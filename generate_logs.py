@@ -63,6 +63,22 @@ def send_to_logscale(log, config):
 def simulate_web_access(user, url):
     os.system(f'curl -A "{user["user_agent"]}" {url} > /dev/null 2>&1')
 
+def generate_windows_event_logs():
+    # PowerShell script to generate Windows Event logs
+    powershell_script = '''
+    # Create process creation log
+    Start-Process powershell -ArgumentList '-ExecutionPolicy Bypass -File C:\\Users\\Eagle\\Downloads\\malware.ps1'
+
+    # Simulate file creation
+    New-Item -Path "C:\\Users\\Eagle\\Downloads" -Name "malware.exe" -ItemType "File"
+
+    # Simulate registry modification
+    Set-ItemProperty -Path "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" -Name "MaliciousApp" -Value "C:\\Users\\Eagle\\Downloads\\malware.exe"
+    '''
+    with open('generate_event_logs.ps1', 'w') as file:
+        file.write(powershell_script)
+    os.system('powershell -ExecutionPolicy Bypass -File generate_event_logs.ps1')
+
 def test_commands():
     print("Testing curl command...")
     response = os.system('curl --version')
@@ -107,6 +123,9 @@ def main():
         status, response = send_to_logscale(log, config)
         print(f"Sent log: {json.dumps(log, indent=4)}")
         print(f"Response: {status}, {response}")
+
+    # Generate corresponding Windows Event logs
+    generate_windows_event_logs()
 
 if __name__ == "__main__":
     main()
