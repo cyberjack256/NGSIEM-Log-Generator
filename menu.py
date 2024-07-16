@@ -1,113 +1,57 @@
-import json
-import logging
 import os
-import random
-import requests
-from datetime import datetime, timedelta
-import pytz
 import yaml
-from faker import Faker
+from generate_logs import load_config, save_config, generate_sample_logs
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+PRESETS = {
+    '1': {
+        'usernames': ["sparrow", "robin", "eagle"],
+        'mac_addresses': ["00:1A:2B:3C:4D:5E", "11:22:33:44:55:66"],
+        'user_agents': ["Mozilla/5.0", "Chrome/91.0"],
+        'server_ips': ["192.168.1.1", "192.168.1.2"],
+        'client_ips': ["10.0.0.1", "10.0.0.2"],
+        'hostnames': ["birdserver.example.com", "eaglehost.example.com"]
+    },
+    '2': {
+        'usernames': ["Falcon", "Panther", "Raven"],
+        'mac_addresses': ["22:33:44:55:66:77", "33:44:55:66:77:88"],
+        'user_agents': ["Mozilla/5.0", "Edge/91.0"],
+        'server_ips': ["192.168.2.1", "192.168.2.2"],
+        'client_ips': ["10.1.0.1", "10.1.0.2"],
+        'hostnames': ["falconserver.example.com", "pantherhost.example.com"]
+    },
+    '3': {
+        'usernames': ["Orion", "Sirius", "Andromeda"],
+        'mac_addresses': ["44:55:66:77:88:99", "55:66:77:88:99:AA"],
+        'user_agents': ["Mozilla/5.0", "Safari/14.0"],
+        'server_ips': ["192.168.3.1", "192.168.3.2"],
+        'client_ips': ["10.2.0.1", "10.2.0.2"],
+        'hostnames': ["orionserver.example.com", "siriushost.example.com"]
+    }
+}
 
-CONFIG_FILE = 'config.yaml'
-fake = Faker()
-
-# Load configuration
-def load_config():
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, 'r') as file:
-            return yaml.safe_load(file)
-    return {}
-
-# Save configuration
-def save_config(config):
-    with open(CONFIG_FILE, 'w') as file:
-        yaml.safe_dump(config, file)
-
-# Show current configuration
-def show_config():
+# Load preset configuration
+def load_preset(preset):
     config = load_config()
-    print(yaml.dump(config, sort_keys=False))
+    if preset in PRESETS:
+        config.update(PRESETS[preset])
+        save_config(config)
+        print(f"Preset {preset} loaded successfully.")
+    else:
+        print("Invalid preset selected.")
 
 # Add configuration value
 def add_config_value(field, example):
     config = load_config()
+    values = []
     while True:
         new_value = input(f"Enter a value for {field} (e.g., {example}) or press [Enter] to return to the menu: ").strip()
         if not new_value:
             break
-        if field not in config:
-            config[field] = []
-        config[field].append(new_value)
-    save_config(config)
-    print(f"Configuration updated: {field} set to {config[field]}")
-
-# Generate sample logs
-def generate_sample_logs():
-    config = load_config()
-    if 'api_url' not in config:
-        print("\nAPI URL is not set in the configuration.")
-        return
-    
-    api_url = config['api_url']
-    now = datetime.utcnow()
-    
-    log_entry = {
-        "sourcetype": "zscalernss-web",
-        "event": {
-            "datetime": (now - timedelta(minutes=random.randint(1, 5))).strftime("%Y-%m-%d %H:%M:%S"),
-            "reason": "allowed",
-            "event_id": random.randint(100000, 999999),
-            "protocol": "HTTPS",
-            "action": "allowed",
-            "transactionsize": random.randint(1000, 2000),
-            "responsesize": random.randint(500, 1000),
-            "requestsize": random.randint(100, 500),
-            "urlcategory": fake.word(),
-            "serverip": random.choice(config.get('server_ips', [fake.ipv4()])),
-            "clienttranstime": random.randint(200, 500),
-            "requestmethod": random.choice(["GET", "POST"]),
-            "refererURL": fake.url(),
-            "useragent": random.choice(config.get('user_agents', [fake.user_agent()])),
-            "product": "NSS",
-            "location": fake.city(),
-            "ClientIP": random.choice(config.get('client_ips', [fake.ipv4()])),
-            "status": random.choice(["200", "404", "500"]),
-            "user": random.choice(config.get('usernames', [fake.user_name()])),
-            "url": fake.url(),
-            "vendor": "Zscaler",
-            "hostname": random.choice(config.get('hostnames', [fake.hostname()])),
-            "clientpublicIP": fake.ipv4(),
-            "threatcategory": fake.word(),
-            "threatname": fake.file_name(extension='exe'),
-            "filetype": "exe",
-            "appname": fake.word(),
-            "pagerisk": random.randint(1, 100),
-            "department": fake.word(),
-            "urlsupercategory": fake.word(),
-            "appclass": fake.word(),
-            "dlpengine": fake.word(),
-            "urlclass": fake.word(),
-            "threatclass": fake.word(),
-            "dlpdictionaries": fake.word(),
-            "fileclass": fake.word(),
-            "bwthrottle": "none",
-            "servertranstime": random.randint(100, 300),
-            "contenttype": "application/octet-stream",
-            "unscannabletype": "none",
-            "deviceowner": fake.name(),
-            "devicehostname": fake.hostname(),
-            "decrypted": random.choice(["yes", "no"])
-        }
-    }
-
-    response = requests.post(api_url, headers={"Content-Type": "application/json"}, json=log_entry)
-    if response.status_code == 200:
-        print("Log sent successfully.")
-    else:
-        print(f"Failed to send log: {response.status_code} {response.text}")
+        values.append(new_value)
+    if values:
+        config[field] = values
+        save_config(config)
+        print(f"Configuration updated: {field} set to {config[field]}")
 
 # Main menu
 def main_menu():
@@ -123,6 +67,7 @@ def main_menu():
 ║  1. Show current configuration                              ║
 ║  2. Add a configuration value                               ║
 ║  3. Generate sample logs                                    ║
+║  4. Load preset configuration                               ║
 ║  0. Exit                                                    ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -131,11 +76,43 @@ def main_menu():
         if choice == '1':
             show_config()
         elif choice == '2':
-            field = input("Enter the field name you want to add values to (e.g., usernames): ").strip()
-            example = "example_value"  # Replace with a relevant example based on your field
-            add_config_value(field, example)
+            print("""
+            Select a field to add values to:
+            1. api_url (e.g., https://your-ngsiem-api-url)
+            2. api_key (e.g., your_api_key)
+            3. usernames (e.g., alice, bob)
+            4. mac_addresses (e.g., 00:1A:2B:3C:4D:5E)
+            5. user_agents (e.g., Mozilla/5.0)
+            6. server_ips (e.g., 192.168.1.1)
+            7. client_ips (e.g., 192.168.1.2)
+            8. hostnames (e.g., server1.example.com)
+            """)
+            field_map = {
+                '1': ('api_url', 'https://your-ngsiem-api-url'),
+                '2': ('api_key', 'your_api_key'),
+                '3': ('usernames', 'alice'),
+                '4': ('mac_addresses', '00:1A:2B:3C:4D:5E'),
+                '5': ('user_agents', 'Mozilla/5.0'),
+                '6': ('server_ips', '192.168.1.1'),
+                '7': ('client_ips', '192.168.1.2'),
+                '8': ('hostnames', 'server1.example.com')
+            }
+            field_choice = input("Select a field: ").strip()
+            if field_choice in field_map:
+                field, example = field_map[field_choice]
+                add_config_value(field, example)
+            else:
+                print("Invalid field choice.")
         elif choice == '3':
             generate_sample_logs()
+        elif choice == '4':
+            print("""
+            1. Bird Names and Comical Bird Adversaries
+            2. CrowdStrike Adversaries and Cool Analyst Names
+            3. Celestial Body Names and Comical Celestial Adversaries
+            """)
+            preset_choice = input("Select a preset: ").strip()
+            load_preset(preset_choice)
         elif choice == '0':
             break
         else:
