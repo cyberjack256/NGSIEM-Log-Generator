@@ -1,20 +1,9 @@
 {
-  "users": [
-    {"name": "Eagle", "ip": "192.168.1.100", "mac": "00:0a:95:9d:68:ff", "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
-    {"name": "Hawk", "ip": "192.168.1.101", "mac": "00:0a:95:9d:68:fe", "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-  ],
-  "malicious_urls": [
-    "http://badpatch-update.com",
-    "http://malicious-email.com/link"
-  ],
-  "malicious_file_url": "http://malicious-site.com/malware.exe",
-  "malicious_file_hash": "known_malicious_hash",
-  "legitimate_urls": [
-    "http://legit-patch.com",
-    "http://goodpatch-update.com"
-  ],
-  "fake_website_url": "http://fake-website.com",
-  "logscale_api_token": "your_logscale_api_token",
-  "logscale_url": "https://your-logscale-instance.com/api/v1/ingest/logs",
-  "test_mode": true
+  "logscale_api_url": "https://your-ngsiem-api-url-here",
+  "users": ["sparrow", "robin", "hawk"],
+  "malicious_user": "falcon",
+  "user_agents": ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"],
+  "ips": ["192.168.1.10", "192.168.1.11", "192.168.1.12"],
+  "malicious_site": "http://malicious.example.com",
+  "malicious_hash": "e99a18c428cb38d5f260853678922e03"
 }
