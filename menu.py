@@ -1,26 +1,35 @@
-import json
 import os
+import json
 import subprocess
 
-CONFIG_FILE = 'config.json'
-LOGSCALE_URL = 'https://your-logscale-instance.com/api/v1/ingest/logs'
+# Set up logging
+logging.basicConfig(level=logging.INFO)
 
+CONFIG_FILE = 'config.json'
+
+# Load configuration
 def load_config():
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, 'r') as file:
             return json.load(file)
     return {}
 
+# Save configuration
 def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
         json.dump(config, file, indent=4)
 
+# Show current configuration
 def show_config():
     config = load_config()
-    print("\nCurrent configuration:")
-    for key, value in config.items():
-        print(f"{key}: {value}")
+    if not config:
+        print("\nNo configuration found.")
+    else:
+        print("\nCurrent configuration:")
+        for key, value in config.items():
+            print(f"{key}: {value}")
 
+# Set configuration field
 def set_config_field(field):
     config = load_config()
     new_value = input(f"Enter the value for {field}: ").strip()
@@ -28,36 +37,38 @@ def set_config_field(field):
     save_config(config)
     print(f"Configuration updated: {field} set to {config[field]}")
 
-def validate_config():
+# Generate sample logs
+def generate_sample_logs():
+    print("\nGenerating sample logs...")
+    subprocess.run(['python3', 'generate_logs.py'], check=True)
+
+# Send logs to NGSIEM API
+def send_logs_to_ngsiem():
     config = load_config()
-    required_fields = ["logscale_api_token", "logscale_url"]
-    missing_fields = [field for field in required_fields if field not in config or config[field] == ""]
-    if missing_fields:
-        print(f"\nMissing required fields: {', '.join(missing_fields)}")
-        return False
-    return True
-
-def run_script(script_name):
-    if not validate_config():
-        print("\nPlease set the missing configuration fields using the menu.")
+    if 'api_url' not in config:
+        print("\nAPI URL is not set in the configuration.")
         return
-    result = subprocess.run(['python3', script_name], capture_output=True, text=True)
-    print(result.stdout)
-    print(result.stderr)
+    api_url = config['api_url']
+    headers = {"Content-Type": "application/json"}
+    with open('sample_log.json', 'r') as log_file:
+        logs = json.load(log_file)
+    response = requests.post(api_url, json=logs, headers=headers)
+    print(f"\nResponse from NGSIEM API: {response.status_code}")
 
+# Main menu
 def main_menu():
     while True:
         os.system('clear')
         print("""
 ╔════════════════════════════════════════════════════════════════════════════╗
-║                              Zscaler Log Generator                         ║
+║                                Log Generator Menu                          ║
 ║════════════════════════════════════════════════════════════════════════════║
-║ Welcome to the Zscaler Log Generator Menu                                  ║
 ║ Please select an option:                                                   ║
 ║                                                                            ║
 ║  1. Show current configuration                                             ║
-║  2. Set a configuration field                                              ║
-║  3. Run the log generation script                                          ║
+║  2. Set configuration field                                                ║
+║  3. Generate sample logs                                                   ║
+║  4. Send logs to NGSIEM API                                                ║
 ║  0. Exit                                                                   ║
 ╚════════════════════════════════════════════════════════════════════════════╝
         """)
@@ -66,15 +77,17 @@ def main_menu():
         if choice == '1':
             show_config()
         elif choice == '2':
-            field = input("Enter the name of the field to set: ").strip()
+            field = input("\nEnter the configuration field you want to set: ").strip()
             set_config_field(field)
         elif choice == '3':
-            run_script('generate_logs.py')
+            generate_sample_logs()
+        elif choice == '4':
+            send_logs_to_ngsiem()
         elif choice == '0':
             break
         else:
             print("Invalid choice. Please try again.")
-        
+
         input("\nPress Enter to continue...")
 
 if __name__ == "__main__":
