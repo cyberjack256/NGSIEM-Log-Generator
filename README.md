@@ -47,13 +47,13 @@ Customize your experience by editing the config.json file. Add new data sources,
 
 This project was created to aid in the learning and testing of log data ingestion and analysis in Zscaler environments. It's a valuable tool for incident responders, security analysts, and anyone looking to understand and work with Zscaler log data.
 
-## Authors
 
-- **Jack Turner** - *Senior Instructor at CrowdStrike* - [LinkedIn](https://www.linkedin.com/in/jackturner)
 
 ## Contact
 
 For contact or support, reach out via LinkedIn or open an issue on this repository.
+ [LinkedIn](https://www.linkedin.com/in/jackturner)
+
 
 ## License
 
