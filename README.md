@@ -73,7 +73,7 @@ You can generate a sample example log with the data that is currently fed into t
 Sample Configuration
 
 Add the following settings to your config.json file:
-
+```json
 {
     "api_url": "https://your-ngsiem-api-url.com",
     "users": ["eagle", "hawk", "falcon"],
@@ -82,6 +82,7 @@ Add the following settings to your config.json file:
     "ips": ["192.168.1.10", "192.168.1.11", "192.168.1.12"],
     "user_agents": ["Mozilla/5.0", "Chrome/91.0"]
 }
+```
 
 Generate Logs
 
