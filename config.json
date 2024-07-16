@@ -1,9 +1,9 @@
 {
-  "logscale_api_url": "https://your-ngsiem-api-url-here",
-  "users": ["sparrow", "robin", "hawk"],
-  "malicious_user": "falcon",
-  "user_agents": ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"],
-  "ips": ["192.168.1.10", "192.168.1.11", "192.168.1.12"],
-  "malicious_site": "http://malicious.example.com",
-  "malicious_hash": "e99a18c428cb38d5f260853678922e03"
+    "ngsiem_api_url": "https://your-ngsiem-api-url",
+    "users": ["sparrow", "robin", "hawk"],
+    "malicious_user": "falcon",
+    "user_agents": ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"],
+    "ips": ["192.168.1.10", "192.168.1.11", "192.168.1.12"],
+    "malicious_site": "http://malicious.example.com",
+    "malicious_hash": "e99a18c428cb38d5f260853678922e03"
 }
