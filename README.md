@@ -1,55 +1,20 @@
-# Zscaler Log Generator
+# Traffic Data Generation for Falcon NGSIEM
+Welcome to the Traffic Data Generation project! This repository is designed to help security professionals and researchers generate realistic traffic data logs for testing and validating their NGSIEM (Next-Generation Security Information and Event Management) setup. The data includes simulated web server logs, Zscaler logs, network appliance logs, and Windows server logs, complete with malicious beacons and realistic scenarios.
 
 ## Overview
+This project uses Python and the Faker library to generate realistic data logs. It includes a menu-driven system for ease of use, allowing you to configure and generate logs dynamically.
 
-Welcome to the Zscaler Log Generator, a powerful tool designed to generate realistic Zscaler log data for testing and analysis. This tool allows you to create detailed logs that simulate user interactions and network traffic in a Zscaler environment, helping you validate and analyze log data in NGSIEM or other log management systems.
+## Requirements
+- Python 3.9 or higher
+- The following Python libraries:
+  - requests
+  - pyyaml
+  - faker
+  - pytz
 
-## Features
-
-- Generate Zscaler web, firewall, DNS, and CASB logs
-- Simulate user interactions with realistic data
-- Configurable through an intuitive menu system
-- Send generated logs to NGSIEM or other log management APIs
-
-## Installation
-
-1. **Clone the repository:**
-
-    ```bash
-    git clone https://github.com/cyberjack256/Traffic.git
-    ```
-
-2. **Navigate to the project directory:**
-
-    ```bash
-    cd Traffic
-    ```
-
-3. **Install the required libraries:**
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-## Usage
-
-Run the script through the menu system. Execute the `menu.py` script, and it will guide you through the various functionalities.
+Install the required libraries using the following command:
 
 ```bash
-python3 menu.py
+pip install requests pyyaml faker pytz
 ```
-
-## Contact and Support
-
-For support, reach out via [LinkedIn](https://www.linkedin.com/in/cyberjack256) or open an issue on this repository. GitHub responses are preferred for this project.
-
-## Authors
-
-- Jack Turner - [cyberjack256](https://www.linkedin.com/in/cyberjack256)
-
-## License
-
-This project is licensed under the Apache-2.0 License. See the LICENSE file for details.
-
-
 
