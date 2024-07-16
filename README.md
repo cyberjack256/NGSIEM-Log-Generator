@@ -52,7 +52,7 @@ Here is an example of the `config.json` file:
 }
 ```
 
-Usage
+### Usage
 
 Run the scripts through the menu system. Just execute the menu.py script, and it will guide you through the various functionalities. No need to remember all the individual script names – let the menu do the work!
 
@@ -84,25 +84,25 @@ Add the following settings to your config.json file:
 }
 ```
 
-Generate Logs
+### Generate Logs
 
 To generate logs based on the above configuration, run:
 
 python3 generate_logs.py
 
-Send Logs to NGSIEM
+### Send Logs to NGSIEM
 
 After generating the logs, use the menu to send the logs to the NGSIEM API.
 
-Contributing
+## Contributing
 
 Have ideas to make these scripts even better? Fork the repository, make your changes, and submit a pull request. We’d love to see your contributions!
 
-License
+## License
 
 This project is licensed under the Apache-2.0 License. See the LICENSE file for details.
 
-Contact
+## Contact
 
 Got questions or need support? Open an issue on this repository, and we’ll get back to you as soon as possible. You can also reach out via LinkedIn or email. For this project, GitHub issues are preferred.
 
