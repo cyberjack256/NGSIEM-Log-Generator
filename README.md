@@ -50,6 +50,7 @@ Here is an example of the `config.json` file:
     "ips": ["192.168.1.10", "192.168.1.11", "192.168.1.12"],
     "user_agents": ["Mozilla/5.0", "Chrome/91.0"]
 }
+```
 
 Usage
 
