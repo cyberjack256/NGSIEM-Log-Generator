@@ -49,7 +49,7 @@ This project was created to aid in the learning and testing of log data ingestio
 
 ### Authors
 
-	•	Jack Turner - Senior Instructor at CrowdStrike - LinkedIn
+- Jack Turner - Senior Instructor at CrowdStrike - LinkedIn
 
 ### Contact
 
