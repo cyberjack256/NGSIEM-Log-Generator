@@ -1,109 +1,67 @@
-# Zscaler and NGSIEM Log Generator
+# Zscaler Log Generator
 
 ## Overview
 
-Welcome to the Zscaler and NGSIEM Log Generator! This project is designed to help cybersecurity professionals simulate realistic web and security logs for testing and training purposes. By using this tool, you can generate detailed logs that mimic user activities, security events, and potential breaches, all tailored to fit within a Zscaler and NGSIEM environment.
+Welcome to the Zscaler Log Generator, a powerful tool designed to generate realistic Zscaler log data for testing and analysis. This tool allows you to create detailed logs that simulate user interactions and network traffic in a Zscaler environment, helping you validate and analyze log data in NGSIEM or other log management systems.
 
 ## Features
 
-- **Generate Realistic Logs**: Create web server logs, Zscaler logs, and more with customizable data inputs.
-- **Simulate Security Events**: Craft detailed narratives with user activities and potential security breaches.
-- **Easy Configuration**: Use simple configuration files to customize user agents, IP addresses, and more.
-- **Seamless Integration**: Send logs directly to NGSIEM or other specified APIs with minimal setup.
+- Generate Zscaler web, firewall, DNS, and CASB logs
+- Simulate user interactions with realistic data
+- Configurable through an intuitive menu system
+- Send generated logs to NGSIEM or other log management APIs
 
-## Getting Started
+## Installation
 
-### Prerequisites
+1. **Clone the repository:**
 
-Before you begin, ensure you have met the following requirements:
-
-- **Python 3.9** or later installed.
-- Administrator access to the Zscaler console.
-- Administrator access to the Falcon console for the respective CID.
-- Valid API URL and key from your NGSIEM instance.
-
-### Installation
-
-1. **Clone the Repository**:
     ```bash
-    git clone https://github.com/yourusername/log-generator.git
-    cd log-generator
+    git clone https://github.com/cyberjack256/Traffic.git
     ```
 
-2. **Install the Required Libraries**:
+2. **Navigate to the project directory:**
+
+    ```bash
+    cd Traffic
+    ```
+
+3. **Install the required libraries:**
+
     ```bash
     pip install -r requirements.txt
     ```
 
-### Configuration
+## Usage
 
-Customize your experience by editing the `config.json` file. Add new data sources, tweak parameters, and make the scripts work for your specific needs.
+Run the script through the menu system. Execute the `menu.py` script, and it will guide you through the various functionalities.
 
-Here is an example of the `config.json` file:
-
-```json
-{
-    "api_url": "https://your-ngsiem-api-url.com",
-    "users": ["eagle", "hawk", "falcon"],
-    "malicious_user": "hawk",
-    "malware_name": "CatSpyware",
-    "ips": ["192.168.1.10", "192.168.1.11", "192.168.1.12"],
-    "user_agents": ["Mozilla/5.0", "Chrome/91.0"]
-}
-```
-
-### Usage
-
-Run the scripts through the menu system. Just execute the menu.py script, and it will guide you through the various functionalities. No need to remember all the individual script names – let the menu do the work!
-
+```bash
 python3 menu.py
 
-Menu Options
+### Configuration
 
-	1.	Show Current Configuration: Displays the existing configuration values.
-	2.	Set Configuration Field: Allows you to input new values for specific configuration fields.
-	3.	Generate Sample Logs: Executes the generate_logs.py script to produce sample logs.
-	4.	Send Logs to NGSIEM API: Sends the generated logs to the specified NGSIEM API endpoint.
-	5.	Exit: Gracefully exits the menu system.
+Customize your experience by editing the config.json file. Add new data sources, tweak parameters, and make the scripts work for your specific needs.
 
-Example Log Generation
+## 🎓 About this Project
 
-You can generate a sample example log with the data that is currently fed into the system and send it to the NGSIEM API for testing.
+This project was created to aid in the learning and testing of log data ingestion and analysis in Zscaler environments. It’s a valuable tool for incident responders, security analysts, and anyone looking to understand and work with Zscaler log data.
 
-Sample Configuration
+### Authors
 
-Add the following settings to your config.json file:
-```json
-{
-    "api_url": "https://your-ngsiem-api-url.com",
-    "users": ["eagle", "hawk", "falcon"],
-    "malicious_user": "hawk",
-    "malware_name": "CatSpyware",
-    "ips": ["192.168.1.10", "192.168.1.11", "192.168.1.12"],
-    "user_agents": ["Mozilla/5.0", "Chrome/91.0"]
-}
-```
+	•	Jack Turner - Senior Instructor at CrowdStrike - LinkedIn
 
-### Generate Logs
+### Contact
 
-To generate logs based on the above configuration, run:
+For contact or support, reach out via LinkedIn or open an issue on this repository.
 
-python3 generate_logs.py
-
-### Send Logs to NGSIEM
-
-After generating the logs, use the menu to send the logs to the NGSIEM API.
-
-## Contributing
-
-Have ideas to make these scripts even better? Fork the repository, make your changes, and submit a pull request. We’d love to see your contributions!
-
-## License
+### License
 
 This project is licensed under the Apache-2.0 License. See the LICENSE file for details.
 
-## Contact
+### Contributing
 
-Got questions or need support? Open an issue on this repository, and we’ll get back to you as soon as possible. You can also reach out via LinkedIn or email. For this project, GitHub issues are preferred.
+Feel free to fork this repository, make your changes, and submit a pull request. Contributions are welcome!
 
-Happy log generating! 🚀
+## References
+
+For more information about Zscaler logs and data ingestion, visit the Zscaler Documentation.
