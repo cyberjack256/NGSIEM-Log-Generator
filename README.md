@@ -38,16 +38,6 @@ Run the script through the menu system. Execute the `menu.py` script, and it wil
 ```bash
 python3 menu.py
 ```
-## Requirements
-
-Create a `requirements.txt` file with the following content:
-
-requests
-json
-datetime
-logging
-pytz
-random
 
 ## Contact and Support
 
