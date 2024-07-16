@@ -1,8 +1,27 @@
 api_url: "https://your-ngsiem-api-url"
 api_key: "your_api_key"
-usernames: ["alice", "bob"]
-mac_addresses: ["00:1A:2B:3C:4D:5E"]
-user_agents: ["Mozilla/5.0"]
-server_ips: ["192.168.1.1"]
-client_ips: ["192.168.1.2"]
-hostnames: ["server1.example.com"]
+
+usernames:
+  - sparrow
+  - robin
+  - eagle
+
+mac_addresses:
+  - 00:1A:2B:3C:4D:5E
+  - 11:22:33:44:55:66
+
+user_agents:
+  - Mozilla/5.0
+  - Chrome/91.0
+
+server_ips:
+  - 192.168.1.1
+  - 192.168.1.2
+
+client_ips:
+  - 10.0.0.1
+  - 10.0.0.2
+
+hostnames:
+  - birdserver.example.com
+  - eaglehost.example.com
