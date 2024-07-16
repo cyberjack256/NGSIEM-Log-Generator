@@ -41,28 +41,28 @@ python3 menu.py
 
 ### Configuration
 
-Customize your experience by editing the config.json file. Add new data sources, tweak parameters, and make the scripts work for your specific needs.
+Customize your experience by editing the config.json file. Add new data sources, tweak parameters, an
 
 ## 🎓 About this Project
 
-This project was created to aid in the learning and testing of log data ingestion and analysis in Zscaler environments. It’s a valuable tool for incident responders, security analysts, and anyone looking to understand and work with Zscaler log data.
+This project was created to aid in the learning and testing of log data ingestion and analysis in Zscaler environments. It's a valuable tool for incident responders, security analysts, and anyone looking to understand and work with Zscaler log data.
 
-### Authors
+## Authors
 
-- Jack Turner - Senior Instructor at CrowdStrike - LinkedIn
+- **Jack Turner** - *Senior Instructor at CrowdStrike* - [LinkedIn](https://www.linkedin.com/in/jackturner)
 
-### Contact
+## Contact
 
 For contact or support, reach out via LinkedIn or open an issue on this repository.
 
-### License
+## License
 
-This project is licensed under the Apache-2.0 License. See the LICENSE file for details.
+This project is licensed under the Apache-2.0 License. See the [LICENSE](LICENSE) file for details.
 
-### Contributing
+## Contributing
 
 Feel free to fork this repository, make your changes, and submit a pull request. Contributions are welcome!
 
 ## References
 
-For more information about Zscaler logs and data ingestion, visit the Zscaler Documentation.
+For more information about Zscaler logs and data ingestion, visit the [Zscaler Documentation](https://help.zscaler.com/zia/about-cloud-nss-feeds).
