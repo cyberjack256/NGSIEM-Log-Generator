@@ -37,6 +37,7 @@ Run the script through the menu system. Execute the `menu.py` script, and it wil
 
 ```bash
 python3 menu.py
+```
 
 ### Configuration
 
