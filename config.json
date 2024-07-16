@@ -1,9 +1,21 @@
-{
-    "ngsiem_api_url": "https://your-ngsiem-api-url",
-    "users": ["sparrow", "robin", "hawk"],
-    "malicious_user": "falcon",
-    "user_agents": ["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"],
-    "ips": ["192.168.1.10", "192.168.1.11", "192.168.1.12"],
-    "malicious_site": "http://malicious.example.com",
-    "malicious_hash": "e99a18c428cb38d5f260853678922e03"
-}
+api_url: "https://ingest.us-2.crowdstrike.com/api/ingest/hec/YOUR_API_TOKEN/v1/services/collector/raw"
+usernames:
+  - hawk
+  - eagle
+  - sparrow
+mac_addresses:
+  - "00:1B:44:11:3A:B7"
+  - "00:1B:44:11:3A:B8"
+client_ips:
+  - "192.168.1.101"
+  - "192.168.1.102"
+server_ips:
+  - "192.168.1.100"
+  - "192.168.1.200"
+user_agents:
+  - "Mozilla/5.0"
+  - "Safari/537.36"
+  - "Chrome/91.0"
+hostnames:
+  - host1
+  - host2
