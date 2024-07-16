@@ -1,152 +1,142 @@
 import json
-import os
 import logging
-import subprocess
+import os
+import random
+import requests
+from datetime import datetime, timedelta
+import pytz
+import yaml
+from faker import Faker
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
-CONFIG_FILE = 'config.json'
-
-REQUIRED_FIELDS = ['api_url', 'usernames', 'mac_addresses', 'ip_addresses', 'user_agents']
+CONFIG_FILE = 'config.yaml'
+fake = Faker()
 
 # Load configuration
 def load_config():
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, 'r') as file:
-            return json.load(file)
+            return yaml.safe_load(file)
     return {}
 
 # Save configuration
 def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
-        json.dump(config, file, indent=4)
+        yaml.safe_dump(config, file)
 
 # Show current configuration
 def show_config():
     config = load_config()
-    print("\nCurrent configuration:")
-    for field in REQUIRED_FIELDS:
-        value = config.get(field, 'Not set')
-        print(f"{field}: {value}")
+    print(yaml.dump(config, sort_keys=False))
 
-# Set configuration field
-def set_config_field(field):
+# Add configuration value
+def add_config_value(field, example):
     config = load_config()
-    new_value = input(f"Enter the value for {field}: ").strip()
-    config[field] = new_value
+    while True:
+        new_value = input(f"Enter a value for {field} (e.g., {example}) or press [Enter] to return to the menu: ").strip()
+        if not new_value:
+            break
+        if field not in config:
+            config[field] = []
+        config[field].append(new_value)
     save_config(config)
     print(f"Configuration updated: {field} set to {config[field]}")
 
-# Validate configuration
-def validate_config():
-    config = load_config()
-    missing_fields = [field for field in REQUIRED_FIELDS if field not in config or config[field] == '']
-    if missing_fields:
-        print(f"\nMissing required fields: {', '.join(missing_fields)}")
-        return False
-    return True
-
 # Generate sample logs
 def generate_sample_logs():
-    if not validate_config():
-        print("\nPlease set the missing configuration fields using option 2.")
-        return
-    # Generate logs based on the config
     config = load_config()
-    logs = [
-        {
-            "sourcetype": "zscalernss-web",
-            "event": {
-                "datetime": "2024-07-16 10:20:30",
-                "reason": "allowed",
-                "event_id": 123456789,
-                "protocol": "HTTPS",
-                "action": "allowed",
-                "transactionsize": 512,
-                "responsesize": 256,
-                "requestsize": 128,
-                "urlcategory": "business",
-                "serverip": "192.168.1.100",
-                "clienttranstime": 123,
-                "requestmethod": "GET",
-                "refererURL": "https://example.com",
-                "useragent": config['user_agents'][0],
-                "product": "NSS",
-                "location": "Office",
-                "ClientIP": config['ip_addresses'][0],
-                "status": "200",
-                "user": config['usernames'][0],
-                "url": "https://malicious-site.com",
-                "vendor": "Zscaler",
-                "hostname": "malicious-site.com",
-                "clientpublicIP": config['ip_addresses'][0],
-                "threatcategory": "malware",
-                "threatname": "MaliciousFile.exe",
-                "filetype": "exe",
-                "appname": "MalwareApp",
-                "pagerisk": 100,
-                "department": "IT",
-                "urlsupercategory": "malicious",
-                "appclass": "unknown",
-                "dlpengine": "engine1",
-                "urlclass": "malicious",
-                "threatclass": "malware",
-                "dlpdictionaries": "dict1",
-                "fileclass": "malware",
-                "bwthrottle": "none",
-                "servertranstime": 200,
-                "contenttype": "application/octet-stream",
-                "unscannabletype": "none",
-                "deviceowner": "admin",
-                "devicehostname": "host1",
-                "decrypted": "no"
-            }
-        }
-    ]
-    print("\nGenerated logs:")
-    for log in logs:
-        print(json.dumps(log, indent=4))
-
-    # Example command to send logs to NGSIEM
+    if 'api_url' not in config:
+        print("\nAPI URL is not set in the configuration.")
+        return
+    
     api_url = config['api_url']
-    for log in logs:
-        command = f'curl -X POST {api_url} -H "Content-Type: application/json" -d \'{json.dumps(log)}\''
-        print(f"\nSending log with command: {command}")
-        subprocess.run(command, shell=True)
+    now = datetime.utcnow()
+    
+    log_entry = {
+        "sourcetype": "zscalernss-web",
+        "event": {
+            "datetime": (now - timedelta(minutes=random.randint(1, 5))).strftime("%Y-%m-%d %H:%M:%S"),
+            "reason": "allowed",
+            "event_id": random.randint(100000, 999999),
+            "protocol": "HTTPS",
+            "action": "allowed",
+            "transactionsize": random.randint(1000, 2000),
+            "responsesize": random.randint(500, 1000),
+            "requestsize": random.randint(100, 500),
+            "urlcategory": fake.word(),
+            "serverip": random.choice(config.get('server_ips', [fake.ipv4()])),
+            "clienttranstime": random.randint(200, 500),
+            "requestmethod": random.choice(["GET", "POST"]),
+            "refererURL": fake.url(),
+            "useragent": random.choice(config.get('user_agents', [fake.user_agent()])),
+            "product": "NSS",
+            "location": fake.city(),
+            "ClientIP": random.choice(config.get('client_ips', [fake.ipv4()])),
+            "status": random.choice(["200", "404", "500"]),
+            "user": random.choice(config.get('usernames', [fake.user_name()])),
+            "url": fake.url(),
+            "vendor": "Zscaler",
+            "hostname": random.choice(config.get('hostnames', [fake.hostname()])),
+            "clientpublicIP": fake.ipv4(),
+            "threatcategory": fake.word(),
+            "threatname": fake.file_name(extension='exe'),
+            "filetype": "exe",
+            "appname": fake.word(),
+            "pagerisk": random.randint(1, 100),
+            "department": fake.word(),
+            "urlsupercategory": fake.word(),
+            "appclass": fake.word(),
+            "dlpengine": fake.word(),
+            "urlclass": fake.word(),
+            "threatclass": fake.word(),
+            "dlpdictionaries": fake.word(),
+            "fileclass": fake.word(),
+            "bwthrottle": "none",
+            "servertranstime": random.randint(100, 300),
+            "contenttype": "application/octet-stream",
+            "unscannabletype": "none",
+            "deviceowner": fake.name(),
+            "devicehostname": fake.hostname(),
+            "decrypted": random.choice(["yes", "no"])
+        }
+    }
+
+    response = requests.post(api_url, headers={"Content-Type": "application/json"}, json=log_entry)
+    if response.status_code == 200:
+        print("Log sent successfully.")
+    else:
+        print(f"Failed to send log: {response.status_code} {response.text}")
 
 # Main menu
 def main_menu():
     while True:
         os.system('clear')
         print("""
-╔════════════════════════════════════════════════════════════════════════════╗
-║                           Zscaler Log Generator                            ║
-║════════════════════════════════════════════════════════════════════════════║
-║ Please select an option:                                                   ║
-║  1. Show current configuration                                             ║
-║  2. Set a configuration field                                              ║
-║  3. Generate sample logs                                                   ║
-║  0. Exit                                                                   ║
-╚════════════════════════════════════════════════════════════════════════════╝
+╔═════════════════════════════════════════════════════════════╗
+║                     Zscaler Log Generator                   ║
+║═════════════════════════════════════════════════════════════║
+║  Welcome to the Zscaler Log Generator Menu                  ║
+║  Please select an option:                                   ║
+║                                                             ║
+║  1. Show current configuration                              ║
+║  2. Add a configuration value                               ║
+║  3. Generate sample logs                                    ║
+║  0. Exit                                                    ║
+╚═════════════════════════════════════════════════════════════╝
         """)
         choice = input("Enter your choice: ").strip()
 
         if choice == '1':
             show_config()
         elif choice == '2':
-            for i, field in enumerate(REQUIRED_FIELDS, 1):
-                print(f"{i}. {field}")
-            field_choice = input("\nEnter the number of the field you want to set: ").strip()
-            if field_choice.isdigit() and 1 <= int(field_choice) <= len(REQUIRED_FIELDS):
-                field = REQUIRED_FIELDS[int(field_choice) - 1]
-                set_config_field(field)
-            else:
-                print("Invalid choice. Please enter a number from the list.")
+            field = input("Enter the field name you want to add values to (e.g., usernames): ").strip()
+            example = "example_value"  # Replace with a relevant example based on your field
+            add_config_value(field, example)
         elif choice == '3':
             generate_sample_logs()
         elif choice == '0':
-            print("Exiting...")
             break
         else:
             print("Invalid choice. Please try again.")
