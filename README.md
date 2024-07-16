@@ -38,31 +38,28 @@ Run the script through the menu system. Execute the `menu.py` script, and it wil
 ```bash
 python3 menu.py
 ```
+## Requirements
 
-### Configuration
+Create a `requirements.txt` file with the following content:
 
-Customize your experience by editing the config.json file. Add new data sources, tweak parameters, an
+requests
+json
+datetime
+logging
+pytz
+random
 
-## 🎓 About this Project
+## Contact and Support
 
-This project was created to aid in the learning and testing of log data ingestion and analysis in Zscaler environments. It's a valuable tool for incident responders, security analysts, and anyone looking to understand and work with Zscaler log data.
+For support, reach out via [LinkedIn](https://www.linkedin.com/in/cyberjack256) or open an issue on this repository. GitHub responses are preferred for this project.
 
+## Authors
 
-
-## Contact
-
-For contact or support, reach out via LinkedIn or open an issue on this repository.
- [LinkedIn](https://www.linkedin.com/in/jackturner)
-
+- Jack Turner - [cyberjack256](https://www.linkedin.com/in/cyberjack256)
 
 ## License
 
-This project is licensed under the Apache-2.0 License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache-2.0 License. See the LICENSE file for details.
 
-## Contributing
 
-Feel free to fork this repository, make your changes, and submit a pull request. Contributions are welcome!
 
-## References
-
-For more information about Zscaler logs and data ingestion, visit the [Zscaler Documentation](https://help.zscaler.com/zia/about-cloud-nss-feeds).
