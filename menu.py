@@ -66,9 +66,9 @@ def view_cron_job():
     else:
         print("No cron jobs set.")
 
-# Set cron job
+# Set cron job1
 def set_cron_job():
-    job = "*/2 * * * * for i in {1..15}; do python3 /path/to/your/send_logs.py > /dev/null 2>&1; sleep 8; done"
+    job = "*/2 * * * * for i in {1..50}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_logs.py > /dev/null 2>&1; sleep 8; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job not in cron_jobs:
@@ -83,7 +83,7 @@ def set_cron_job():
 
 # Delete cron job
 def delete_cron_job():
-    job = "*/2 * * * * for i in {1..15}; do python3 /path/to/your/send_logs.py > /dev/null 2>&1; sleep 8; done"
+    job = "*/2 * * * * for i in {1..50}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_logs.py > /dev/null 2>&1; sleep 8; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job in cron_jobs:
@@ -107,9 +107,9 @@ def main_menu():
         os.system('clear')
         print("""
 ╔═════════════════════════════════════════════════════════════╗
-║                     Zscaler Log Generator                   ║
+║                     NGSIEM Log Generator                    ║
 ║═════════════════════════════════════════════════════════════║
-║  Welcome to the Zscaler Log Generator Menu                  ║
+║  Welcome to the NGSIEM Log Generator Menu                   ║
 ║  Please select an option:                                   ║
 ║                                                             ║
 ║  1. Show current configuration                              ║
