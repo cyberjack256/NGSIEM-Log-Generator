@@ -35,19 +35,23 @@ def generate_sample_logs():
     api_key = config['api_key']
     now = datetime.utcnow()
 
-    internal_sites = config.get('hostnames', ['example.com'])
-    external_sites = [fake.url() for _ in range(5)]
+    domains = config.get('domains', ['example.com'])
+    hostnames = config.get('hostnames', ['host1.example.com'])
+    emails = config.get('emails', ['user@example.com'])
 
     sample_logs = []
     for _ in range(25):
+        base_domain = random.choice(domains)
+        hostname = random.choice(hostnames)
+        email = random.choice(emails)
+
+        internal_url = f"https://{base_domain}/{fake.uri_path()}"
+        referer_url = f"https://{base_domain}/{fake.uri_path()}"
+        external_url = fake.url()
+        
         is_internal = random.choice([True, False])
-        if is_internal:
-            base_url = random.choice(internal_sites)
-            url = f"https://{base_url}/{fake.uri_path()}"
-            referer = f"https://{base_url}/{fake.uri_path()}"
-        else:
-            url = fake.url()
-            referer = fake.url()
+        url = internal_url if is_internal else external_url
+        referer = referer_url if is_internal else external_url
 
         log_entry = {
             "sourcetype": "zscalernss-web",
@@ -70,10 +74,10 @@ def generate_sample_logs():
                 "location": fake.city(),
                 "ClientIP": random.choice(config.get('client_ips', [fake.ipv4()])),
                 "status": random.choice(["200", "404", "500"]),
-                "user": random.choice(config.get('usernames', [fake.user_name()])),
+                "user": email,
                 "url": url,
                 "vendor": "Zscaler",
-                "hostname": random.choice(config.get('hostnames', [fake.hostname()])),
+                "hostname": hostname,
                 "clientpublicIP": fake.ipv4(),
                 "threatcategory": fake.word(),
                 "threatname": fake.file_name(extension='exe'),
