@@ -2,38 +2,21 @@ import os
 import yaml
 from generate_logs import load_config, save_config, generate_sample_logs
 
-PRESETS = {
-    '1': {
-        'usernames': ["sparrow", "robin", "eagle"],
-        'mac_addresses': ["00:1A:2B:3C:4D:5E", "11:22:33:44:55:66"],
-        'user_agents': ["Mozilla/5.0", "Chrome/91.0"],
-        'server_ips': ["192.168.1.1", "192.168.1.2"],
-        'client_ips': ["10.0.0.1", "10.0.0.2"],
-        'hostnames': ["birdserver.example.com", "eaglehost.example.com"]
-    },
-    '2': {
-        'usernames': ["Falcon", "Panther", "Raven"],
-        'mac_addresses': ["22:33:44:55:66:77", "33:44:55:66:77:88"],
-        'user_agents': ["Mozilla/5.0", "Edge/91.0"],
-        'server_ips': ["192.168.2.1", "192.168.2.2"],
-        'client_ips': ["10.1.0.1", "10.1.0.2"],
-        'hostnames': ["falconserver.example.com", "pantherhost.example.com"]
-    },
-    '3': {
-        'usernames': ["Orion", "Sirius", "Andromeda"],
-        'mac_addresses': ["44:55:66:77:88:99", "55:66:77:88:99:AA"],
-        'user_agents': ["Mozilla/5.0", "Safari/14.0"],
-        'server_ips': ["192.168.3.1", "192.168.3.2"],
-        'client_ips': ["10.2.0.1", "10.2.0.2"],
-        'hostnames': ["orionserver.example.com", "siriushost.example.com"]
-    }
-}
+PRESETS_FILE = 'presets.yaml'
+
+# Load presets from file
+def load_presets():
+    if os.path.exists(PRESETS_FILE):
+        with open(PRESETS_FILE, 'r') as file:
+            return yaml.safe_load(file)
+    return {}
 
 # Load preset configuration
 def load_preset(preset):
     config = load_config()
-    if preset in PRESETS:
-        config.update(PRESETS[preset])
+    presets = load_presets()
+    if preset in presets:
+        config.update(presets[preset])
         save_config(config)
         print(f"Preset {preset} loaded successfully.")
     else:
@@ -52,6 +35,11 @@ def add_config_value(field, example):
         config[field] = values
         save_config(config)
         print(f"Configuration updated: {field} set to {config[field]}")
+
+# Show current configuration
+def show_config():
+    config = load_config()
+    print(yaml.dump(config, sort_keys=False))
 
 # Main menu
 def main_menu():
