@@ -28,7 +28,7 @@ def save_config(config):
 def generate_email(username, domain):
     return f"{username}@{domain}"
 
-# Generate sample logs
+# Generate realistic sample logs
 def generate_sample_logs():
     config = load_config()
     if 'api_url' not in config or 'api_key' not in config:
@@ -70,39 +70,39 @@ def generate_sample_logs():
                 "responsesize": random.randint(500, 1000),
                 "requestsize": random.randint(100, 500),
                 "urlcategory": "news" if is_internal else "external",
-                "serverip": random.choice(config.get('server_ips', [fake.ipv4()])),
+                "serverip": random.choice(config.get('server_ips', ['192.168.1.2'])),
                 "clienttranstime": random.randint(200, 500),
                 "requestmethod": random.choice(["GET", "POST"]),
                 "refererURL": referer,
-                "useragent": random.choice(config.get('user_agents', [fake.user_agent()])),
+                "useragent": random.choice(config.get('user_agents', ['Mozilla/5.0'])),
                 "product": "NSS",
-                "location": fake.city(),
-                "ClientIP": random.choice(config.get('client_ips', [fake.ipv4()])),
+                "location": "New York",
+                "ClientIP": random.choice(config.get('client_ips', ['10.0.0.2'])),
                 "status": random.choice(["200", "404", "500"]),
                 "user": email,
                 "url": url,
                 "vendor": "Zscaler",
                 "hostname": hostname,
                 "clientpublicIP": fake.ipv4(),
-                "threatcategory": fake.word(),
-                "threatname": fake.file_name(extension='exe'),
-                "filetype": "exe",
-                "appname": fake.word(),
+                "threatcategory": "none",
+                "threatname": "none",
+                "filetype": "none",
+                "appname": "browser",
                 "pagerisk": random.randint(1, 100),
-                "department": fake.word(),
-                "urlsupercategory": fake.word(),
-                "appclass": fake.word(),
-                "dlpengine": fake.word(),
-                "urlclass": fake.word(),
-                "threatclass": fake.word(),
-                "dlpdictionaries": fake.word(),
-                "fileclass": fake.word(),
+                "department": random.choice(["IT", "HR", "Finance"]),
+                "urlsupercategory": "information",
+                "appclass": "web",
+                "dlpengine": "none",
+                "urlclass": "news",
+                "threatclass": "none",
+                "dlpdictionaries": "none",
+                "fileclass": "none",
                 "bwthrottle": "none",
                 "servertranstime": random.randint(100, 300),
                 "contenttype": "application/octet-stream",
                 "unscannabletype": "none",
-                "deviceowner": fake.name(),
-                "devicehostname": fake.hostname(),
+                "deviceowner": "Admin",
+                "devicehostname": hostname,
                 "decrypted": random.choice(["yes", "no"])
             }
         }
