@@ -4,8 +4,6 @@ import os
 import random
 import requests
 from datetime import datetime, timedelta
-import pytz
-import yaml
 from faker import Faker
 
 # Set up logging
@@ -29,10 +27,28 @@ def save_config(config):
 # Generate sample logs
 def generate_sample_logs():
     config = load_config()
-    now = datetime.utcnow()
-    sample_logs = []
+    if 'api_url' not in config or 'api_key' not in config:
+        print("\nAPI URL and API Key are not set in the configuration.")
+        return [], ""
 
-    for _ in range(random.randint(5, 10)):
+    api_url = config['api_url']
+    api_key = config['api_key']
+    now = datetime.utcnow()
+
+    internal_sites = config.get('hostnames', ['example.com'])
+    external_sites = [fake.url() for _ in range(5)]
+
+    sample_logs = []
+    for _ in range(25):
+        is_internal = random.choice([True, False])
+        if is_internal:
+            base_url = random.choice(internal_sites)
+            url = f"https://{base_url}/{fake.uri_path()}"
+            referer = f"https://{base_url}/{fake.uri_path()}"
+        else:
+            url = fake.url()
+            referer = fake.url()
+
         log_entry = {
             "sourcetype": "zscalernss-web",
             "event": {
@@ -44,37 +60,37 @@ def generate_sample_logs():
                 "transactionsize": random.randint(1000, 2000),
                 "responsesize": random.randint(500, 1000),
                 "requestsize": random.randint(100, 500),
-                "urlcategory": "news",
+                "urlcategory": "news" if is_internal else "external",
                 "serverip": random.choice(config.get('server_ips', [fake.ipv4()])),
                 "clienttranstime": random.randint(200, 500),
                 "requestmethod": random.choice(["GET", "POST"]),
-                "refererURL": fake.url(),
+                "refererURL": referer,
                 "useragent": random.choice(config.get('user_agents', [fake.user_agent()])),
                 "product": "NSS",
-                "location": "New York",
+                "location": fake.city(),
                 "ClientIP": random.choice(config.get('client_ips', [fake.ipv4()])),
                 "status": random.choice(["200", "404", "500"]),
                 "user": random.choice(config.get('usernames', [fake.user_name()])),
-                "url": fake.url(),
+                "url": url,
                 "vendor": "Zscaler",
                 "hostname": random.choice(config.get('hostnames', [fake.hostname()])),
                 "clientpublicIP": fake.ipv4(),
-                "threatcategory": "none",
-                "threatname": "none",
-                "filetype": "none",
-                "appname": "browser",
+                "threatcategory": fake.word(),
+                "threatname": fake.file_name(extension='exe'),
+                "filetype": "exe",
+                "appname": fake.word(),
                 "pagerisk": random.randint(1, 100),
-                "department": "IT",
-                "urlsupercategory": "information",
-                "appclass": "web",
-                "dlpengine": "none",
-                "urlclass": "news",
-                "threatclass": "none",
-                "dlpdictionaries": "none",
-                "fileclass": "none",
+                "department": fake.word(),
+                "urlsupercategory": fake.word(),
+                "appclass": fake.word(),
+                "dlpengine": fake.word(),
+                "urlclass": fake.word(),
+                "threatclass": fake.word(),
+                "dlpdictionaries": fake.word(),
+                "fileclass": fake.word(),
                 "bwthrottle": "none",
                 "servertranstime": random.randint(100, 300),
-                "contenttype": "text/html",
+                "contenttype": "application/octet-stream",
                 "unscannabletype": "none",
                 "deviceowner": fake.name(),
                 "devicehostname": fake.hostname(),
@@ -83,36 +99,32 @@ def generate_sample_logs():
         }
         sample_logs.append(log_entry)
 
-    return sample_logs
+    curl_command = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{json.dumps(sample_logs[0])}'"
 
-# Send logs to NGSIEM
+    return sample_logs, curl_command
+
+# Send logs
 def send_logs():
+    sample_logs, _ = generate_sample_logs()
     config = load_config()
     if 'api_url' not in config or 'api_key' not in config:
         print("\nAPI URL and API Key are not set in the configuration.")
         return
-    
+
     api_url = config['api_url']
     api_key = config['api_key']
-    sample_logs = generate_sample_logs()
-
+    
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}"
     }
-
-    for log_entry in sample_logs:
-        response = requests.post(api_url, headers=headers, json=log_entry)
+    
+    for log in sample_logs:
+        response = requests.post(api_url, headers=headers, json=log)
         if response.status_code == 200:
             print("Log sent successfully.")
         else:
             print(f"Failed to send log: {response.status_code} {response.text}")
 
-    # Output example message and curl command
-    example_log = json.dumps(sample_logs[0], indent=4)
-    example_curl = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{json.dumps(sample_logs[0])}'"
-
-    print("\nExample log message:")
-    print(example_log)
-    print("\nExample curl command:")
-    print(example_curl)
+if __name__ == "__main__":
+    generate_sample_logs()
