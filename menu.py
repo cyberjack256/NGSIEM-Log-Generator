@@ -1,8 +1,7 @@
 import os
 import json
-import readchar
 import subprocess
-from generate_logs import load_config, save_config, generate_sample_logs
+from generate_logs import load_config, save_config, generate_sample_logs, send_logs
 
 CONFIG_FILE = 'config.json'
 
@@ -69,7 +68,7 @@ def view_cron_job():
 
 # Set cron job
 def set_cron_job():
-    job = "*/10 * * * * python3 /path/to/your/generate_logs.py > /dev/null 2>&1"
+    job = "*/2 * * * * for i in {1..5}; do python3 /path/to/your/send_logs.py > /dev/null 2>&1; sleep 24; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job not in cron_jobs:
@@ -78,13 +77,13 @@ def set_cron_job():
             f.write(cron_jobs)
         subprocess.run(['crontab', 'mycron'])
         os.remove('mycron')
-        print("Cron job set to send logs every 10 minutes.")
+        print("Cron job set to send logs every 2 minutes.")
     else:
         print("Cron job already set.")
 
 # Delete cron job
 def delete_cron_job():
-    job = "*/10 * * * * python3 /path/to/your/generate_logs.py > /dev/null 2>&1"
+    job = "*/2 * * * * for i in {1..5}; do python3 /path/to/your/send_logs.py > /dev/null 2>&1; sleep 24; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job in cron_jobs:
@@ -119,7 +118,7 @@ def main_menu():
 ║  0. Exit                                                    ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
-        choice = readchar.readkey()
+        choice = input("Enter your choice: ").strip()
 
         if choice == '1':
             show_config()
@@ -145,7 +144,7 @@ def main_menu():
                 '7': ('client_ips', '192.168.1.2'),
                 '8': ('hostnames', 'server1.example.com')
             }
-            field_choice = readchar.readkey()
+            field_choice = input("Select a field: ").strip()
             if field_choice in field_map:
                 field, example = field_map[field_choice]
                 add_config_value(field, example)
@@ -154,7 +153,10 @@ def main_menu():
         elif choice == '3':
             clear_config_value()
         elif choice == '4':
-            generate_sample_logs()
+            sample_logs = generate_sample_logs()
+            print("Sample logs generated:")
+            for log in sample_logs:
+                print(json.dumps(log, indent=4))
         elif choice == '5':
             send_logs()
         elif choice == '6':
