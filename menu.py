@@ -158,8 +158,9 @@ def main_menu():
         elif choice == '3':
             clear_config_value()
         elif choice == '4':
-            sample_logs = generate_sample_logs()
-            pager("Sample logs generated:\n" + "\n".join(json.dumps(log, indent=4) for log in sample_logs))
+            sample_logs, curl_command = generate_sample_logs()
+            sample_log_str = json.dumps(sample_logs[0], indent=4)
+            pager(f"Sample log:\n{sample_log_str}\n\nCurl command:\n{curl_command}")
         elif choice == '5':
             send_logs()
         elif choice == '6':
