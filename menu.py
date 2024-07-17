@@ -15,9 +15,9 @@ def load_presets():
 def load_preset(preset):
     config = load_config()
     presets = load_presets()
-    print(f"Available presets: {presets}")  # Debugging line to check loaded presets
-    if preset in presets:
-        config.update(presets[preset])
+    preset_key = str(preset)
+    if preset_key in presets:
+        config.update(presets[preset_key])
         save_config(config)
         print(f"Preset {preset} loaded successfully.")
     else:
