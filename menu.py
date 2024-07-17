@@ -2,60 +2,44 @@ import os
 import json
 from generate_logs import load_config, save_config, generate_sample_logs
 
-PRESETS_FILE = 'presets.json'
 CONFIG_FILE = 'config.json'
 
-# Load presets from a separate JSON file
-def load_presets():
-    with open(PRESETS_FILE, 'r') as file:
-        return json.load(file)
-
-# Load configuration
 def load_config():
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, 'r') as file:
             return json.load(file)
     return {}
 
-# Save configuration
 def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
         json.dump(config, file, indent=4)
 
-# Load preset configuration
-def load_preset(preset):
-    config = load_config()
-    presets = load_presets()
-    print(f"Available presets: {presets}")  # Debug print to show available presets
-    preset_key = str(preset)  # Ensure preset key is a string
-    if preset_key in presets:
-        print(f"Loading preset {preset_key}...")  # Debug print to indicate loading preset
-        config.update(presets[preset_key])
-        save_config(config)
-        print(f"Preset {preset_key} loaded successfully.")
-    else:
-        print("Invalid preset selected.")
-
-# Add configuration value
-def add_config_value(field, example):
-    config = load_config()
-    values = []
-    while True:
-        new_value = input(f"Enter a value for {field} (e.g., {example}) or press [Enter] to return to the menu: ").strip()
-        if not new_value:
-            break
-        values.append(new_value)
-    if values:
-        config[field] = values
-        save_config(config)
-        print(f"Configuration updated: {field} set to {config[field]}")
-
-# Show current configuration
 def show_config():
     config = load_config()
     print(json.dumps(config, indent=4))
 
-# Main menu
+def add_config_value(field, example):
+    config = load_config()
+    print(f"\nYou are updating the '{field}' field. Example: {example}")
+    print("Press [Enter] without typing anything to stop adding values and return to the main menu.\n")
+
+    if field not in config:
+        config[field] = []
+
+    while True:
+        new_value = input(f"Enter a value for {field} (or press [Enter] to finish): ").strip()
+        if not new_value:
+            break
+        if new_value in config[field]:
+            print(f"'{new_value}' is already in the '{field}' list. Try another value.")
+        else:
+            config[field].append(new_value)
+            print(f"'{new_value}' added to the '{field}' list.")
+
+    save_config(config)
+    print(f"\nConfiguration updated: {field} set to {config[field]}")
+    input("\nPress Enter to return to the main menu...")
+
 def main_menu():
     while True:
         os.system('clear')
@@ -69,7 +53,6 @@ def main_menu():
 ║  1. Show current configuration                              ║
 ║  2. Add a configuration value                               ║
 ║  3. Generate sample logs                                    ║
-║  4. Load preset configuration                               ║
 ║  0. Exit                                                    ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -77,6 +60,7 @@ def main_menu():
 
         if choice == '1':
             show_config()
+            input("\nPress Enter to return to the main menu...")
         elif choice == '2':
             print("""
             Select a field to add values to:
@@ -104,23 +88,16 @@ def main_menu():
                 field, example = field_map[field_choice]
                 add_config_value(field, example)
             else:
-                print("Invalid field choice.")
+                print("Invalid field choice. Press Enter to return to the main menu.")
+                input()
         elif choice == '3':
             generate_sample_logs()
-        elif choice == '4':
-            print("""
-            1. Bird Names and Comical Bird Adversaries
-            2. CrowdStrike Adversaries and Cool Analyst Names
-            3. Celestial Body Names and Comical Celestial Adversaries
-            """)
-            preset_choice = input("Select a preset: ").strip()
-            load_preset(preset_choice)
+            input("\nPress Enter to return to the main menu...")
         elif choice == '0':
             break
         else:
             print("Invalid choice. Please try again.")
-        
-        input("\nPress Enter to continue...")
+            input("\nPress Enter to continue...")
 
 if __name__ == "__main__":
     main_menu()
