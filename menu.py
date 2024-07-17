@@ -1,66 +1,103 @@
 import os
 import json
-from generate_logs import load_config, save_config, create_sample_log_entry
+import readchar
+import subprocess
+from generate_logs import load_config, save_config, generate_sample_logs
 
 CONFIG_FILE = 'config.json'
 
+# Load configuration
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r') as file:
+            return json.load(file)
+    return {}
+
+# Save configuration
+def save_config(config):
+    with open(CONFIG_FILE, 'w') as file:
+        json.dump(config, file, indent=4)
+
+# Show current configuration
 def show_config():
     config = load_config()
     print(json.dumps(config, indent=4))
 
-def clear_config_value(field):
-    config = load_config()
-    if field in config:
-        config[field] = [] if isinstance(config[field], list) else ""
-        save_config(config)
-        print(f"Configuration cleared: {field} is now {config[field]}")
-    else:
-        print(f"Field '{field}' not found in configuration.")
-    input("\nPress Enter to return to the main menu...")
-
+# Add configuration value
 def add_config_value(field, example):
     config = load_config()
-    print(f"\nYou are updating the '{field}' field. Example: {example}")
-    print("Enter a comma-separated list of values, or press [Enter] without typing anything to return to the main menu.\n")
-
+    values = []
+    print(f"You are updating the '{field}' field. Example: {example}")
+    print("Press [Enter] without typing anything to stop adding values and return to the main menu.")
     while True:
-        new_value = input(f"Enter values for {field} (or press [Enter] to finish): ").strip()
+        new_value = input(f"Enter a value for {field} (or press [Enter] to finish): ").strip()
         if not new_value:
             break
-        if ',' in new_value:
-            values = [val.strip() for val in new_value.split(',')]
-        else:
-            values = [new_value]
-        
-        if isinstance(config[field], list):
+        values.append(new_value)
+    if values:
+        if isinstance(config.get(field), list):
             config[field].extend(values)
-            config[field] = list(set(config[field]))  # Remove duplicates
         else:
-            config[field] = values[0]
-
+            config[field] = values if len(values) > 1 else values[0]
         save_config(config)
-        print(f"\nConfiguration updated: {field} set to {config[field]}")
-        input("\nPress Enter to return to the main menu...")
+        print(f"Configuration updated: {field} set to {config[field]}")
 
-def generate_sample_logs():
+# Clear configuration value
+def clear_config_value():
     config = load_config()
-    sample_log_entry = create_sample_log_entry(config)
-    print("\nSample Log Entry:")
-    print(json.dumps(sample_log_entry, indent=4))
-    print("\nSample CURL Command:")
-    api_url = config.get('api_url', 'https://your-ngsiem-api-url')
-    api_key = config.get('api_key', 'your_api_key')
-    curl_command = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{json.dumps(sample_log_entry)}'"
-    print(curl_command)
-    input("\nPress Q to return to the main menu...")
+    print("Select a field to clear values from:")
+    fields = list(config.keys())
+    for i, field in enumerate(fields, 1):
+        print(f"{i}. {field}")
+    choice = input("Select a field: ").strip()
+    if choice.isdigit() and 1 <= int(choice) <= len(fields):
+        field = fields[int(choice) - 1]
+        config[field] = [] if isinstance(config[field], list) else ""
+        save_config(config)
+        print(f"Configuration cleared for field: {field}")
+    else:
+        print("Invalid field choice.")
 
-def send_logs_to_ngsiem():
-    from generate_logs import send_log_entry
-    config = load_config()
-    sample_log_entry = create_sample_log_entry(config)
-    send_log_entry(sample_log_entry, config)
-    input("\nPress Enter to return to the main menu...")
+# View cron job
+def view_cron_job():
+    result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
+    if result.returncode == 0:
+        print("Current cron jobs:")
+        print(result.stdout)
+    else:
+        print("No cron jobs set.")
 
+# Set cron job
+def set_cron_job():
+    job = "*/10 * * * * python3 /path/to/your/generate_logs.py > /dev/null 2>&1"
+    result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
+    cron_jobs = result.stdout if result.returncode == 0 else ""
+    if job not in cron_jobs:
+        cron_jobs += f"{job}\n"
+        with open('mycron', 'w') as f:
+            f.write(cron_jobs)
+        subprocess.run(['crontab', 'mycron'])
+        os.remove('mycron')
+        print("Cron job set to send logs every 10 minutes.")
+    else:
+        print("Cron job already set.")
+
+# Delete cron job
+def delete_cron_job():
+    job = "*/10 * * * * python3 /path/to/your/generate_logs.py > /dev/null 2>&1"
+    result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
+    cron_jobs = result.stdout if result.returncode == 0 else ""
+    if job in cron_jobs:
+        cron_jobs = cron_jobs.replace(f"{job}\n", "")
+        with open('mycron', 'w') as f:
+            f.write(cron_jobs)
+        subprocess.run(['crontab', 'mycron'])
+        os.remove('mycron')
+        print("Cron job deleted.")
+    else:
+        print("No matching cron job found.")
+
+# Main menu
 def main_menu():
     while True:
         os.system('clear')
@@ -76,14 +113,16 @@ def main_menu():
 ║  3. Clear a configuration value                             ║
 ║  4. Generate sample logs                                    ║
 ║  5. Send logs to NGSIEM                                     ║
+║  6. View cron job                                           ║
+║  7. Set cron job                                            ║
+║  8. Delete cron job                                         ║
 ║  0. Exit                                                    ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
-        choice = input("Enter your choice: ").strip()
+        choice = readchar.readkey()
 
         if choice == '1':
             show_config()
-            input("\nPress Enter to return to the main menu...")
         elif choice == '2':
             print("""
             Select a field to add values to:
@@ -99,58 +138,37 @@ def main_menu():
             field_map = {
                 '1': ('api_url', 'https://your-ngsiem-api-url'),
                 '2': ('api_key', 'your_api_key'),
-                '3': ('usernames', 'alice, bob'),
-                '4': ('mac_addresses', '00:1A:2B:3C:4D:5E, 11:22:33:44:55:66'),
-                '5': ('user_agents', 'Mozilla/5.0, Chrome/91.0'),
-                '6': ('server_ips', '192.168.1.1, 192.168.1.2'),
-                '7': ('client_ips', '10.0.0.1, 10.0.0.2'),
-                '8': ('hostnames', 'server1.example.com, server2.example.com')
+                '3': ('usernames', 'alice'),
+                '4': ('mac_addresses', '00:1A:2B:3C:4D:5E'),
+                '5': ('user_agents', 'Mozilla/5.0'),
+                '6': ('server_ips', '192.168.1.1'),
+                '7': ('client_ips', '192.168.1.2'),
+                '8': ('hostnames', 'server1.example.com')
             }
-            field_choice = input("Select a field: ").strip()
+            field_choice = readchar.readkey()
             if field_choice in field_map:
                 field, example = field_map[field_choice]
                 add_config_value(field, example)
             else:
-                print("Invalid field choice. Press Enter to return to the main menu.")
-                input()
+                print("Invalid field choice.")
         elif choice == '3':
-            print("""
-            Select a field to clear values from:
-            1. api_url
-            2. api_key
-            3. usernames
-            4. mac_addresses
-            5. user_agents
-            6. server_ips
-            7. client_ips
-            8. hostnames
-            """)
-            field_map = {
-                '1': 'api_url',
-                '2': 'api_key',
-                '3': 'usernames',
-                '4': 'mac_addresses',
-                '5': 'user_agents',
-                '6': 'server_ips',
-                '7': 'client_ips',
-                '8': 'hostnames'
-            }
-            field_choice = input("Select a field: ").strip()
-            if field_choice in field_map:
-                field = field_map[field_choice]
-                clear_config_value(field)
-            else:
-                print("Invalid field choice. Press Enter to return to the main menu.")
-                input()
+            clear_config_value()
         elif choice == '4':
             generate_sample_logs()
         elif choice == '5':
-            send_logs_to_ngsiem()
+            send_logs()
+        elif choice == '6':
+            view_cron_job()
+        elif choice == '7':
+            set_cron_job()
+        elif choice == '8':
+            delete_cron_job()
         elif choice == '0':
             break
         else:
             print("Invalid choice. Please try again.")
-            input("\nPress Enter to continue...")
+        
+        input("\nPress Enter to continue...")
 
 if __name__ == "__main__":
     main_menu()
