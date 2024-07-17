@@ -5,38 +5,29 @@ import random
 import requests
 from datetime import datetime, timedelta
 import pytz
-import yaml
 from faker import Faker
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
-CONFIG_FILE = 'config.yaml'
+CONFIG_FILE = 'config.json'
 fake = Faker()
 
 # Load configuration
 def load_config():
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, 'r') as file:
-            return yaml.safe_load(file)
+            return json.load(file)
     return {}
 
 # Save configuration
 def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
-        yaml.safe_dump(config, file)
+        json.dump(config, file, indent=4)
 
-# Generate sample logs
-def generate_sample_logs():
-    config = load_config()
-    if 'api_url' not in config or 'api_key' not in config:
-        print("\nAPI URL and API Key are not set in the configuration.")
-        return
-    
-    api_url = config['api_url']
-    api_key = config['api_key']
+# Create a sample log entry
+def create_sample_log_entry(config):
     now = datetime.utcnow()
-    
     log_entry = {
         "sourcetype": "zscalernss-web",
         "event": {
@@ -48,43 +39,53 @@ def generate_sample_logs():
             "transactionsize": random.randint(1000, 2000),
             "responsesize": random.randint(500, 1000),
             "requestsize": random.randint(100, 500),
-            "urlcategory": fake.word(),
-            "serverip": random.choice(config.get('server_ips', [fake.ipv4()])),
+            "urlcategory": "news",
+            "serverip": random.choice(config.get('server_ips', ["192.168.1.1", "192.168.1.2"])),
             "clienttranstime": random.randint(200, 500),
-            "requestmethod": random.choice(["GET", "POST"]),
-            "refererURL": fake.url(),
-            "useragent": random.choice(config.get('user_agents', [fake.user_agent()])),
+            "requestmethod": "GET",
+            "refererURL": "https://news.example.com",
+            "useragent": random.choice(config.get('user_agents', ["Mozilla/5.0", "Chrome/91.0"])),
             "product": "NSS",
-            "location": fake.city(),
-            "ClientIP": random.choice(config.get('client_ips', [fake.ipv4()])),
-            "status": random.choice(["200", "404", "500"]),
-            "user": random.choice(config.get('usernames', [fake.user_name()])),
-            "url": fake.url(),
+            "location": "New York",
+            "ClientIP": random.choice(config.get('client_ips', ["10.0.0.1", "10.0.0.2"])),
+            "status": "200",
+            "user": random.choice(config.get('usernames', ["sparrow", "robin", "eagle"])),
+            "url": "https://news.example.com/article",
             "vendor": "Zscaler",
-            "hostname": random.choice(config.get('hostnames', [fake.hostname()])),
-            "clientpublicIP": fake.ipv4(),
-            "threatcategory": fake.word(),
-            "threatname": fake.file_name(extension='exe'),
-            "filetype": "exe",
-            "appname": fake.word(),
-            "pagerisk": random.randint(1, 100),
-            "department": fake.word(),
-            "urlsupercategory": fake.word(),
-            "appclass": fake.word(),
-            "dlpengine": fake.word(),
-            "urlclass": fake.word(),
-            "threatclass": fake.word(),
-            "dlpdictionaries": fake.word(),
-            "fileclass": fake.word(),
+            "hostname": random.choice(config.get('hostnames', ["birdserver.example.com", "eaglehost.example.com"])),
+            "clientpublicIP": "203.0.113.0",
+            "threatcategory": "none",
+            "threatname": "none",
+            "filetype": "none",
+            "appname": "browser",
+            "pagerisk": 10,
+            "department": "IT",
+            "urlsupercategory": "information",
+            "appclass": "web",
+            "dlpengine": "none",
+            "urlclass": "news",
+            "threatclass": "none",
+            "dlpdictionaries": "none",
+            "fileclass": "none",
             "bwthrottle": "none",
             "servertranstime": random.randint(100, 300),
-            "contenttype": "application/octet-stream",
+            "contenttype": "text/html",
             "unscannabletype": "none",
-            "deviceowner": fake.name(),
-            "devicehostname": fake.hostname(),
-            "decrypted": random.choice(["yes", "no"])
+            "deviceowner": "Admin",
+            "devicehostname": "workstation.example.com",
+            "decrypted": "no"
         }
     }
+    return log_entry
+
+# Send log entry to NGSIEM
+def send_log_entry(log_entry, config):
+    if 'api_url' not in config or 'api_key' not in config:
+        print("\nAPI URL and API Key are not set in the configuration.")
+        return
+
+    api_url = config['api_url']
+    api_key = config['api_key']
 
     headers = {
         "Content-Type": "application/json",
@@ -97,4 +98,6 @@ def generate_sample_logs():
         print(f"Failed to send log: {response.status_code} {response.text}")
 
 if __name__ == "__main__":
-    generate_sample_logs()
+    config = load_config()
+    sample_log_entry = create_sample_log_entry(config)
+    send_log_entry(sample_log_entry, config)
