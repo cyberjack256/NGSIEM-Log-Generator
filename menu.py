@@ -1,11 +1,26 @@
 import os
-import yaml
+import json
 from generate_logs import load_config, save_config, generate_sample_logs
 
-# Load presets from a separate YAML file
+PRESETS_FILE = 'presets.json'
+CONFIG_FILE = 'config.json'
+
+# Load presets from a separate JSON file
 def load_presets():
-    with open('presets.yaml', 'r') as file:
-        return yaml.safe_load(file)
+    with open(PRESETS_FILE, 'r') as file:
+        return json.load(file)
+
+# Load configuration
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r') as file:
+            return json.load(file)
+    return {}
+
+# Save configuration
+def save_config(config):
+    with open(CONFIG_FILE, 'w') as file:
+        json.dump(config, file, indent=4)
 
 # Load preset configuration
 def load_preset(preset):
@@ -38,7 +53,7 @@ def add_config_value(field, example):
 # Show current configuration
 def show_config():
     config = load_config()
-    print(yaml.dump(config, sort_keys=False))
+    print(json.dumps(config, indent=4))
 
 # Main menu
 def main_menu():
