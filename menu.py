@@ -12,11 +12,12 @@ def load_preset(preset):
     config = load_config()
     presets = load_presets()
     print(f"Available presets: {presets}")  # Debug print to show available presets
-    if preset in presets:
-        print(f"Loading preset {preset}...")  # Debug print to indicate loading preset
-        config.update(presets[preset])
+    preset_key = str(preset)  # Ensure preset key is a string
+    if preset_key in presets:
+        print(f"Loading preset {preset_key}...")  # Debug print to indicate loading preset
+        config.update(presets[preset_key])
         save_config(config)
-        print(f"Preset {preset} loaded successfully.")
+        print(f"Preset {preset_key} loaded successfully.")
     else:
         print("Invalid preset selected.")
 
