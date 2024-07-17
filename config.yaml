@@ -1,0 +1,8 @@
+api_url: "https://your-ngsiem-api-url"
+api_key: "your_api_key"
+usernames: []
+mac_addresses: []
+user_agents: []
+server_ips: []
+client_ips: []
+hostnames: []
