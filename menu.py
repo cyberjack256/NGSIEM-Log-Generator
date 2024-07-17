@@ -2,22 +2,19 @@ import os
 import yaml
 from generate_logs import load_config, save_config, generate_sample_logs
 
-PRESETS_FILE = 'presets.yaml'
-
-# Load presets from file
+# Load presets from a separate YAML file
 def load_presets():
-    if os.path.exists(PRESETS_FILE):
-        with open(PRESETS_FILE, 'r') as file:
-            return yaml.safe_load(file)
-    return {}
+    with open('presets.yaml', 'r') as file:
+        return yaml.safe_load(file)
 
 # Load preset configuration
 def load_preset(preset):
     config = load_config()
     presets = load_presets()
-    preset_key = str(preset)
-    if preset_key in presets:
-        config.update(presets[preset_key])
+    print(f"Available presets: {presets}")  # Debug print to show available presets
+    if preset in presets:
+        print(f"Loading preset {preset}...")  # Debug print to indicate loading preset
+        config.update(presets[preset])
         save_config(config)
         print(f"Preset {preset} loaded successfully.")
     else:
