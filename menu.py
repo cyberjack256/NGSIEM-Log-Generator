@@ -20,7 +20,8 @@ def save_config(config):
 # Show current configuration
 def show_config():
     config = load_config()
-    print(json.dumps(config, indent=4))
+    config_str = json.dumps(config, indent=4)
+    pager(config_str)
 
 # Add configuration value
 def add_config_value(field, example):
@@ -61,14 +62,13 @@ def clear_config_value():
 def view_cron_job():
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     if result.returncode == 0:
-        print("Current cron jobs:")
-        print(result.stdout)
+        pager("Current cron jobs:\n" + result.stdout)
     else:
         print("No cron jobs set.")
 
 # Set cron job
 def set_cron_job():
-    job = "*/2 * * * * for i in {1..5}; do python3 /path/to/your/send_logs.py > /dev/null 2>&1; sleep 24; done"
+    job = "*/2 * * * * for i in {1..15}; do python3 /path/to/your/send_logs.py > /dev/null 2>&1; sleep 8; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job not in cron_jobs:
@@ -83,7 +83,7 @@ def set_cron_job():
 
 # Delete cron job
 def delete_cron_job():
-    job = "*/2 * * * * for i in {1..5}; do python3 /path/to/your/send_logs.py > /dev/null 2>&1; sleep 24; done"
+    job = "*/2 * * * * for i in {1..15}; do python3 /path/to/your/send_logs.py > /dev/null 2>&1; sleep 8; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job in cron_jobs:
@@ -95,6 +95,11 @@ def delete_cron_job():
         print("Cron job deleted.")
     else:
         print("No matching cron job found.")
+
+# Use less for scrolling output
+def pager(content):
+    pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
+    pager_process.communicate(input=content.encode('utf-8'))
 
 # Main menu
 def main_menu():
@@ -154,9 +159,7 @@ def main_menu():
             clear_config_value()
         elif choice == '4':
             sample_logs = generate_sample_logs()
-            print("Sample logs generated:")
-            for log in sample_logs:
-                print(json.dumps(log, indent=4))
+            pager("Sample logs generated:\n" + "\n".join(json.dumps(log, indent=4) for log in sample_logs))
         elif choice == '5':
             send_logs()
         elif choice == '6':
