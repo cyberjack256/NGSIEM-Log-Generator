@@ -89,7 +89,7 @@ def generate_sample_logs():
                 "filetype": "none",
                 "appname": "browser",
                 "pagerisk": random.randint(1, 100),
-                "department": random.choice(["IT", "HR", "Finance"]),
+                "department": random.choice(["IT", "SOC", "Help-Desk"]),
                 "urlsupercategory": "information",
                 "appclass": "web",
                 "dlpengine": "none",
