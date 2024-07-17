@@ -1,14 +1,28 @@
 import os
 import json
-from generate_logs import load_config, save_config, generate_sample_logs
 
 CONFIG_FILE = 'config.json'
 
 def load_config():
+    default_config = {
+        "api_url": "",
+        "api_key": "",
+        "usernames": [],
+        "mac_addresses": [],
+        "user_agents": [],
+        "server_ips": [],
+        "client_ips": [],
+        "hostnames": []
+    }
+    
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, 'r') as file:
-            return json.load(file)
-    return {}
+            config = json.load(file)
+            for key in default_config:
+                if key not in config:
+                    config[key] = default_config[key]
+            return config
+    return default_config
 
 def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
@@ -23,18 +37,21 @@ def add_config_value(field, example):
     print(f"\nYou are updating the '{field}' field. Example: {example}")
     print("Press [Enter] without typing anything to stop adding values and return to the main menu.\n")
 
-    if field not in config:
-        config[field] = []
-
-    while True:
+    if isinstance(config[field], list):
+        while True:
+            new_value = input(f"Enter a value for {field} (or press [Enter] to finish): ").strip()
+            if not new_value:
+                break
+            if new_value in config[field]:
+                print(f"'{new_value}' is already in the '{field}' list. Try another value.")
+            else:
+                config[field].append(new_value)
+                print(f"'{new_value}' added to the '{field}' list.")
+    else:
         new_value = input(f"Enter a value for {field} (or press [Enter] to finish): ").strip()
-        if not new_value:
-            break
-        if new_value in config[field]:
-            print(f"'{new_value}' is already in the '{field}' list. Try another value.")
-        else:
-            config[field].append(new_value)
-            print(f"'{new_value}' added to the '{field}' list.")
+        if new_value:
+            config[field] = new_value
+            print(f"'{field}' set to '{new_value}'")
 
     save_config(config)
     print(f"\nConfiguration updated: {field} set to {config[field]}")
