@@ -25,9 +25,23 @@ def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
         json.dump(config, file, indent=4)
 
-# Create a sample log entry
-def create_sample_log_entry(config):
+# Generate random URL within a domain
+def generate_random_url(domain):
+    paths = ["news", "articles", "blog", "posts", "updates"]
+    return f"https://{domain}/{random.choice(paths)}"
+
+# Generate sample logs
+def generate_sample_logs():
+    config = load_config()
+    if 'api_url' not in config or 'api_key' not in config:
+        print("\nAPI URL and API Key are not set in the configuration.")
+        return
+
+    api_url = config['api_url']
+    api_key = config['api_key']
     now = datetime.utcnow()
+    user = random.choice(config['users'])
+
     log_entry = {
         "sourcetype": "zscalernss-web",
         "event": {
@@ -40,25 +54,25 @@ def create_sample_log_entry(config):
             "responsesize": random.randint(500, 1000),
             "requestsize": random.randint(100, 500),
             "urlcategory": "news",
-            "serverip": random.choice(config.get('server_ips', ["192.168.1.1", "192.168.1.2"])),
+            "serverip": random.choice(config['server_ips']),
             "clienttranstime": random.randint(200, 500),
-            "requestmethod": "GET",
-            "refererURL": "https://news.example.com",
-            "useragent": random.choice(config.get('user_agents', ["Mozilla/5.0", "Chrome/91.0"])),
+            "requestmethod": random.choice(["GET", "POST"]),
+            "refererURL": generate_random_url(random.choice(config['domains'])),
+            "useragent": random.choice(config['user_agents']),
             "product": "NSS",
-            "location": "New York",
-            "ClientIP": random.choice(config.get('client_ips', ["10.0.0.1", "10.0.0.2"])),
-            "status": "200",
-            "user": random.choice(config.get('usernames', ["sparrow", "robin", "eagle"])),
-            "url": "https://news.example.com/article",
+            "location": fake.city(),
+            "ClientIP": random.choice(config['client_ips']),
+            "status": random.choice(["200", "404", "500"]),
+            "user": user['email'],
+            "url": generate_random_url(random.choice(config['domains'])),
             "vendor": "Zscaler",
-            "hostname": random.choice(config.get('hostnames', ["birdserver.example.com", "eaglehost.example.com"])),
-            "clientpublicIP": "203.0.113.0",
+            "hostname": user['hostname'],
+            "clientpublicIP": fake.ipv4(),
             "threatcategory": "none",
             "threatname": "none",
             "filetype": "none",
             "appname": "browser",
-            "pagerisk": 10,
+            "pagerisk": random.randint(1, 100),
             "department": "IT",
             "urlsupercategory": "information",
             "appclass": "web",
@@ -71,21 +85,11 @@ def create_sample_log_entry(config):
             "servertranstime": random.randint(100, 300),
             "contenttype": "text/html",
             "unscannabletype": "none",
-            "deviceowner": "Admin",
-            "devicehostname": "workstation.example.com",
-            "decrypted": "no"
+            "deviceowner": fake.name(),
+            "devicehostname": user['hostname'],
+            "decrypted": random.choice(["yes", "no"])
         }
     }
-    return log_entry
-
-# Send log entry to NGSIEM
-def send_log_entry(log_entry, config):
-    if 'api_url' not in config or 'api_key' not in config:
-        print("\nAPI URL and API Key are not set in the configuration.")
-        return
-
-    api_url = config['api_url']
-    api_key = config['api_key']
 
     headers = {
         "Content-Type": "application/json",
@@ -98,6 +102,4 @@ def send_log_entry(log_entry, config):
         print(f"Failed to send log: {response.status_code} {response.text}")
 
 if __name__ == "__main__":
-    config = load_config()
-    sample_log_entry = create_sample_log_entry(config)
-    send_log_entry(sample_log_entry, config)
+    generate_sample_logs()
