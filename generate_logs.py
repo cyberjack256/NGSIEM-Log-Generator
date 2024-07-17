@@ -24,6 +24,10 @@ def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
         json.dump(config, file, indent=4)
 
+# Generate email addresses based on usernames and domains
+def generate_email(username, domain):
+    return f"{username}@{domain}"
+
 # Generate sample logs
 def generate_sample_logs():
     config = load_config()
@@ -37,13 +41,14 @@ def generate_sample_logs():
 
     domains = config.get('domains', ['example.com'])
     hostnames = config.get('hostnames', ['host1.example.com'])
-    emails = config.get('emails', ['user@example.com'])
+    usernames = config.get('usernames', ['user'])
 
     sample_logs = []
     for _ in range(25):
         base_domain = random.choice(domains)
         hostname = random.choice(hostnames)
-        email = random.choice(emails)
+        username = random.choice(usernames)
+        email = generate_email(username, base_domain)
 
         internal_url = f"https://{base_domain}/{fake.uri_path()}"
         referer_url = f"https://{base_domain}/{fake.uri_path()}"
