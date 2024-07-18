@@ -1,3 +1,5 @@
+# Location: generate_logs.py
+
 import json
 import logging
 import os
@@ -24,36 +26,32 @@ def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
         json.dump(config, file, indent=4)
 
-# Generate email addresses based on usernames and domains
-def generate_email(username, domain):
-    return f"{username}@{domain}"
-
 # Generate realistic sample logs
 def generate_sample_logs():
     config = load_config()
-    if 'api_url' not in config or 'api_key' not in config:
+    if 'zscaler_api_url' not in config or 'zscaler_api_key' not in config:
         print("\nAPI URL and API Key are not set in the configuration.")
         return [], ""
 
-    api_url = config['api_url']
-    api_key = config['api_key']
+    api_url = config['zscaler_api_url']
+    api_key = config['zscaler_api_key']
     now = datetime.utcnow()
 
     domains = config.get('domains', ['example.com'])
-    users = config.get('users', [{'username': 'user', 'email': 'user@example.com', 'hostname': 'host1.example.com'}])
+    hostnames = config.get('hostnames', ['host1.example.com'])
+    users = config.get('users', [])
 
     sample_logs = []
     for _ in range(25):
         user = random.choice(users)
-        base_domain = user['email'].split('@')[-1]
-        username = user['username']
+        base_domain = random.choice(domains)
         hostname = user['hostname']
         email = user['email']
 
         internal_url = f"https://{base_domain}/{fake.uri_path()}"
         referer_url = f"https://{base_domain}/{fake.uri_path()}"
         external_url = fake.url()
-        
+
         is_internal = random.choice([True, False])
         url = internal_url if is_internal else external_url
         referer = referer_url if is_internal else external_url
@@ -113,15 +111,15 @@ def generate_sample_logs():
     return sample_logs, curl_command
 
 # Send logs
-def send_logs():
-    sample_logs, _ = generate_sample_logs()
+def send_logs(api_url_key, api_key_key):
     config = load_config()
-    if 'api_url' not in config or 'api_key' not in config:
-        print("\nAPI URL and API Key are not set in the configuration.")
+    if api_url_key not in config or api_key_key not in config:
+        print(f"\nAPI URL and API Key are not set in the configuration for {api_url_key} and {api_key_key}.")
         return
 
-    api_url = config['api_url']
-    api_key = config['api_key']
+    api_url = config[api_url_key]
+    api_key = config[api_key_key]
+    sample_logs, _ = generate_sample_logs()
     
     headers = {
         "Content-Type": "application/json",
