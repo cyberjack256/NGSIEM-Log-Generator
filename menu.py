@@ -2,7 +2,7 @@ import os
 import json
 import subprocess
 from generate_logs import load_config, save_config, generate_sample_logs, send_logs
-from generate_syslog_logs import generate_sample_syslogs, write_syslog_to_file
+from generate_syslogs import generate_sample_syslogs, send_syslogs, write_syslog_to_file
 
 CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
 
