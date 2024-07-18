@@ -66,9 +66,9 @@ def view_cron_job():
     else:
         print("No cron jobs set.")
 
-# Set cron job1
-def set_cron_job():
-    job = "*/2 * * * * for i in {1..50}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_logs.py > /dev/null 2>&1; sleep 8; done"
+# Set cron job for Zscaler logs
+def set_cron_job_zscaler():
+    job = "*/2 * * * * for i in {1..15}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_logs.py > /dev/null 2>&1; sleep 8; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job not in cron_jobs:
@@ -77,13 +77,13 @@ def set_cron_job():
             f.write(cron_jobs)
         subprocess.run(['crontab', 'mycron'])
         os.remove('mycron')
-        print("Cron job set to send logs every 2 minutes.")
+        print("Cron job set to send Zscaler logs every 2 minutes.")
     else:
         print("Cron job already set.")
 
-# Delete cron job
-def delete_cron_job():
-    job = "*/2 * * * * for i in {1..50}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_logs.py > /dev/null 2>&1; sleep 8; done"
+# Delete cron job for Zscaler logs
+def delete_cron_job_zscaler():
+    job = "*/2 * * * * for i in {1..15}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_logs.py > /dev/null 2>&1; sleep 8; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job in cron_jobs:
@@ -92,9 +92,63 @@ def delete_cron_job():
             f.write(cron_jobs)
         subprocess.run(['crontab', 'mycron'])
         os.remove('mycron')
-        print("Cron job deleted.")
+        print("Cron job for Zscaler logs deleted.")
     else:
         print("No matching cron job found.")
+
+# Set cron job for Syslog
+def set_cron_job_syslog():
+    job = "*/2 * * * * for i in {1..15}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslogs.py > /dev/null 2>&1; sleep 8; done"
+    result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
+    cron_jobs = result.stdout if result.returncode == 0 else ""
+    if job not in cron_jobs:
+        cron_jobs += f"{job}\n"
+        with open('mycron', 'w') as f:
+            f.write(cron_jobs)
+        subprocess.run(['crontab', 'mycron'])
+        os.remove('mycron')
+        print("Cron job set to send Syslogs every 2 minutes.")
+    else:
+        print("Cron job already set.")
+
+# Delete cron job for Syslog
+def delete_cron_job_syslog():
+    job = "*/2 * * * * for i in {1..15}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslogs.py > /dev/null 2>&1; sleep 8; done"
+    result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
+    cron_jobs = result.stdout if result.returncode == 0 else ""
+    if job in cron_jobs:
+        cron_jobs = cron_jobs.replace(f"{job}\n", "")
+        with open('mycron', 'w') as f:
+            f.write(cron_jobs)
+        subprocess.run(['crontab', 'mycron'])
+        os.remove('mycron')
+        print("Cron job for Syslogs deleted.")
+    else:
+        print("No matching cron job found.")
+
+# Start LogScale log collector
+def start_logshipper():
+    result = subprocess.run(['start-logshipper'], capture_output=True, text=True)
+    if result.returncode == 0:
+        print("LogScale log collector started successfully.")
+    else:
+        print(f"Failed to start LogScale log collector: {result.stderr}")
+
+# Stop LogScale log collector
+def stop_logshipper():
+    result = subprocess.run(['stop-logshipper'], capture_output=True, text=True)
+    if result.returncode == 0:
+        print("LogScale log collector stopped successfully.")
+    else:
+        print(f"Failed to stop LogScale log collector: {result.stderr}")
+
+# Status of LogScale log collector
+def status_logshipper():
+    result = subprocess.run(['status-logshipper'], capture_output=True, text=True)
+    if result.returncode == 0:
+        print("LogScale log collector status:\n" + result.stdout)
+    else:
+        print(f"Failed to get LogScale log collector status: {result.stderr}")
 
 # Use less for scrolling output
 def pager(content):
@@ -116,10 +170,16 @@ def main_menu():
 ║  2. Add a configuration value                               ║
 ║  3. Clear a configuration value                             ║
 ║  4. Generate sample logs                                    ║
-║  5. Send logs to NGSIEM                                     ║
-║  6. View cron job                                           ║
-║  7. Set cron job                                            ║
-║  8. Delete cron job                                         ║
+║  5. Generate sample syslogs                                 ║
+║  6. Send logs to NGSIEM                                     ║
+║  7. View cron job                                           ║
+║  8. Set cron job for Zscaler logs                           ║
+║  9. Delete cron job for Zscaler logs                        ║
+║ 10. Set cron job for Syslogs                                ║
+║ 11. Delete cron job for Syslogs                             ║
+║ 12. Start LogScale log collector                            ║
+║ 13. Stop LogScale log collector                             ║
+║ 14. Status of LogScale log collector                        ║
 ║  0. Exit                                                    ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -162,13 +222,26 @@ def main_menu():
             sample_log_str = json.dumps(sample_logs[0], indent=4)
             pager(f"Sample log:\n{sample_log_str}\n\nCurl command:\n{curl_command}")
         elif choice == '5':
-            send_logs()
+            # Implement generate_sample_syslogs here
+            pass
         elif choice == '6':
-            view_cron_job()
+            send_logs()
         elif choice == '7':
-            set_cron_job()
+            view_cron_job()
         elif choice == '8':
-            delete_cron_job()
+            set_cron_job_zscaler()
+        elif choice == '9':
+            delete_cron_job_zscaler()
+        elif choice == '10':
+            set_cron_job_syslog()
+        elif choice == '11':
+            delete_cron_job_syslog()
+        elif choice == '12':
+            start_logshipper()
+        elif choice == '13':
+            stop_logshipper()
+        elif choice == '14':
+            status_logshipper()
         elif choice == '0':
             break
         else:
