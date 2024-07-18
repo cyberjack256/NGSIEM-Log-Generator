@@ -252,6 +252,7 @@ def zscaler_menu():
         
         input("\nPress Enter to continue...")
 
+# Syslog menu
 def syslog_menu():
     while True:
         os.system('clear')
@@ -262,14 +263,13 @@ def syslog_menu():
 ║  Please select an option:                                   ║
 ║                                                             ║
 ║  1. Show current configuration                              ║
-║  2. Add a configuration value                               ║
-║  3. Clear a configuration value                             ║
-║  4. Generate sample Syslog logs                             ║
-║  5. Set cron job for Syslogs                                ║
-║  6. Delete cron job for Syslogs                             ║
-║  7. Start LogScale log collector                            ║
-║  8. Stop LogScale log collector                             ║
-║  9. Status of LogScale log collector                        ║
+║  2. Generate sample Syslog logs                             ║
+║  3. Generate batch of Syslog logs to log folder             ║
+║  4. Set cron job for Syslogs                                ║
+║  5. Delete cron job for Syslogs                             ║
+║  6. Start LogScale log collector                            ║
+║  7. Stop LogScale log collector                             ║
+║  8. Status of LogScale log collector                        ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -278,57 +278,24 @@ def syslog_menu():
         if choice == '1':
             show_config()
         elif choice == '2':
-            print("""
-            Select a field to add values to:
-            1. api_url for Syslog (e.g., https://your-ngsiem-api-url)
-            2. api_key for Syslog (e.g., your_api_key)
-            3. usernames (e.g., alice, bob)
-            4. mac_addresses (e.g., 00:1A:2B:3C:4D:5E)
-            5. user_agents (e.g., Mozilla/5.0)
-            6. server_ips (e.g., 192.168.1.1)
-            7. client_ips (e.g., 192.168.1.2)
-            8. hostnames (e.g., server1.example.com)
-            9. observer.id (e.g., observer123)
-            10. encounter.alias (e.g., encounterX)
-            """)
-            field_map = {
-                '1': ('syslog_api_url', 'https://your-ngsiem-api-url'),
-                '2': ('syslog_api_key', 'your_api_key'),
-                '3': ('usernames', 'alice'),
-                '4': ('mac_addresses', '00:1A:2B:3C:4D:5E'),
-                '5': ('user_agents', 'Mozilla/5.0'),
-                '6': ('server_ips', '192.168.1.1'),
-                '7': ('client_ips', '192.168.1.2'),
-                '8': ('hostnames', 'server1.example.com'),
-                '9': ('observer.id', 'observer123'),
-                '10': ('encounter.alias', 'encounterX')
-            }
-            field_choice = input("Select a field: ").strip()
-            if field_choice in field_map:
-                field, example = field_map[field_choice]
-                add_config_value(field, example)
-            else:
-                print("Invalid field choice.")
-        elif choice == '3':
-            clear_config_value()
-        elif choice == '4':
-            sample_logs, _ = generate_sample_syslogs()
+            sample_logs, curl_command = generate_sample_syslogs()
             if sample_logs:
                 sample_log_str = json.dumps(sample_logs[0], indent=4)
-                pager(f"Sample log:\n{sample_log_str}")
-                write_syslog_to_file(sample_logs)
-                print("Syslog messages written to file.")
+                pager(f"Sample log:\n{sample_log_str}\n\nCurl command:\n{curl_command}")
             else:
                 print("No sample logs generated.")
-        elif choice == '5':
+        elif choice == '3':
+            write_syslog_to_file()
+            print("Batch of syslog logs generated and saved to log folder.")
+        elif choice == '4':
             set_cron_job_syslog()
-        elif choice == '6':
+        elif choice == '5':
             delete_cron_job_syslog()
-        elif choice == '7':
+        elif choice == '6':
             start_logshipper()
-        elif choice == '8':
+        elif choice == '7':
             stop_logshipper()
-        elif choice == '9':
+        elif choice == '8':
             status_logshipper()
         elif choice == '0':
             break
