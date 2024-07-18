@@ -9,7 +9,7 @@ from faker import Faker
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
-CONFIG_FILE = 'config.json'
+CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
 fake = Faker()
 
 # Load configuration
@@ -40,15 +40,15 @@ def generate_sample_logs():
     now = datetime.utcnow()
 
     domains = config.get('domains', ['example.com'])
-    hostnames = config.get('hostnames', ['host1.example.com'])
-    usernames = config.get('usernames', ['user'])
+    users = config.get('users', [{'username': 'user', 'email': 'user@example.com', 'hostname': 'host1.example.com'}])
 
     sample_logs = []
     for _ in range(25):
-        base_domain = random.choice(domains)
-        hostname = random.choice(hostnames)
-        username = random.choice(usernames)
-        email = generate_email(username, base_domain)
+        user = random.choice(users)
+        base_domain = user['email'].split('@')[-1]
+        username = user['username']
+        hostname = user['hostname']
+        email = user['email']
 
         internal_url = f"https://{base_domain}/{fake.uri_path()}"
         referer_url = f"https://{base_domain}/{fake.uri_path()}"
