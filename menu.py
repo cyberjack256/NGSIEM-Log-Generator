@@ -278,16 +278,14 @@ def syslog_menu():
         if choice == '1':
             show_config()
         elif choice == '2':
-            sample_logs, curl_command = generate_sample_syslogs()
+            sample_logs = generate_sample_syslogs()
             if sample_logs:
                 sample_log_str = json.dumps(sample_logs[0], indent=4)
-                pager(f"Sample log:\n{sample_log_str}\n\nCurl command:\n{curl_command}")
+                pager(f"Sample log:\n{sample_log_str}")
             else:
                 print("No sample logs generated.")
         elif choice == '3':
-            sample_logs = generate_sample_syslogs()  # Generate the logs first
-            for log in sample_logs:
-                write_syslog_to_file(log)  # Write each log to the file
+            write_syslog_to_file()
             print("Batch of syslog logs generated and saved to log folder.")
         elif choice == '4':
             set_cron_job_syslog()
