@@ -2,6 +2,7 @@ import os
 import json
 import subprocess
 from generate_logs import load_config, save_config, generate_sample_logs, send_logs
+from generate_syslogs import generate_sample_syslogs
 
 CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
 
@@ -68,7 +69,7 @@ def view_cron_job():
 
 # Set cron job for Zscaler logs
 def set_cron_job_zscaler():
-    job = "*/2 * * * * for i in {1..15}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_logs.py > /dev/null 2>&1; sleep 8; done"
+    job = "*/2 * * * * for i in {1..200}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_logs.py > /dev/null 2>&1; sleep 1; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job not in cron_jobs:
@@ -83,7 +84,7 @@ def set_cron_job_zscaler():
 
 # Delete cron job for Zscaler logs
 def delete_cron_job_zscaler():
-    job = "*/2 * * * * for i in {1..15}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_logs.py > /dev/null 2>&1; sleep 8; done"
+    job = "*/2 * * * * for i in {1..200}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_logs.py > /dev/null 2>&1; sleep 1; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job in cron_jobs:
@@ -92,13 +93,12 @@ def delete_cron_job_zscaler():
             f.write(cron_jobs)
         subprocess.run(['crontab', 'mycron'])
         os.remove('mycron')
-        print("Cron job for Zscaler logs deleted.")
+        print("Cron job deleted for Zscaler logs.")
     else:
-        print("No matching cron job found.")
-
-# Set cron job for Syslog
+        print("No matching cron job found for Zscaler logs.")
+# Set cron job for Syslogs
 def set_cron_job_syslog():
-    job = "*/2 * * * * for i in {1..15}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslogs.py > /dev/null 2>&1; sleep 8; done"
+    job = "*/15 * * * * for i in {1..1000}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslogs.py > /dev/null 2>&1; sleep 2; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job not in cron_jobs:
@@ -107,13 +107,13 @@ def set_cron_job_syslog():
             f.write(cron_jobs)
         subprocess.run(['crontab', 'mycron'])
         os.remove('mycron')
-        print("Cron job set to send Syslogs every 2 minutes.")
+        print("Cron job set to send Syslogs every 15 minutes.")
     else:
         print("Cron job already set.")
 
-# Delete cron job for Syslog
+# Delete cron job for Syslogs
 def delete_cron_job_syslog():
-    job = "*/2 * * * * for i in {1..15}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslogs.py > /dev/null 2>&1; sleep 8; done"
+    job = "*/15 * * * * for i in {1..1000}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslogs.py > /dev/null 2>&1; sleep 2; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job in cron_jobs:
@@ -122,39 +122,29 @@ def delete_cron_job_syslog():
             f.write(cron_jobs)
         subprocess.run(['crontab', 'mycron'])
         os.remove('mycron')
-        print("Cron job for Syslogs deleted.")
+        print("Cron job deleted for Syslogs.")
     else:
-        print("No matching cron job found.")
+        print("No matching cron job found for Syslogs.")
 
 # Start LogScale log collector
 def start_logshipper():
-    result = subprocess.run(['start-logshipper'], capture_output=True, text=True)
-    if result.returncode == 0:
-        print("LogScale log collector started successfully.")
-    else:
-        print(f"Failed to start LogScale log collector: {result.stderr}")
+    subprocess.run(['/usr/bin/start-logshipper'])
+    print("LogScale log collector started.")
 
 # Stop LogScale log collector
 def stop_logshipper():
-    result = subprocess.run(['stop-logshipper'], capture_output=True, text=True)
-    if result.returncode == 0:
-        print("LogScale log collector stopped successfully.")
-    else:
-        print(f"Failed to stop LogScale log collector: {result.stderr}")
+    subprocess.run(['/usr/bin/stop-logshipper'])
+    print("LogScale log collector stopped.")
 
 # Status of LogScale log collector
 def status_logshipper():
-    result = subprocess.run(['status-logshipper'], capture_output=True, text=True)
-    if result.returncode == 0:
-        print("LogScale log collector status:\n" + result.stdout)
-    else:
-        print(f"Failed to get LogScale log collector status: {result.stderr}")
+    result = subprocess.run(['/usr/bin/status-logshipper'], capture_output=True, text=True)
+    pager(result.stdout)
 
 # Use less for scrolling output
 def pager(content):
     pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
     pager_process.communicate(input=content.encode('utf-8'))
-
 # Main menu
 def main_menu():
     while True:
@@ -166,21 +156,42 @@ def main_menu():
 ║  Welcome to the NGSIEM Log Generator Menu                   ║
 ║  Please select an option:                                   ║
 ║                                                             ║
+║  1. Zscaler log actions                                     ║
+║  2. Syslog log actions                                      ║
+║  0. Exit                                                    ║
+╚═════════════════════════════════════════════════════════════╝
+        """)
+        choice = input("Enter your choice: ").strip()
+
+        if choice == '1':
+            zscaler_menu()
+        elif choice == '2':
+            syslog_menu()
+        elif choice == '0':
+            break
+        else:
+            print("Invalid choice. Please try again.")
+        
+        input("\nPress Enter to continue...")
+
+# Zscaler menu
+def zscaler_menu():
+    while True:
+        os.system('clear')
+        print("""
+╔═════════════════════════════════════════════════════════════╗
+║                     Zscaler Log Actions                     ║
+║═════════════════════════════════════════════════════════════║
+║  Please select an option:                                   ║
+║                                                             ║
 ║  1. Show current configuration                              ║
 ║  2. Add a configuration value                               ║
 ║  3. Clear a configuration value                             ║
-║  4. Generate sample logs                                    ║
-║  5. Generate sample syslogs                                 ║
-║  6. Send logs to NGSIEM                                     ║
-║  7. View cron job                                           ║
-║  8. Set cron job for Zscaler logs                           ║
-║  9. Delete cron job for Zscaler logs                        ║
-║ 10. Set cron job for Syslogs                                ║
-║ 11. Delete cron job for Syslogs                             ║
-║ 12. Start LogScale log collector                            ║
-║ 13. Stop LogScale log collector                             ║
-║ 14. Status of LogScale log collector                        ║
-║  0. Exit                                                    ║
+║  4. Generate sample Zscaler logs                            ║
+║  5. Send logs to NGSIEM                                     ║
+║  6. Set cron job for Zscaler logs                           ║
+║  7. Delete cron job for Zscaler logs                        ║
+║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
         choice = input("Enter your choice: ").strip()
@@ -190,24 +201,28 @@ def main_menu():
         elif choice == '2':
             print("""
             Select a field to add values to:
-            1. api_url (e.g., https://your-ngsiem-api-url)
-            2. api_key (e.g., your_api_key)
+            1. api_url for Zscaler (e.g., https://your-ngsiem-api-url)
+            2. api_key for Zscaler (e.g., your_api_key)
             3. usernames (e.g., alice, bob)
             4. mac_addresses (e.g., 00:1A:2B:3C:4D:5E)
             5. user_agents (e.g., Mozilla/5.0)
             6. server_ips (e.g., 192.168.1.1)
             7. client_ips (e.g., 192.168.1.2)
             8. hostnames (e.g., server1.example.com)
+            9. observer.id (e.g., observer123)
+            10. encounter.alias (e.g., encounterX)
             """)
             field_map = {
-                '1': ('api_url', 'https://your-ngsiem-api-url'),
-                '2': ('api_key', 'your_api_key'),
+                '1': ('zscaler_api_url', 'https://your-ngsiem-api-url'),
+                '2': ('zscaler_api_key', 'your_api_key'),
                 '3': ('usernames', 'alice'),
                 '4': ('mac_addresses', '00:1A:2B:3C:4D:5E'),
                 '5': ('user_agents', 'Mozilla/5.0'),
                 '6': ('server_ips', '192.168.1.1'),
                 '7': ('client_ips', '192.168.1.2'),
-                '8': ('hostnames', 'server1.example.com')
+                '8': ('hostnames', 'server1.example.com'),
+                '9': ('observer.id', 'observer123'),
+                '10': ('encounter.alias', 'encounterX')
             }
             field_choice = input("Select a field: ").strip()
             if field_choice in field_map:
@@ -222,25 +237,94 @@ def main_menu():
             sample_log_str = json.dumps(sample_logs[0], indent=4)
             pager(f"Sample log:\n{sample_log_str}\n\nCurl command:\n{curl_command}")
         elif choice == '5':
-            # Implement generate_sample_syslogs here
-            pass
+            send_logs('zscaler_api_url', 'zscaler_api_key')
         elif choice == '6':
-            send_logs()
-        elif choice == '7':
-            view_cron_job()
-        elif choice == '8':
             set_cron_job_zscaler()
-        elif choice == '9':
+        elif choice == '7':
             delete_cron_job_zscaler()
-        elif choice == '10':
+        elif choice == '0':
+            break
+        else:
+            print("Invalid choice. Please try again.")
+        
+        input("\nPress Enter to continue...")
+
+# Syslog menu
+def syslog_menu():
+    while True:
+        os.system('clear')
+        print("""
+╔═════════════════════════════════════════════════════════════╗
+║                     Syslog Log Actions                      ║
+║═════════════════════════════════════════════════════════════║
+║  Please select an option:                                   ║
+║                                                             ║
+║  1. Show current configuration                              ║
+║  2. Add a configuration value                               ║
+║  3. Clear a configuration value                             ║
+║  4. Generate sample Syslog logs                             ║
+║  5. Send logs to NGSIEM                                     ║
+║  6. Set cron job for Syslogs                                ║
+║  7. Delete cron job for Syslogs                             ║
+║  8. Start LogScale log collector                            ║
+║  9. Stop LogScale log collector                             ║
+║ 10. Status of LogScale log collector                        ║
+║  0. Back to main menu                                       ║
+╚═════════════════════════════════════════════════════════════╝
+        """)
+        choice = input("Enter your choice: ").strip()
+
+        if choice == '1':
+            show_config()
+        elif choice == '2':
+            print("""
+            Select a field to add values to:
+            1. api_url for Syslog (e.g., https://your-ngsiem-api-url)
+            2. api_key for Syslog (e.g., your_api_key)
+            3. usernames (e.g., alice, bob)
+            4. mac_addresses (e.g., 00:1A:2B:3C:4D:5E)
+            5. user_agents (e.g., Mozilla/5.0)
+            6. server_ips (e.g., 192.168.1.1)
+            7. client_ips (e.g., 192.168.1.2)
+            8. hostnames (e.g., server1.example.com)
+            9. observer.id (e.g., observer123)
+            10. encounter.alias (e.g., encounterX)
+            """)
+            field_map = {
+                '1': ('syslog_api_url', 'https://your-ngsiem-api-url'),
+                '2': ('syslog_api_key', 'your_api_key'),
+                '3': ('usernames', 'alice'),
+                '4': ('mac_addresses', '00:1A:2B:3C:4D:5E'),
+                '5': ('user_agents', 'Mozilla/5.0'),
+                '6': ('server_ips', '192.168.1.1'),
+                '7': ('client_ips', '192.168.1.2'),
+                '8': ('hostnames', 'server1.example.com'),
+                '9': ('observer.id', 'observer123'),
+                '10': ('encounter.alias', 'encounterX')
+            }
+            field_choice = input("Select a field: ").strip()
+            if field_choice in field_map:
+                field, example = field_map[field_choice]
+                add_config_value(field, example)
+            else:
+                print("Invalid field choice.")
+        elif choice == '3':
+            clear_config_value()
+        elif choice == '4':
+            sample_logs, curl_command = generate_sample_syslogs()
+            sample_log_str = json.dumps(sample_logs[0], indent=4)
+            pager(f"Sample log:\n{sample_log_str}\n\nCurl command:\n{curl_command}")
+        elif choice == '5':
+            send_logs('syslog_api_url', 'syslog_api_key')
+        elif choice == '6':
             set_cron_job_syslog()
-        elif choice == '11':
+        elif choice == '7':
             delete_cron_job_syslog()
-        elif choice == '12':
+        elif choice == '8':
             start_logshipper()
-        elif choice == '13':
+        elif choice == '9':
             stop_logshipper()
-        elif choice == '14':
+        elif choice == '10':
             status_logshipper()
         elif choice == '0':
             break
