@@ -1,71 +1,64 @@
-# Zscaler Log Generator
+# NGSIEM Log Generator
 
-This project generates sample logs for Zscaler and sends them to an NGSIEM. It includes a menu-driven interface for configuring log parameters, generating sample logs, and sending logs to NGSIEM. It also supports setting up a cron job to send logs periodically.
+NGSIEM Log Generator is a tool designed to generate and manage log messages for Zscaler and Syslog. This tool allows you to generate sample logs, batch logs, and set up cron jobs for automated log generation. Additionally, it provides options to start, stop, and check the status of a LogScale log collector.
 
-## About This Project
+## Features
 
-The Zscaler Log Generator is designed to help security analysts and developers with testing and validation. It uses Faker to generate realistic log data based on predefined and configurable sets of parameters.
+- **Generate Sample Logs**: Generate sample Zscaler and Syslog logs to understand their format.
+- **Batch Log Generation**: Generate a batch of logs and save them to a specified log folder.
+- **Automated Log Generation**: Set up cron jobs to automate log generation at specified intervals.
+- **LogScale Log Collector Management**: Start, stop, and check the status of the LogScale log collector service.
 
-## Requirements
-
-Create a `requirements.txt` file with the following content:
-```txt
-requests
-json
-datetime
-logging
-pytz
-random
-faker
-```
 ## Installation
 
-1. Clone the repository.
-2. Navigate to the project directory.
-3. Install the required libraries using pip:
-   pip install -r requirements.txt
-
-## Configuration
-
-The configuration is stored in `config.json`. Here is an example of the configuration file:
-```json
-{
-  "api_url": "https://your-ngsiem-api-url",
-  "api_key": "your_api_key",
-  "usernames": ["sparrow", "robin", "eagle"],
-  "mac_addresses": ["00:1A:2B:3C:4D:5E", "11:22:33:44:55:66"],
-  "user_agents": ["Mozilla/5.0", "Chrome/91.0"],
-  "server_ips": ["192.168.1.1", "192.168.1.2"],
-  "client_ips": ["10.0.0.1", "10.0.0.2"],
-  "hostnames": ["birdserver.example.com", "eaglehost.example.com"]
-}
+1. Clone the repository:
+```bash
+git clone https://github.com/cyberjack256/NGSIEM-Log-Generator.git cd NGSIEM-Log-Generator
+```
+2. Install the required dependencies:
+```bash
+pip3 install -r requirements.txt
 ```
 
 ## Usage
 
-Run the menu script to interact with the log generator:
+2. Run the menu script to access the main menu:
 ```bash
 python3 menu.py
 ```
-The menu options are:
 
-1. Show current configuration
-2. Add a configuration value
-3. Clear a configuration value
-4. Generate sample logs
-5. Send logs to NGSIEM
-6. View cron job
-7. Set cron job
-8. Delete cron job
-0. Exit
+### Main Menu Options
 
-## Contact and Support
+1. **Zscaler Log Actions**
+2. **Syslog Log Actions**
+3. **Exit**
 
-For support, reach out via [LinkedIn](https://www.linkedin.com/in/cyberjack256) or open an issue on this repository. GitHub responses are preferred for this project.
+### Zscaler Log Actions
 
-## Authors
+1. **Show current configuration**: Display the current configuration settings.
+2. **Add a configuration value**: Add values to specific fields in the configuration.
+3. **Clear a configuration value**: Clear values from specific fields in the configuration.
+4. **Generate sample Zscaler logs**: Generate and display sample Zscaler logs.
+5. **Send logs to NGSIEM**: Send generated logs to the NGSIEM.
+6. **Set cron job for Zscaler logs**: Set up a cron job to automate Zscaler log generation.
+7. **Delete cron job for Zscaler logs**: Delete the existing cron job for Zscaler logs.
+8. **Back to main menu**: Return to the main menu.
 
-Jack Turner - [cyberjack256](https://github.com/cyberjack256)
+### Syslog Log Actions
+
+1. **Show current configuration**: Display the current configuration settings.
+2. **Generate sample Syslog logs**: Generate and display sample Syslog logs.
+3. **Generate batch of Syslog logs to log folder**: Generate a batch of Syslog logs and save them to the log folder.
+4. **Set cron job for Syslogs**: Set up a cron job to automate Syslog generation.
+5. **Delete cron job for Syslogs**: Delete the existing cron job for Syslogs.
+6. **Start LogScale log collector**: Start the LogScale log collector service.
+7. **Stop LogScale log collector**: Stop the LogScale log collector service.
+8. **Status of LogScale log collector**: Check the status of the LogScale log collector service.
+9. **Back to main menu**: Return to the main menu.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
