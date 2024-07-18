@@ -128,17 +128,17 @@ def delete_cron_job_syslog():
 
 # Start LogScale log collector
 def start_logshipper():
-    subprocess.run(['/usr/bin/start-logshipper'])
+    subprocess.run(['sudo', 'systemctl', 'start', 'humio-log-collector.service'])
     print("LogScale log collector started.")
 
 # Stop LogScale log collector
 def stop_logshipper():
-    subprocess.run(['/usr/bin/stop-logshipper'])
+    subprocess.run(['sudo', 'systemctl', 'stop', 'humio-log-collector.service'])
     print("LogScale log collector stopped.")
 
 # Status of LogScale log collector
 def status_logshipper():
-    result = subprocess.run(['/usr/bin/status-logshipper'], capture_output=True, text=True)
+    result = subprocess.run(['sudo', 'systemctl', 'status', 'humio-log-collector.service'], capture_output=True, text=True)
     pager(result.stdout)
 
 # Use less for scrolling output
