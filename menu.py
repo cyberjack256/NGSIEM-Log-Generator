@@ -285,7 +285,9 @@ def syslog_menu():
             else:
                 print("No sample logs generated.")
         elif choice == '3':
-            write_syslog_to_file()
+            sample_logs, _ = generate_sample_syslogs()  # Generate the logs first
+            for log in sample_logs:
+                write_syslog_to_file(log)  # Write each log to the file
             print("Batch of syslog logs generated and saved to log folder.")
         elif choice == '4':
             set_cron_job_syslog()
@@ -303,6 +305,5 @@ def syslog_menu():
             print("Invalid choice. Please try again.")
         
         input("\nPress Enter to continue...")
-
 if __name__ == "__main__":
     main_menu()
