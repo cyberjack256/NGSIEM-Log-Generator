@@ -9,6 +9,7 @@ from faker import Faker
 logging.basicConfig(level=logging.INFO)
 
 CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
+LOG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/syslog.log'
 fake = Faker()
 
 # Load configuration
@@ -39,21 +40,20 @@ def generate_sample_syslogs():
         username = user['username']
         timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%b %d %H:%M:%S')
 
-        log_entry = f"{timestamp} {hostname} {username} [{observer_id}] Sample syslog message"
-
+        log_entry = f"<134>{timestamp} {hostname} {username} [{observer_id}] Sample syslog message"
         sample_logs.append(log_entry)
 
     return sample_logs
 
 # Write syslog to file
-def write_syslog_to_file(log_entries):
-    log_dir = "/home/ec2-user/NGSIEM-Log-Generator"
-    log_file_path = os.path.join(log_dir, "syslog.log")
+def write_syslog_to_file():
+    sample_logs = generate_sample_syslogs()
+    log_dir = os.path.dirname(LOG_FILE)
+    os.makedirs(log_dir, exist_ok=True)
     
-    with open(log_file_path, "a") as log_file:
-        for log_entry in log_entries:
+    with open(LOG_FILE, "a") as log_file:
+        for log_entry in sample_logs:
             log_file.write(log_entry + "\n")
 
 if __name__ == "__main__":
-    sample_logs = generate_sample_syslogs()
-    write_syslog_to_file(sample_logs)
+    write_syslog_to_file()
