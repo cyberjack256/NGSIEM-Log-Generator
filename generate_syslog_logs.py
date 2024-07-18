@@ -1,5 +1,3 @@
-# Location: generate_syslogs.py
-
 import json
 import logging
 import os
@@ -54,6 +52,15 @@ def generate_sample_syslogs():
 
     return sample_logs, curl_command
 
+# Write syslog to file
+def write_syslog_to_file(log_entry):
+    log_dir = "/home/ec2-user/NGSIEM-Log-Generator/var/log"
+    os.makedirs(log_dir, exist_ok=True)
+    log_file_path = os.path.join(log_dir, "syslog.log")
+    
+    with open(log_file_path, "a") as log_file:
+        log_file.write(log_entry + "\n")
+
 # Send syslogs
 def send_syslogs(api_url_key, api_key_key):
     config = load_config()
@@ -71,6 +78,7 @@ def send_syslogs(api_url_key, api_key_key):
     }
     
     for log in sample_logs:
+        write_syslog_to_file(log)
         response = requests.post(api_url, headers=headers, json={"log": log})
         if response.status_code == 200:
             print("Log sent successfully.")
