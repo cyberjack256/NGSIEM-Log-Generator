@@ -285,7 +285,7 @@ def syslog_menu():
             else:
                 print("No sample logs generated.")
         elif choice == '3':
-            sample_logs, _ = generate_sample_syslogs()  # Generate the logs first
+            sample_logs = generate_sample_syslogs()  # Generate the logs first
             for log in sample_logs:
                 write_syslog_to_file(log)  # Write each log to the file
             print("Batch of syslog logs generated and saved to log folder.")
