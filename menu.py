@@ -2,7 +2,7 @@ import os
 import json
 import subprocess
 from generate_logs import load_config, save_config, generate_sample_logs, send_logs
-from generate_syslog_logs import generate_sample_syslogs, write_syslog_to_file
+from generate_syslog_logs import generate_sample_syslogs, send_syslogs, write_syslog_to_file
 
 CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
 
@@ -96,9 +96,10 @@ def delete_cron_job_zscaler():
         print("Cron job deleted for Zscaler logs.")
     else:
         print("No matching cron job found for Zscaler logs.")
-# Set cron job for Syslogs
+
+# Set cron job for syslog logs
 def set_cron_job_syslog():
-    job = "*/15 * * * * for i in {1..1000}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslogs.py > /dev/null 2>&1; sleep 2; done"
+    job = "*/15 * * * * for i in {1..1000}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslog_logs.py > /dev/null 2>&1; sleep 2; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job not in cron_jobs:
@@ -107,10 +108,9 @@ def set_cron_job_syslog():
             f.write(cron_jobs)
         subprocess.run(['crontab', 'mycron'])
         os.remove('mycron')
-        print("Cron job set to send Syslogs every 15 minutes.")
+        print("Cron job set to generate Syslogs every 15 minutes.")
     else:
         print("Cron job already set.")
-
 # Delete cron job for Syslogs
 def delete_cron_job_syslog():
     job = "*/15 * * * * for i in {1..1000}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslogs.py > /dev/null 2>&1; sleep 2; done"
@@ -252,7 +252,6 @@ def zscaler_menu():
         
         input("\nPress Enter to continue...")
 
-# Syslog menu
 def syslog_menu():
     while True:
         os.system('clear')
@@ -266,12 +265,11 @@ def syslog_menu():
 ║  2. Add a configuration value                               ║
 ║  3. Clear a configuration value                             ║
 ║  4. Generate sample Syslog logs                             ║
-║  5. Send logs to NGSIEM                                     ║
-║  6. Set cron job for Syslogs                                ║
-║  7. Delete cron job for Syslogs                             ║
-║  8. Start LogScale log collector                            ║
-║  9. Stop LogScale log collector                             ║
-║ 10. Status of LogScale log collector                        ║
+║  5. Set cron job for Syslogs                                ║
+║  6. Delete cron job for Syslogs                             ║
+║  7. Start LogScale log collector                            ║
+║  8. Stop LogScale log collector                             ║
+║  9. Status of LogScale log collector                        ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -314,23 +312,23 @@ def syslog_menu():
         elif choice == '3':
             clear_config_value()
         elif choice == '4':
-            sample_logs, curl_command = generate_sample_syslogs()
+            sample_logs, _ = generate_sample_syslogs()
             if sample_logs:
                 sample_log_str = json.dumps(sample_logs[0], indent=4)
-                pager(f"Sample log:\n{sample_log_str}\n\nCurl command:\n{curl_command}")
+                pager(f"Sample log:\n{sample_log_str}")
+                write_syslog_to_file(sample_logs)
+                print("Syslog messages written to file.")
             else:
                 print("No sample logs generated.")
         elif choice == '5':
-            send_logs('syslog_api_url', 'syslog_api_key')
-        elif choice == '6':
             set_cron_job_syslog()
-        elif choice == '7':
+        elif choice == '6':
             delete_cron_job_syslog()
-        elif choice == '8':
+        elif choice == '7':
             start_logshipper()
-        elif choice == '9':
+        elif choice == '8':
             stop_logshipper()
-        elif choice == '10':
+        elif choice == '9':
             status_logshipper()
         elif choice == '0':
             break
