@@ -3,7 +3,7 @@ import json
 import subprocess
 from generate_logs import load_config, save_config, generate_sample_logs, send_logs
 
-CONFIG_FILE = 'config.json'
+CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
 
 # Load configuration
 def load_config():
