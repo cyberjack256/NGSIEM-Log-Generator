@@ -2,7 +2,7 @@ import os
 import json
 import subprocess
 from generate_logs import load_config, save_config, generate_sample_logs, send_logs
-from generate_syslogs import generate_sample_syslogs
+from generate_syslog_logs import generate_sample_syslogs, send_syslogs
 
 CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
 
@@ -98,7 +98,7 @@ def delete_cron_job_zscaler():
         print("No matching cron job found for Zscaler logs.")
 # Set cron job for Syslogs
 def set_cron_job_syslog():
-    job = "*/15 * * * * for i in {1..1000}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslogs.py > /dev/null 2>&1; sleep 2; done"
+    job = "*/15 * * * * for i in {1..1000}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslog_logs.py > /dev/null 2>&1; sleep 2; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job not in cron_jobs:
@@ -113,7 +113,7 @@ def set_cron_job_syslog():
 
 # Delete cron job for Syslogs
 def delete_cron_job_syslog():
-    job = "*/15 * * * * for i in {1..1000}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslogs.py > /dev/null 2>&1; sleep 2; done"
+    job = "*/15 * * * * for i in {1..1000}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslog_logs.py > /dev/null 2>&1; sleep 2; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job in cron_jobs:
@@ -145,6 +145,7 @@ def status_logshipper():
 def pager(content):
     pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
     pager_process.communicate(input=content.encode('utf-8'))
+
 # Main menu
 def main_menu():
     while True:
@@ -248,7 +249,6 @@ def zscaler_menu():
             print("Invalid choice. Please try again.")
         
         input("\nPress Enter to continue...")
-
 # Syslog menu
 def syslog_menu():
     while True:
