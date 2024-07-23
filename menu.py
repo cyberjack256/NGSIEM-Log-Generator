@@ -1,12 +1,13 @@
 import os
 import json
 import subprocess
-from generate_logs import generate_sample_logs as generate_zscaler_logs, send_logs
-from generate_syslog_logs import generate_sample_syslogs, write_syslog_to_file
+from generate_logs import generate_sample_zscaler_logs_main as generate_zscaler_logs, send_logs
+from generate_syslog_logs import generate_sample_syslogs_main as generate_syslog_logs, write_syslog_to_file
 
 CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
 ZS_LOG_EXECUTION_FILE = '/home/ec2-user/NGSIEM-Log-Generator/generate_logs_execution.log'
 SYSLOG_EXECUTION_FILE = '/home/ec2-user/NGSIEM-Log-Generator/generate_syslog_logs_execution.log'
+LOGSCALE_CONFIG_FILE = '/etc/humio-logcollector/config.yaml'
 
 # Load configuration
 def load_config():
@@ -123,6 +124,13 @@ def status_logshipper():
     result = subprocess.run(['sudo', 'systemctl', 'status', 'humio-log-collector.service'], capture_output=True, text=True)
     pager(result.stdout)
 
+# Edit LogScale configuration
+def edit_logscale_config():
+    if os.path.exists(LOGSCALE_CONFIG_FILE):
+        subprocess.run(['sudo', 'nano', '-l', LOGSCALE_CONFIG_FILE])
+    else:
+        print(f"LogScale configuration file {LOGSCALE_CONFIG_FILE} does not exist.")
+
 # Use less for scrolling output
 def pager(content):
     pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
@@ -141,6 +149,7 @@ def main_menu():
 ║                                                             ║
 ║  1. Zscaler log actions                                     ║
 ║  2. Syslog log actions                                      ║
+║  3. Edit LogScale configuration                             ║
 ║  0. Exit                                                    ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -150,6 +159,8 @@ def main_menu():
             zscaler_menu()
         elif choice == '2':
             syslog_menu()
+        elif choice == '3':
+            edit_logscale_config()
         elif choice == '0':
             break
         else:
@@ -185,28 +196,16 @@ def zscaler_menu():
         elif choice == '2':
             print("""
             Select a field to add values to:
-            1. api_url for Zscaler (e.g., https://your-ngsiem-api-url)
-            2. api_key for Zscaler (e.g., your_api_key)
-            3. usernames (e.g., alice, bob)
-            4. mac_addresses (e.g., 00:1A:2B:3C:4D:5E)
-            5. user_agents (e.g., Mozilla/5.0)
-            6. server_ips (e.g., 192.168.1.1)
-            7. client_ips (e.g., 192.168.1.2)
-            8. hostnames (e.g., server1.example.com)
-            9. observer.id (e.g., observer123)
-            10. encounter.alias (e.g., encounterX)
+            1. observer_id (e.g., observer123)
+            2. api_url for Zscaler (e.g., https://your-ngsiem-api-url)
+            3. api_key for Zscaler (e.g., your_api_key)
+            4. observer.alias (e.g., observerAlias)
             """)
             field_map = {
-                '1': ('zscaler_api_url', 'https://your-ngsiem-api-url'),
-                '2': ('zscaler_api_key', 'your_api_key'),
-                '3': ('usernames', 'alice'),
-                '4': ('mac_addresses', '00:1A:2B:3C:4D:5E'),
-                '5': ('user_agents', 'Mozilla/5.0'),
-                '6': ('server_ips', '192.168.1.1'),
-                '7': ('client_ips', '192.168.1.2'),
-                '8': ('hostnames', 'server1.example.com'),
-                '9': ('observer.id', 'observer123'),
-                '10': ('encounter.alias', 'encounterX')
+                '1': ('observer_id', 'observer123'),
+                '2': ('zscaler_api_url', 'https://your-ngsiem-api-url'),
+                '3': ('zscaler_api_key', 'your_api_key'),
+                '4': ('observer.alias', 'observerAlias')
             }
             field_choice = input("Select a field: ").strip()
             if field_choice in field_map:
@@ -266,7 +265,7 @@ def syslog_menu():
         if choice == '1':
             show_config()
         elif choice == '2':
-            sample_logs = generate_sample_syslogs()
+            sample_logs = generate_syslog_logs()
             if sample_logs:
                 sample_log_str = json.dumps(sample_logs[0], indent=4)
                 pager(f"Sample log:\n{sample_log_str}")
