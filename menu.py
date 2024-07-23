@@ -1,10 +1,12 @@
 import os
 import json
 import subprocess
-from generate_logs import load_config, save_config, generate_sample_logs, send_logs
+from generate_logs import generate_sample_logs as generate_zscaler_logs, send_logs
 from generate_syslog_logs import generate_sample_syslogs, write_syslog_to_file
 
 CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
+ZS_LOG_EXECUTION_FILE = '/home/ec2-user/NGSIEM-Log-Generator/generate_logs_execution.log'
+SYSLOG_EXECUTION_FILE = '/home/ec2-user/NGSIEM-Log-Generator/generate_syslog_logs_execution.log'
 
 # Load configuration
 def load_config():
@@ -67,9 +69,9 @@ def view_cron_job():
     else:
         print("No cron jobs set.")
 
-# Set cron job for Zscaler logs
-def set_cron_job_zscaler():
-    job = "*/2 * * * * for i in {1..200}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_logs.py > /dev/null 2>&1; sleep 1; done"
+# Set cron job
+def set_cron_job(script_name, interval):
+    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/ec2-user/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job not in cron_jobs:
@@ -78,13 +80,13 @@ def set_cron_job_zscaler():
             f.write(cron_jobs)
         subprocess.run(['crontab', 'mycron'])
         os.remove('mycron')
-        print("Cron job set to send Zscaler logs every 2 minutes.")
+        print(f"Cron job set to run {script_name} every {interval} minutes.")
     else:
         print("Cron job already set.")
 
-# Delete cron job for Zscaler logs
-def delete_cron_job_zscaler():
-    job = "*/2 * * * * for i in {1..200}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_logs.py > /dev/null 2>&1; sleep 1; done"
+# Delete cron job
+def delete_cron_job(script_name, interval):
+    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/ec2-user/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job in cron_jobs:
@@ -93,38 +95,18 @@ def delete_cron_job_zscaler():
             f.write(cron_jobs)
         subprocess.run(['crontab', 'mycron'])
         os.remove('mycron')
-        print("Cron job deleted for Zscaler logs.")
+        print(f"Cron job deleted for {script_name}.")
     else:
-        print("No matching cron job found for Zscaler logs.")
+        print("No matching cron job found.")
 
-# Set cron job for syslog logs
-def set_cron_job_syslog():
-    job = "*/15 * * * * for i in {1..1000}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslog_logs.py > /dev/null 2>&1; sleep 2; done"
-    result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
-    cron_jobs = result.stdout if result.returncode == 0 else ""
-    if job not in cron_jobs:
-        cron_jobs += f"{job}\n"
-        with open('mycron', 'w') as f:
-            f.write(cron_jobs)
-        subprocess.run(['crontab', 'mycron'])
-        os.remove('mycron')
-        print("Cron job set to generate Syslogs every 15 minutes.")
-    else:
-        print("Cron job already set.")
-# Delete cron job for Syslogs
-def delete_cron_job_syslog():
-    job = "*/15 * * * * for i in {1..1000}; do python3 /home/ec2-user/NGSIEM-Log-Generator/generate_syslogs.py > /dev/null 2>&1; sleep 2; done"
-    result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
-    cron_jobs = result.stdout if result.returncode == 0 else ""
-    if job in cron_jobs:
-        cron_jobs = cron_jobs.replace(f"{job}\n", "")
-        with open('mycron', 'w') as f:
-            f.write(cron_jobs)
-        subprocess.run(['crontab', 'mycron'])
-        os.remove('mycron')
-        print("Cron job deleted for Syslogs.")
-    else:
-        print("No matching cron job found for Syslogs.")
+# Get last execution time
+def get_last_execution_time(log_file):
+    if os.path.exists(log_file):
+        with open(log_file, 'r') as file:
+            lines = file.readlines()
+        if lines:
+            return lines[-1].strip()
+    return "No execution log found."
 
 # Start LogScale log collector
 def start_logshipper():
@@ -174,11 +156,12 @@ def main_menu():
             print("Invalid choice. Please try again.")
         
         input("\nPress Enter to continue...")
+
 # Zscaler menu
 def zscaler_menu():
     while True:
         os.system('clear')
-        print("""
+        print(f"""
 ╔═════════════════════════════════════════════════════════════╗
 ║                     Zscaler Log Actions                     ║
 ║═════════════════════════════════════════════════════════════║
@@ -191,6 +174,7 @@ def zscaler_menu():
 ║  5. Send logs to NGSIEM                                     ║
 ║  6. Set cron job for Zscaler logs                           ║
 ║  7. Delete cron job for Zscaler logs                        ║
+║  8. View last execution time of Zscaler cron job            ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -233,7 +217,7 @@ def zscaler_menu():
         elif choice == '3':
             clear_config_value()
         elif choice == '4':
-            sample_logs, curl_command = generate_sample_logs()
+            sample_logs, curl_command = generate_zscaler_logs()
             if sample_logs:
                 sample_log_str = json.dumps(sample_logs[0], indent=4)
                 pager(f"Sample log:\n{sample_log_str}\n\nCurl command:\n{curl_command}")
@@ -242,9 +226,12 @@ def zscaler_menu():
         elif choice == '5':
             send_logs('zscaler_api_url', 'zscaler_api_key')
         elif choice == '6':
-            set_cron_job_zscaler()
+            set_cron_job('generate_logs.py', 2)
         elif choice == '7':
-            delete_cron_job_zscaler()
+            delete_cron_job('generate_logs.py', 2)
+        elif choice == '8':
+            last_execution = get_last_execution_time(ZS_LOG_EXECUTION_FILE)
+            print(f"Last execution time of Zscaler cron job: {last_execution}")
         elif choice == '0':
             break
         else:
@@ -256,7 +243,7 @@ def zscaler_menu():
 def syslog_menu():
     while True:
         os.system('clear')
-        print("""
+        print(f"""
 ╔═════════════════════════════════════════════════════════════╗
 ║                     Syslog Log Actions                      ║
 ║═════════════════════════════════════════════════════════════║
@@ -267,9 +254,10 @@ def syslog_menu():
 ║  3. Generate batch of Syslog logs to log folder             ║
 ║  4. Set cron job for Syslogs                                ║
 ║  5. Delete cron job for Syslogs                             ║
-║  6. Start LogScale log collector                            ║
-║  7. Stop LogScale log collector                             ║
-║  8. Status of LogScale log collector                        ║
+║  6. View last execution time of Syslog cron job             ║
+║  7. Start LogScale log collector                            ║
+║  8. Stop LogScale log collector                             ║
+║  9. Status of LogScale log collector                        ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -288,14 +276,17 @@ def syslog_menu():
             write_syslog_to_file()
             print("Batch of syslog logs generated and saved to log folder.")
         elif choice == '4':
-            set_cron_job_syslog()
+            set_cron_job('generate_syslog_logs.py', 15)
         elif choice == '5':
-            delete_cron_job_syslog()
+            delete_cron_job('generate_syslog_logs.py', 15)
         elif choice == '6':
-            start_logshipper()
+            last_execution = get_last_execution_time(SYSLOG_EXECUTION_FILE)
+            print(f"Last execution time of Syslog cron job: {last_execution}")
         elif choice == '7':
-            stop_logshipper()
+            start_logshipper()
         elif choice == '8':
+            stop_logshipper()
+        elif choice == '9':
             status_logshipper()
         elif choice == '0':
             break
@@ -303,5 +294,6 @@ def syslog_menu():
             print("Invalid choice. Please try again.")
         
         input("\nPress Enter to continue...")
+
 if __name__ == "__main__":
     main_menu()
