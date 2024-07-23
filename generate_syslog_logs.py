@@ -37,7 +37,7 @@ def generate_sample_syslogs():
     config = load_config()
     now = datetime.utcnow()
 
-    log_level = config.get('log_level', 'info')
+    log_levels = config.get('log_levels', ['info'])
     hostnames = config.get('hostnames', ['server1.example.com', 'server2.example.com'])
     network_devices = config.get('network_devices', ["bldg1-room1-rack1", "bldg1-room1-rack2"])
     users = config.get('users', [])
@@ -74,8 +74,7 @@ def generate_sample_syslogs():
 
     sample_logs = []
 
-    # Generate 80% info logs, 10% warning logs, and 10% error logs based on the log level setting
-    for _ in range(80):
+    for _ in range(80):  # 80 logs from servers
         user = random.choice(users)
         hostname = random.choice(hostnames)
         app_name = "app"
@@ -83,19 +82,18 @@ def generate_sample_syslogs():
         msgid = "ID" + str(random.randint(100, 999))
         timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
+        log_level = random.choice(log_levels)
         if log_level == 'info':
             message_template = random.choice(info_messages)
             message = message_template.format(user=user['username'])
             severity = "info"
         elif log_level == 'warning':
-            message_template = random.choices(
-                [random.choice(info_messages), random.choice(warning_messages), random.choice(error_messages)],
-                weights=[10, 45, 45], k=1)[0]
-            message = message_template.format(user=user['username'], client_ip=user['client_ip'])
-            severity = "warning" if message in warning_messages else "error" if message in error_messages else "info"
+            message_template = random.choice(warning_messages)
+            message = message_template.format(user=user['username'], client_ip=user.get('client_ip', 'Unknown IP'))
+            severity = "warning"
         else:
             message_template = random.choice(error_messages)
-            message = message_template.format(user=user['username'], client_ip=user['client_ip'])
+            message = message_template.format(user=user['username'], client_ip=user.get('client_ip', 'Unknown IP'))
             severity = "error"
 
         log_entry = generate_syslog_message(hostname, app_name, procid, msgid, message, severity, timestamp)
@@ -109,19 +107,18 @@ def generate_sample_syslogs():
         msgid = "ID" + str(random.randint(100, 999))
         timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
+        log_level = random.choice(log_levels)
         if log_level == 'info':
             message_template = random.choice(info_messages)
             message = message_template.format(user=user['username'])
             severity = "info"
         elif log_level == 'warning':
-            message_template = random.choices(
-                [random.choice(info_messages), random.choice(warning_messages), random.choice(error_messages)],
-                weights=[10, 45, 45], k=1)[0]
-            message = message_template.format(user=user['username'], client_ip=user['client_ip'])
-            severity = "warning" if message in warning_messages else "error" if message in error_messages else "info"
+            message_template = random.choice(warning_messages)
+            message = message_template.format(user=user['username'], client_ip=user.get('client_ip', 'Unknown IP'))
+            severity = "warning"
         else:
             message_template = random.choice(error_messages)
-            message = message_template.format(user=user['username'], client_ip=user['client_ip'])
+            message = message_template.format(user=user['username'], client_ip=user.get('client_ip', 'Unknown IP'))
             severity = "error"
 
         log_entry = generate_syslog_message(hostname, app_name, procid, msgid, message, severity, timestamp)
