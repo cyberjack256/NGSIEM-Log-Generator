@@ -257,6 +257,7 @@ def syslog_menu():
 ║  7. Start LogScale log collector                            ║
 ║  8. Stop LogScale log collector                             ║
 ║  9. Status of LogScale log collector                        ║
+║ 10. Set Syslog log levels (info, warning, error)            ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -287,6 +288,12 @@ def syslog_menu():
             stop_logshipper()
         elif choice == '9':
             status_logshipper()
+        elif choice == '10':
+            log_levels = input("Enter log levels separated by commas (e.g., info, warning, error): ").strip().lower().split(',')
+            config = load_config()
+            config['log_levels'] = [level.strip() for level in log_levels]
+            save_config(config)
+            print(f"Syslog log levels set to {', '.join(config['log_levels'])}.")
         elif choice == '0':
             break
         else:
