@@ -86,17 +86,5 @@
     }
   ],
   "server_ips": ["192.168.1.1", "192.168.1.2"],
-  "network_devices": [
-    "asw-1-eqiad-1", "asw-2-eqiad-2",
-    "cr-1-eqiad-1", "cr-2-eqiad-2",
-    "mr-1-eqiad-1", "mr-2-eqiad-2",
-    "lsw-1-eqiad-1", "lsw-2-eqiad-2",
-    "ssw-1-eqiad-1", "ssw-2-eqiad-2",
-    "msw-1-eqiad-1", "msw-2-eqiad-2",
-    "pfw-1-eqiad-1", "pfw-2-eqiad-2",
-    "ps-1-eqiad-1", "ps-2-eqiad-2",
-    "scs-1-eqiad-1", "scs-2-eqiad-2",
-    "fasw-1-eqiad-1", "fasw-2-eqiad-2",
-    "cloudsw-1-eqiad-1", "cloudsw-2-eqiad-2"
-  ]
+  "log_levels": ["info", "warning", "error"]
 }
