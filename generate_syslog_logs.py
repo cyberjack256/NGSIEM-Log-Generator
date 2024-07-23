@@ -23,7 +23,7 @@ def load_config():
 
 # Save configuration
 def save_config(config):
-    with open(CONFIG_FILE, 'w') as file:
+    with open(CONFIG_FILE, 'w') as file):
         json.dump(config, file, indent=4)
 
 # Generate realistic sample syslogs following RFC 5424
@@ -39,7 +39,6 @@ def generate_sample_syslogs():
 
     log_levels = config.get('log_levels', ['info'])
     hostnames = config.get('hostnames', ['server1.example.com', 'server2.example.com'])
-    network_devices = config.get('network_devices', ["bldg1-room1-rack1", "bldg1-room1-rack2"])
     users = config.get('users', [])
     observer_id = config.get('observer_id', 'observer123')
 
@@ -98,38 +97,12 @@ def generate_sample_syslogs():
 
         log_entry = generate_syslog_message(hostname, app_name, procid, msgid, message, severity, timestamp)
         sample_logs.append(log_entry)
-    
-    for _ in range(20):  # 20 logs from network devices
-        user = random.choice(users)
-        hostname = random.choice(network_devices)
-        app_name = "netapp"
-        procid = str(random.randint(1000, 9999))
-        msgid = "ID" + str(random.randint(100, 999))
-        timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-
-        log_level = random.choice(log_levels)
-        if log_level == 'info':
-            message_template = random.choice(info_messages)
-            message = message_template.format(user=user['username'])
-            severity = "info"
-        elif log_level == 'warning':
-            message_template = random.choice(warning_messages)
-            message = message_template.format(user=user['username'], client_ip=user.get('client_ip', 'Unknown IP'))
-            severity = "warning"
-        else:
-            message_template = random.choice(error_messages)
-            message = message_template.format(user=user['username'], client_ip=user.get('client_ip', 'Unknown IP'))
-            severity = "error"
-
-        log_entry = generate_syslog_message(hostname, app_name, procid, msgid, message, severity, timestamp)
-        sample_logs.append(log_entry)
 
     return sample_logs
 
 # Generate syslogs for Eagle's bad login attempts
 def generate_bad_syslogs(config):
     users = config.get("users", [])
-    network_devices = config.get('network_devices', ["bldg1-room1-rack1", "bldg1-room1-rack2"])
     now = datetime.utcnow()
     logs = []
 
@@ -137,7 +110,7 @@ def generate_bad_syslogs(config):
     user_info = next((u for u in users if u['username'] == "eagle"), None)
     if user_info:
         for _ in range(10):  # Generate 10 bad traffic logs every 15 minutes
-            hostname = random.choice(network_devices + config.get('hostnames', []))
+            hostname = random.choice(config.get('hostnames', []))
             app_name = "auth"
             procid = str(random.randint(1000, 9999))
             msgid = "ID" + str(random.randint(100, 999))
