@@ -11,6 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
 SYSLOG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/syslog.log'
+EXECUTION_LOG = '/home/ec2-user/NGSIEM-Log-Generator/generate_syslog_logs_execution.log'
 fake = Faker()
 
 # Load configuration
@@ -124,6 +125,10 @@ def continuous_log_generation():
         
         # Write logs to file
         write_syslog_to_file(all_logs)
+        
+        # Log execution time
+        with open(EXECUTION_LOG, 'a') as exec_log:
+            exec_log.write(f"Executed at: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}\n")
         
         # Sleep for 1 minute before generating the next set of logs
         time.sleep(60)
