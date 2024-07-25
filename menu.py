@@ -4,9 +4,9 @@ import subprocess
 from generate_logs import generate_sample_logs as generate_sample_zscaler_logs, send_logs
 from generate_syslog_logs import generate_sample_syslogs_main as generate_syslog_logs, write_syslog_to_file
 
-CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
-ZS_LOG_EXECUTION_FILE = '/home/ec2-user/NGSIEM-Log-Generator/generate_logs_execution.log'
-SYSLOG_EXECUTION_FILE = '/home/ec2-user/NGSIEM-Log-Generator/generate_syslog_logs_execution.log'
+CONFIG_FILE = '~/NGSIEM-Log-Generator/config.json'
+ZS_LOG_EXECUTION_FILE = '~/NGSIEM-Log-Generator/generate_logs_execution.log'
+SYSLOG_EXECUTION_FILE = '~/NGSIEM-Log-Generator/generate_syslog_logs_execution.log'
 
 # Load configuration
 def load_config():
