@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import random
+import requests
 import time
 from datetime import datetime, timedelta
 from faker import Faker
@@ -10,8 +11,6 @@ from faker import Faker
 logging.basicConfig(level=logging.INFO)
 
 CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
-SYSLOG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/syslog.log'
-EXECUTION_LOG = '/home/ec2-user/NGSIEM-Log-Generator/generate_syslog_logs_execution.log'
 fake = Faker()
 
 # Load configuration
@@ -26,97 +25,132 @@ def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
         json.dump(config, file, indent=4)
 
-# Generate realistic sample syslogs following RFC 5424
-def generate_syslog_message(hostname, app_name, procid, msgid, message, timestamp, log_level):
-    pri = 134  # Example priority value for local use
-    version = 1
-    return f"<{pri}>{version} {timestamp} {hostname} {app_name} {procid} {msgid} [{log_level}] - {message}"
-
-# Generate sample syslogs
-def generate_sample_syslogs():
-    config = load_config()
+# Generate Zscaler log
+def generate_zscaler_log(config, user, hostname, url, referer, action, reason):
     now = datetime.utcnow()
+    log_entry = {
+        "sourcetype": "zscalernss-web",
+        "event": {
+            "datetime": (now - timedelta(minutes=random.randint(1, 5))).strftime("%Y-%m-%d %H:%M:%S"),
+            "reason": reason,
+            "event_id": random.randint(100000, 999999),
+            "protocol": "HTTPS",
+            "action": action,
+            "transactionsize": random.randint(1000, 2000),
+            "responsesize": random.randint(500, 1000),
+            "requestsize": random.randint(100, 500),
+            "urlcategory": "news" if "birdsite.com" in url else "external",
+            "serverip": random.choice(config.get('server_ips', ['192.168.1.2'])),
+            "clienttranstime": random.randint(200, 500),
+            "requestmethod": random.choice(["GET", "POST"]),
+            "refererURL": referer,
+            "useragent": random.choice(config.get('user_agents', ['Mozilla/5.0'])),
+            "product": "NSS",
+            "location": "New York",
+            "ClientIP": user["client_ip"],
+            "status": random.choice(["200", "404", "500"]),
+            "user": user["email"],
+            "url": url,
+            "vendor": "Zscaler",
+            "hostname": hostname,
+            "clientpublicIP": fake.ipv4(),
+            "threatcategory": "none",
+            "threatname": "none",
+            "filetype": "none",
+            "appname": "browser",
+            "pagerisk": random.randint(1, 100),
+            "department": random.choice(["IT", "SOC", "Help-Desk"]),
+            "urlsupercategory": "information",
+            "appclass": "web",
+            "dlpengine": "none",
+            "urlclass": "news",
+            "threatclass": "none",
+            "dlpdictionaries": "none",
+            "fileclass": "none",
+            "bwthrottle": "none",
+            "servertranstime": random.randint(100, 300),
+            "contenttype": "application/octet-stream",
+            "unscannabletype": "none",
+            "deviceowner": "Admin",
+            "devicehostname": hostname,
+            "decrypted": random.choice(["yes", "no"]),
+            "resource_accessed": url if "sensitive-data" in url else "N/A"
+        }
+    }
+    return log_entry
 
-    hostnames = config.get('hostnames', ['server1.example.com', 'server2.example.com'])
-    users = config.get('users', [])
-    log_level = config.get('log_level', 'info')
-
-    server_messages = [
-        "Routine check: User 'robin' logged in to update the bird photo gallery.",
-        "Maintenance alert: Server uptime confirmed by a cheerful chirp from the CPU.",
-        "System notification: User 'sparrow' changed the default homepage to a picture of a red cardinal.",
-        "Backup complete: All server data safely stored, including the secret bird watching spots.",
-        "Update success: The server successfully updated to the latest version of 'FeatherOS'.",
-        "Log entry: User 'eagle' set a reminder to refill the bird feeders through the server.",
-        "System notice: The server is feeling fresh after a routine cleanup and reboot.",
-        "Access granted: User 'hawk' accessed the server to check on the nest cam live feed.",
-        "Routine operation: The server automatically cleared out old logs and freed up space for more bird data.",
-        "Notification: User 'finch' uploaded a new background image of a beautiful hummingbird for the login screen.",
-        "System check: CPU temperature is normal, and it reports feeling 'as cool as a penguin'.",
-        "Log entry: User 'owl' scheduled a meeting reminder via the server calendar to discuss nocturnal bird behavior.",
-        "Backup status: All files backed up, including the rare bird call recordings.",
-        "Update complete: The server's antivirus definitions are now up to date with the latest birdwatching threats.",
-        "Access log: User 'parrot' successfully changed his password to 'pollywantsacracker'.",
-        "Routine maintenance: Server disk cleanup completed, files neatly organized like a bird's nest.",
-        "System alert: User 'falcon' configured the server to send daily bird facts.",
-        "Security check: All systems are secure and running smoothly, like a well-fed pigeon.",
-        "Log entry: User 'dove' added her birdwatching events to the server calendar.",
-        "System notice: The server's self-check returned a status of 'all feathers intact'."
-    ]
-
-    sample_logs = []
-    for _ in range(100):  # Generate 100 logs
-        user = random.choice(users)
-        hostname = random.choice(hostnames)
-        app_name = "app"
-        procid = str(random.randint(1000, 9999))
-        msgid = "ID" + str(random.randint(100, 999))
-        timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        message = random.choice(server_messages)
-
-        log_entry = generate_syslog_message(hostname, app_name, procid, msgid, message, timestamp, log_level)
-        sample_logs.append(log_entry)
-
-    return sample_logs
-
-# Generate syslogs for Eagle's bad login attempts
-def generate_bad_syslogs(config):
+# Generate regular logs
+def generate_regular_logs(config, count):
     users = config.get("users", [])
-    now = datetime.utcnow()
     logs = []
-    log_level = 'warning'
+    
+    for _ in range(count):
+        user_info = random.choice(users)
+        log = generate_zscaler_log(
+            config=config,
+            user=user_info,
+            hostname=user_info['hostname'],
+            url="https://birdsite.com/home",
+            referer="https://birdsite.com",
+            action="allowed",
+            reason="Normal traffic"
+        )
+        logs.append(log)
+    
+    return logs
 
+# Generate bad traffic logs
+def generate_bad_traffic_logs(config):
+    users = config.get("users", [])
+    logs = []
+    
     # Malicious traffic from "eagle"
     user_info = next((u for u in users if u['username'] == "eagle"), None)
     if user_info:
         for _ in range(10):  # Generate 10 bad traffic logs every 15 minutes
-            hostname = random.choice(config.get('hostnames', []))
-            app_name = "auth"
-            procid = str(random.randint(1000, 9999))
-            msgid = "ID" + str(random.randint(100, 999))
-            timestamp = (now - timedelta(minutes=random.randint(1, 5))).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-            message = "Failed login attempt detected for user eagle"
-
-            log_entry = generate_syslog_message(hostname, app_name, procid, msgid, message, timestamp, log_level)
-            logs.append(log_entry)
+            log = generate_zscaler_log(
+                config=config,
+                user=user_info,
+                hostname=user_info['hostname'],
+                url="https://adminbird.com/login",
+                referer="https://birdsite.com/home",
+                action="blocked",
+                reason="Unauthorized access attempt"
+            )
+            logs.append(log)
     
     return logs
 
-# Write syslog to file
-def write_syslog_to_file(logs):
-    log_dir = os.path.dirname(SYSLOG_FILE)
-    os.makedirs(log_dir, exist_ok=True)
+# Send logs to NGSIEM
+def send_logs(api_url, api_key, logs):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
     
-    with open(SYSLOG_FILE, "a") as log_file:
-        for log_entry in logs:
-            log_file.write(log_entry + "\n")
+    for log in logs:
+        response = requests.post(api_url, headers=headers, json=log)
+        if response.status_code == 200:
+            print("Log sent successfully.")
+        else:
+            print(f"Failed to send log: {response.status_code} {response.text}")
 
-# Generate sample syslogs
-def generate_sample_syslogs_main():
-    sample_logs = generate_sample_syslogs()
-    bad_syslogs = generate_bad_syslogs(load_config())
-    all_logs = sample_logs + bad_syslogs
-    write_syslog_to_file(all_logs)
+# Generate sample logs
+def generate_sample_logs():
+    config = load_config()
+    all_logs = []
+    
+    # Generate 270 regular logs
+    regular_logs = generate_regular_logs(config, 270)
+    all_logs.extend(regular_logs)
+    
+    # Generate 30 bad traffic logs
+    bad_traffic_logs = generate_bad_traffic_logs(config)
+    all_logs.extend(bad_traffic_logs)
+    
+    # Write logs to a file
+    with open('zscaler_sample_logs.json', 'w') as f:
+        json.dump(all_logs, f, indent=2)
 
 # Continuous log generation for cron job
 def continuous_log_generation():
@@ -124,22 +158,20 @@ def continuous_log_generation():
     while True:
         all_logs = []
         
-        # Generate regular syslogs every minute
-        regular_logs = generate_sample_syslogs()
+        # Generate 20-30 regular logs every minute
+        regular_logs = generate_regular_logs(config, random.randint(20, 30))
         all_logs.extend(regular_logs)
         
         # Generate bad traffic logs every 15 minutes
         current_time = datetime.utcnow()
         if current_time.minute % 15 == 0:
-            bad_traffic_logs = generate_bad_syslogs(config)
+            bad_traffic_logs = generate_bad_traffic_logs(config)
             all_logs.extend(bad_traffic_logs)
         
-        # Write logs to file
-        write_syslog_to_file(all_logs)
-        
-        # Log execution time
-        with open(EXECUTION_LOG, 'a') as exec_log:
-            exec_log.write(f"Executed at: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        # Write logs to a file
+        with open('zscaler_continuous_logs.json', 'a') as f:  # Append to file
+            json.dump(all_logs, f, indent=2)
+            f.write('\n')  # Ensure each set of logs is on a new line
         
         # Sleep for 1 minute before generating the next set of logs
         time.sleep(60)
