@@ -10,7 +10,7 @@ from faker import Faker
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
-CONFIG_FILE = '~/NGSIEM-Log-Generator/config.json'
+CONFIG_FILE = '/home/robin/NGSIEM-Log-Generator/config.json'
 fake = Faker()
 
 # Load configuration
@@ -44,7 +44,7 @@ def generate_zscaler_log(config, user, hostname, url, referer, action, reason):
             "clienttranstime": random.randint(200, 500),
             "requestmethod": random.choice(["GET", "POST"]),
             "refererURL": referer,
-            "useragent": random.choice(config.get('user_agents', ['Mozilla/5.0'])),
+            "useragent": user["user_agent"],
             "product": "NSS",
             "location": "New York",
             "ClientIP": user["client_ip"],
@@ -81,7 +81,16 @@ def generate_zscaler_log(config, user, hostname, url, referer, action, reason):
 
 # Generate regular logs
 def generate_regular_logs(config, count):
-    users = config.get("users", [])
+    users = config.get("users", [
+        {
+            "username": "default_user",
+            "email": "default_user@domain.com",
+            "hostname": "default_host",
+            "mac_address": "00:00:00:00:00:00",
+            "client_ip": "127.0.0.1",
+            "user_agent": "Mozilla/5.0"
+        }
+    ])
     logs = []
     
     for _ in range(count):
@@ -101,7 +110,16 @@ def generate_regular_logs(config, count):
 
 # Generate bad traffic logs
 def generate_bad_traffic_logs(config):
-    users = config.get("users", [])
+    users = config.get("users", [
+        {
+            "username": "default_user",
+            "email": "default_user@domain.com",
+            "hostname": "default_host",
+            "mac_address": "00:00:00:00:00:00",
+            "client_ip": "127.0.0.1",
+            "user_agent": "Mozilla/5.0"
+        }
+    ])
     logs = []
     
     # Malicious traffic from "eagle"
