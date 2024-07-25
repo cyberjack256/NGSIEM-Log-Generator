@@ -10,7 +10,7 @@ from faker import Faker
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
-CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
+CONFIG_FILE = '~/NGSIEM-Log-Generator/config.json'
 fake = Faker()
 
 # Load configuration
