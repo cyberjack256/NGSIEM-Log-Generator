@@ -227,7 +227,7 @@ def zscaler_menu():
         elif choice == '3':
             clear_config_value()
         elif choice == '4':
-            sample_logs = generate_sample_zscaler_logs()
+            sample_logs = generate_sample_logs()
             if sample_logs:
                 sample_log_str = json.dumps(sample_logs[0], indent=4)
                 pager(f"Sample log:\n{sample_log_str}")
@@ -238,7 +238,7 @@ def zscaler_menu():
             api_url = config.get('zscaler_api_url')
             api_key = config.get('zscaler_api_key')
             if api_url and api_key:
-                sample_logs = generate_sample_zscaler_logs()
+                sample_logs = generate_sample_logs()
                 send_logs(api_url, api_key, sample_logs)
             else:
                 print("API URL or API Key is missing from configuration.")
