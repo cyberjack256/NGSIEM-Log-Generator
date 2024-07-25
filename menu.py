@@ -1,17 +1,13 @@
-import json
-import logging
 import os
-import random
-import requests
-import time
-from datetime import datetime, timedelta
-from faker import Faker
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
+import json
+import subprocess
+from generate_logs import generate_sample_zscaler_logs, send_logs
+from generate_syslog_logs import generate_sample_syslogs_main as generate_syslog_logs, write_syslog_to_file
+from datetime import datetime, timezone
 
 CONFIG_FILE = '/home/robin/NGSIEM-Log-Generator/config.json'
-fake = Faker()
+ZS_LOG_EXECUTION_FILE = '/home/robin/NGSIEM-Log-Generator/generate_logs_execution.log'
+SYSLOG_EXECUTION_FILE = '/home/robin/NGSIEM-Log-Generator/generate_syslog_logs_execution.log'
 
 # Load configuration
 def load_config():
@@ -25,174 +21,304 @@ def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
         json.dump(config, file, indent=4)
 
-# Generate Zscaler log
-def generate_zscaler_log(config, user, hostname, url, referer, action, reason):
-    now = datetime.utcnow()
-    log_entry = {
-        "sourcetype": "zscalernss-web",
-        "event": {
-            "datetime": (now - timedelta(minutes=random.randint(1, 5))).strftime("%Y-%m-%d %H:%M:%S"),
-            "reason": reason,
-            "event_id": random.randint(100000, 999999),
-            "protocol": "HTTPS",
-            "action": action,
-            "transactionsize": random.randint(1000, 2000),
-            "responsesize": random.randint(500, 1000),
-            "requestsize": random.randint(100, 500),
-            "urlcategory": "news" if "birdsite.com" in url else "external",
-            "serverip": random.choice(config.get('server_ips', ['192.168.1.2'])),
-            "clienttranstime": random.randint(200, 500),
-            "requestmethod": random.choice(["GET", "POST"]),
-            "refererURL": referer,
-            "useragent": user["user_agent"],
-            "product": "NSS",
-            "location": "New York",
-            "ClientIP": user["client_ip"],
-            "status": random.choice(["200", "404", "500"]),
-            "user": user["email"],
-            "url": url,
-            "vendor": "Zscaler",
-            "hostname": hostname,
-            "clientpublicIP": fake.ipv4(),
-            "threatcategory": "none",
-            "threatname": "none",
-            "filetype": "none",
-            "appname": "browser",
-            "pagerisk": random.randint(1, 100),
-            "department": random.choice(["IT", "SOC", "Help-Desk"]),
-            "urlsupercategory": "information",
-            "appclass": "web",
-            "dlpengine": "none",
-            "urlclass": "news",
-            "threatclass": "none",
-            "dlpdictionaries": "none",
-            "fileclass": "none",
-            "bwthrottle": "none",
-            "servertranstime": random.randint(100, 300),
-            "contenttype": "application/octet-stream",
-            "unscannabletype": "none",
-            "deviceowner": "Admin",
-            "devicehostname": hostname,
-            "decrypted": random.choice(["yes", "no"]),
-            "resource_accessed": url if "sensitive-data" in url else "N/A"
-        }
-    }
-    return log_entry
-
-# Generate regular logs
-def generate_regular_logs(config, count):
-    users = config.get("users", [
-        {
-            "username": "default_user",
-            "email": "default_user@domain.com",
-            "hostname": "default_host",
-            "mac_address": "00:00:00:00:00:00",
-            "client_ip": "127.0.0.1",
-            "user_agent": "Mozilla/5.0"
-        }
-    ])
-    logs = []
-    
-    for _ in range(count):
-        user_info = random.choice(users)
-        log = generate_zscaler_log(
-            config=config,
-            user=user_info,
-            hostname=user_info['hostname'],
-            url="https://birdsite.com/home",
-            referer="https://birdsite.com",
-            action="allowed",
-            reason="Normal traffic"
-        )
-        logs.append(log)
-    
-    return logs
-
-# Generate bad traffic logs
-def generate_bad_traffic_logs(config):
-    users = config.get("users", [
-        {
-            "username": "default_user",
-            "email": "default_user@domain.com",
-            "hostname": "default_host",
-            "mac_address": "00:00:00:00:00:00",
-            "client_ip": "127.0.0.1",
-            "user_agent": "Mozilla/5.0"
-        }
-    ])
-    logs = []
-    
-    # Malicious traffic from "eagle"
-    user_info = next((u for u in users if u['username'] == "eagle"), None)
-    if user_info:
-        for _ in range(10):  # Generate 10 bad traffic logs every 15 minutes
-            log = generate_zscaler_log(
-                config=config,
-                user=user_info,
-                hostname=user_info['hostname'],
-                url="https://adminbird.com/login",
-                referer="https://birdsite.com/home",
-                action="blocked",
-                reason="Unauthorized access attempt"
-            )
-            logs.append(log)
-    
-    return logs
-
-# Send logs to NGSIEM
-def send_logs(api_url, api_key, logs):
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
-    }
-    
-    for log in logs:
-        response = requests.post(api_url, headers=headers, json=log)
-        if response.status_code == 200:
-            print("Log sent successfully.")
-        else:
-            print(f"Failed to send log: {response.status_code} {response.text}")
-
-# Generate sample logs
-def generate_sample_logs():
+# Show current configuration
+def show_config():
     config = load_config()
-    all_logs = []
-    
-    # Generate 270 regular logs
-    regular_logs = generate_regular_logs(config, 270)
-    all_logs.extend(regular_logs)
-    
-    # Generate 30 bad traffic logs
-    bad_traffic_logs = generate_bad_traffic_logs(config)
-    all_logs.extend(bad_traffic_logs)
-    
-    # Write logs to a file
-    with open('zscaler_sample_logs.json', 'w') as f:
-        json.dump(all_logs, f, indent=2)
+    config_str = json.dumps(config, indent=4)
+    pager(config_str)
 
-# Continuous log generation for cron job
-def continuous_log_generation():
+# Add configuration value
+def add_config_value(field, example):
     config = load_config()
+    values = []
+    print(f"You are updating the '{field}' field. Example: {example}")
+    print("Press [Enter] without typing anything to stop adding values and return to the main menu.")
     while True:
-        all_logs = []
+        new_value = input(f"Enter a value for {field} (or press [Enter] to finish): ").strip()
+        if not new_value:
+            break
+        values.append(new_value)
+    if values:
+        if isinstance(config.get(field), list):
+            config[field].extend(values)
+        else:
+            config[field] = values if len(values) > 1 else values[0]
+        save_config(config)
+        print(f"Configuration updated: {field} set to {config[field]}")
+
+# Clear configuration value
+def clear_config_value():
+    config = load_config()
+    print("Select a field to clear values from:")
+    fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
+    for i, field in enumerate(fields, 1):
+        print(f"{i}. {field}")
+    choice = input("Select a field: ").strip()
+    if choice.isdigit() and 1 <= int(choice) <= len(fields):
+        field = fields[int(choice) - 1]
+        config[field] = [] if isinstance(config[field], list) else ""
+        save_config(config)
+        print(f"Configuration cleared for field: {field}")
+    else:
+        print("Invalid field choice.")
+
+# View cron job
+def view_cron_job():
+    result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
+    if result.returncode == 0:
+        pager("Current cron jobs:\n" + result.stdout)
+    else:
+        print("No cron jobs set.")
+
+# Set cron job
+def set_cron_job(script_name, interval):
+    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/robin/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
+    result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
+    cron_jobs = result.stdout if result.returncode == 0 else ""
+    if job not in cron_jobs:
+        cron_jobs += f"{job}\n"
+        with open('mycron', 'w') as f:
+            f.write(cron_jobs)
+        subprocess.run(['crontab', 'mycron'])
+        os.remove('mycron')
+        print(f"Cron job set to run {script_name} every {interval} minutes.")
+    else:
+        print("Cron job already set.")
+
+# Delete cron job
+def delete_cron_job(script_name, interval):
+    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/robin/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
+    result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
+    cron_jobs = result.stdout if result.returncode == 0 else ""
+    if job in cron_jobs:
+        cron_jobs = cron_jobs.replace(f"{job}\n", "")
+        with open('mycron', 'w') as f:
+            f.write(cron_jobs)
+        subprocess.run(['crontab', 'mycron'])
+        os.remove('mycron')
+        print(f"Cron job deleted for {script_name}.")
+    else:
+        print("No matching cron job found.")
+
+# Get last execution time
+def get_last_execution_time(log_file):
+    if os.path.exists(log_file):
+        with open(log_file, 'r') as file:
+            lines = file.readlines()
+        if lines:
+            return lines[-1].strip()
+    return "No execution log found."
+
+# Start LogScale log collector
+def start_logshipper():
+    subprocess.run(['sudo', 'systemctl', 'start', 'humio-log-collector.service'])
+    print("LogScale log collector started.")
+
+# Stop LogScale log collector
+def stop_logshipper():
+    subprocess.run(['sudo', 'systemctl', 'stop', 'humio-log-collector.service'])
+    print("LogScale log collector stopped.")
+
+# Status of LogScale log collector
+def status_logshipper():
+    result = subprocess.run(['sudo', 'systemctl', 'status', 'humio-log-collector.service'], capture_output=True, text=True)
+    pager(result.stdout)
+
+# Use less for scrolling output
+def pager(content):
+    pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
+    pager_process.communicate(input=content.encode('utf-8'))
+
+# Set log level
+def set_log_level():
+    config = load_config()
+    print("Select log level to set:")
+    log_levels = ["info", "warning", "error"]
+    for i, level in enumerate(log_levels, 1):
+        print(f"{i}. {level}")
+    choice = input("Select a log level: ").strip()
+    if choice.isdigit() and 1 <= int(choice) <= len(log_levels):
+        config['log_level'] = log_levels[int(choice) - 1]
+        save_config(config)
+        print(f"Log level set to: {config['log_level']}")
+    else:
+        print("Invalid choice.")
+
+# Main menu
+def main_menu():
+    while True:
+        os.system('clear')
+        print("""
+╔═════════════════════════════════════════════════════════════╗
+║                     NGSIEM Log Generator                    ║
+║═════════════════════════════════════════════════════════════║
+║  Welcome to the NGSIEM Log Generator Menu                   ║
+║  Please select an option:                                   ║
+║                                                             ║
+║  1. Zscaler log actions                                     ║
+║  2. Syslog log actions                                      ║
+║  3. Edit LogScale Configuration                             ║
+║  4. Set log level                                           ║
+║  0. Exit                                                    ║
+╚═════════════════════════════════════════════════════════════╝
+        """)
+        choice = input("Enter your choice: ").strip()
+
+        if choice == '1':
+            zscaler_menu()
+        elif choice == '2':
+            syslog_menu()
+        elif choice == '3':
+            edit_logscale_config()
+        elif choice == '4':
+            set_log_level()
+        elif choice == '0':
+            break
+        else:
+            print("Invalid choice. Please try again.")
         
-        # Generate 20-30 regular logs every minute
-        regular_logs = generate_regular_logs(config, random.randint(20, 30))
-        all_logs.extend(regular_logs)
+        input("\nPress Enter to continue...")
+
+# Zscaler menu
+def zscaler_menu():
+    while True:
+        os.system('clear')
+        print(f"""
+╔═════════════════════════════════════════════════════════════╗
+║                     Zscaler Log Actions                     ║
+║═════════════════════════════════════════════════════════════║
+║  Please select an option:                                   ║
+║                                                             ║
+║  1. Show current configuration                              ║
+║  2. Add a configuration value                               ║
+║  3. Clear a configuration value                             ║
+║  4. Generate sample Zscaler logs                            ║
+║  5. Send logs to NGSIEM                                     ║
+║  6. Set cron job for Zscaler logs                           ║
+║  7. Delete cron job for Zscaler logs                        ║
+║  8. View last execution time of Zscaler cron job            ║
+║  0. Back to main menu                                       ║
+╚═════════════════════════════════════════════════════════════╝
+        """)
+        choice = input("Enter your choice: ").strip()
+
+        if choice == '1':
+            show_config()
+        elif choice == '2':
+            print("""
+            Select a field to add values to:
+            1. api_url for Zscaler (e.g., https://your-ngsiem-api-url)
+            2. api_key for Zscaler (e.g., your_api_key)
+            3. observer.id (e.g., observer123)
+            4. encounter.alias (e.g., encounterX)
+            """)
+            field_map = {
+                '1': ('zscaler_api_url', 'https://your-ngsiem-api-url'),
+                '2': ('zscaler_api_key', 'your_api_key'),
+                '3': ('observer.id', 'observer123'),
+                '4': ('encounter.alias', 'encounterX')
+            }
+            field_choice = input("Select a field: ").strip()
+            if field_choice in field_map:
+                field, example = field_map[field_choice]
+                add_config_value(field, example)
+            else:
+                print("Invalid field choice.")
+        elif choice == '3':
+            clear_config_value()
+        elif choice == '4':
+            sample_logs = generate_sample_zscaler_logs()
+            if sample_logs:
+                sample_log_str = json.dumps(sample_logs[0], indent=4)
+                pager(f"Sample log:\n{sample_log_str}")
+            else:
+                print("No sample logs generated.")
+        elif choice == '5':
+            config = load_config()
+            api_url = config.get('zscaler_api_url')
+            api_key = config.get('zscaler_api_key')
+            if api_url and api_key:
+                sample_logs = generate_sample_zscaler_logs()
+                send_logs(api_url, api_key, sample_logs)
+            else:
+                print("API URL or API Key is missing from configuration.")
+        elif choice == '6':
+            set_cron_job('generate_logs.py', 2)
+        elif choice == '7':
+            delete_cron_job('generate_logs.py', 2)
+        elif choice == '8':
+            last_execution = get_last_execution_time(ZS_LOG_EXECUTION_FILE)
+            print(f"Last execution time of Zscaler cron job: {last_execution}")
+        elif choice == '0':
+            break
+        else:
+            print("Invalid choice. Please try again.")
         
-        # Generate bad traffic logs every 15 minutes
-        current_time = datetime.utcnow()
-        if current_time.minute % 15 == 0:
-            bad_traffic_logs = generate_bad_traffic_logs(config)
-            all_logs.extend(bad_traffic_logs)
+        input("\nPress Enter to continue...")
+
+# Syslog menu
+def syslog_menu():
+    while True:
+        os.system('clear')
+        print(f"""
+╔═════════════════════════════════════════════════════════════╗
+║                     Syslog Log Actions                      ║
+║═════════════════════════════════════════════════════════════║
+║  Please select an option:                                   ║
+║                                                             ║
+║  1. Show current configuration                              ║
+║  2. Generate sample Syslog logs                             ║
+║  3. Generate batch of Syslog logs to log folder             ║
+║  4. Set cron job for Syslogs                                ║
+║  5. Delete cron job for Syslogs                             ║
+║  6. View last execution time of Syslog cron job             ║
+║  7. Start LogScale log collector                            ║
+║  8. Stop LogScale log collector                             ║
+║  9. Status of LogScale log collector                        ║
+║  0. Back to main menu                                       ║
+╚═════════════════════════════════════════════════════════════╝
+        """)
+        choice = input("Enter your choice: ").strip()
+
+        if choice == '1':
+            show_config()
+        elif choice == '2':
+            sample_logs = generate_syslog_logs()
+            if sample_logs:
+                sample_log_str = json.dumps(sample_logs[0], indent=4)
+                pager(f"Sample log:\n{sample_log_str}")
+            else:
+                print("No sample logs generated.")
+        elif choice == '3':
+            write_syslog_to_file(generate_syslog_logs())
+            print("Batch of syslog logs generated and saved to log folder.")
+        elif choice == '4':
+            set_cron_job('generate_syslog_logs.py', 15)
+        elif choice == '5':
+            delete_cron_job('generate_syslog_logs.py', 15)
+        elif choice == '6':
+            last_execution = get_last_execution_time(SYSLOG_EXECUTION_FILE)
+            print(f"Last execution time of Syslog cron job: {last_execution}")
+        elif choice == '7':
+            start_logshipper()
+        elif choice == '8':
+            stop_logshipper()
+        elif choice == '9':
+            status_logshipper()
+        elif choice == '0':
+            break
+        else:
+            print("Invalid choice. Please try again.")
         
-        # Write logs to a file
-        with open('zscaler_continuous_logs.json', 'a') as f:  # Append to file
-            json.dump(all_logs, f, indent=2)
-            f.write('\n')  # Ensure each set of logs is on a new line
-        
-        # Sleep for 1 minute before generating the next set of logs
-        time.sleep(60)
+        input("\nPress Enter to continue...")
+
+# Edit LogScale Configuration
+def edit_logscale_config():
+    logscale_config_path = "/etc/humio-logcollector/config.yaml"
+    if os.path.exists(logscale_config_path):
+        subprocess.run(['sudo', 'nano', logscale_config_path])
+    else:
+        print("LogScale configuration file not found.")
 
 if __name__ == "__main__":
-    continuous_log_generation()
+    main_menu()
