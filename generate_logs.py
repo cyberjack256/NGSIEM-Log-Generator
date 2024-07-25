@@ -5,6 +5,7 @@ import random
 import time
 from datetime import datetime, timedelta
 from faker import Faker
+import subprocess
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -171,5 +172,30 @@ def continuous_log_generation():
         # Sleep for 1 minute before generating the next set of logs
         time.sleep(60)
 
+# Send logs to NGSIEM
+def send_logs(api_url, api_key, logs):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+    
+    for log in logs:
+        response = subprocess.run(
+            ["curl", "-X", "POST", api_url, "-H", "Content-Type: application/json", "-H", f"Authorization: Bearer {api_key}", "-d", json.dumps(log)],
+            capture_output=True,
+            text=True
+        )
+        if response.returncode == 0:
+            logging.info("Log sent successfully.")
+        else:
+            logging.error(f"Failed to send log: {response.stderr}")
+
 if __name__ == "__main__":
-    continuous_log_generation()
+    config = load_config()
+    api_url = config.get('zscaler_api_url')
+    api_key = config.get('zscaler_api_key')
+
+    if api_url and api_key:
+        continuous_log_generation()
+    else:
+        logging.error("API URL and API Key are not set in the configuration.")
