@@ -1,13 +1,12 @@
 import os
 import json
 import subprocess
-from generate_logs import generate_sample_zscaler_logs_main as generate_zscaler_logs, send_logs
+from generate_logs import generate_sample_zscaler_logs, send_logs
 from generate_syslog_logs import generate_sample_syslogs_main as generate_syslog_logs, write_syslog_to_file
 
 CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
 ZS_LOG_EXECUTION_FILE = '/home/ec2-user/NGSIEM-Log-Generator/generate_logs_execution.log'
 SYSLOG_EXECUTION_FILE = '/home/ec2-user/NGSIEM-Log-Generator/generate_syslog_logs_execution.log'
-LOGSCALE_CONFIG_FILE = '/etc/humio-logcollector/config.yaml'
 
 # Load configuration
 def load_config():
@@ -50,7 +49,7 @@ def add_config_value(field, example):
 def clear_config_value():
     config = load_config()
     print("Select a field to clear values from:")
-    fields = list(config.keys())
+    fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
     for i, field in enumerate(fields, 1):
         print(f"{i}. {field}")
     choice = input("Select a field: ").strip()
@@ -124,17 +123,25 @@ def status_logshipper():
     result = subprocess.run(['sudo', 'systemctl', 'status', 'humio-log-collector.service'], capture_output=True, text=True)
     pager(result.stdout)
 
-# Edit LogScale configuration
-def edit_logscale_config():
-    if os.path.exists(LOGSCALE_CONFIG_FILE):
-        subprocess.run(['sudo', 'nano', '-l', LOGSCALE_CONFIG_FILE])
-    else:
-        print(f"LogScale configuration file {LOGSCALE_CONFIG_FILE} does not exist.")
-
 # Use less for scrolling output
 def pager(content):
     pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
     pager_process.communicate(input=content.encode('utf-8'))
+
+# Set log level
+def set_log_level():
+    config = load_config()
+    print("Select log level to set:")
+    log_levels = ["info", "warning", "error"]
+    for i, level in enumerate(log_levels, 1):
+        print(f"{i}. {level}")
+    choice = input("Select a log level: ").strip()
+    if choice.isdigit() and 1 <= int(choice) <= len(log_levels):
+        config['log_level'] = log_levels[int(choice) - 1]
+        save_config(config)
+        print(f"Log level set to: {config['log_level']}")
+    else:
+        print("Invalid choice.")
 
 # Main menu
 def main_menu():
@@ -149,7 +156,8 @@ def main_menu():
 ║                                                             ║
 ║  1. Zscaler log actions                                     ║
 ║  2. Syslog log actions                                      ║
-║  3. Edit LogScale configuration                             ║
+║  3. Edit LogScale Configuration                             ║
+║  4. Set log level                                           ║
 ║  0. Exit                                                    ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -161,6 +169,8 @@ def main_menu():
             syslog_menu()
         elif choice == '3':
             edit_logscale_config()
+        elif choice == '4':
+            set_log_level()
         elif choice == '0':
             break
         else:
@@ -196,16 +206,16 @@ def zscaler_menu():
         elif choice == '2':
             print("""
             Select a field to add values to:
-            1. observer_id (e.g., observer123)
-            2. api_url for Zscaler (e.g., https://your-ngsiem-api-url)
-            3. api_key for Zscaler (e.g., your_api_key)
-            4. observer.alias (e.g., observerAlias)
+            1. api_url for Zscaler (e.g., https://your-ngsiem-api-url)
+            2. api_key for Zscaler (e.g., your_api_key)
+            3. observer.id (e.g., observer123)
+            4. encounter.alias (e.g., encounterX)
             """)
             field_map = {
-                '1': ('observer_id', 'observer123'),
-                '2': ('zscaler_api_url', 'https://your-ngsiem-api-url'),
-                '3': ('zscaler_api_key', 'your_api_key'),
-                '4': ('observer.alias', 'observerAlias')
+                '1': ('zscaler_api_url', 'https://your-ngsiem-api-url'),
+                '2': ('zscaler_api_key', 'your_api_key'),
+                '3': ('observer.id', 'observer123'),
+                '4': ('encounter.alias', 'encounterX')
             }
             field_choice = input("Select a field: ").strip()
             if field_choice in field_map:
@@ -216,14 +226,21 @@ def zscaler_menu():
         elif choice == '3':
             clear_config_value()
         elif choice == '4':
-            sample_logs, curl_command = generate_zscaler_logs()
+            sample_logs = generate_sample_zscaler_logs()
             if sample_logs:
                 sample_log_str = json.dumps(sample_logs[0], indent=4)
-                pager(f"Sample log:\n{sample_log_str}\n\nCurl command:\n{curl_command}")
+                pager(f"Sample log:\n{sample_log_str}")
             else:
                 print("No sample logs generated.")
         elif choice == '5':
-            send_logs('zscaler_api_url', 'zscaler_api_key')
+            config = load_config()
+            api_url = config.get('zscaler_api_url')
+            api_key = config.get('zscaler_api_key')
+            if api_url and api_key:
+                sample_logs = generate_sample_zscaler_logs()
+                send_logs(api_url, api_key, sample_logs)
+            else:
+                print("API URL or API Key is missing from configuration.")
         elif choice == '6':
             set_cron_job('generate_logs.py', 2)
         elif choice == '7':
@@ -257,7 +274,6 @@ def syslog_menu():
 ║  7. Start LogScale log collector                            ║
 ║  8. Stop LogScale log collector                             ║
 ║  9. Status of LogScale log collector                        ║
-║ 10. Set Syslog log levels (info, warning, error)            ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -273,7 +289,7 @@ def syslog_menu():
             else:
                 print("No sample logs generated.")
         elif choice == '3':
-            write_syslog_to_file()
+            write_syslog_to_file(generate_syslog_logs())
             print("Batch of syslog logs generated and saved to log folder.")
         elif choice == '4':
             set_cron_job('generate_syslog_logs.py', 15)
@@ -288,18 +304,20 @@ def syslog_menu():
             stop_logshipper()
         elif choice == '9':
             status_logshipper()
-        elif choice == '10':
-            log_levels = input("Enter log levels separated by commas (e.g., info, warning, error): ").strip().lower().split(',')
-            config = load_config()
-            config['log_levels'] = [level.strip() for level in log_levels]
-            save_config(config)
-            print(f"Syslog log levels set to {', '.join(config['log_levels'])}.")
         elif choice == '0':
             break
         else:
             print("Invalid choice. Please try again.")
         
         input("\nPress Enter to continue...")
+
+# Edit LogScale Configuration
+def edit_logscale_config():
+    logscale_config_path = "/etc/humio-logcollector/config.yaml"
+    if os.path.exists(logscale_config_path):
+        subprocess.run(['sudo', 'nano', logscale_config_path])
+    else:
+        print("LogScale configuration file not found.")
 
 if __name__ == "__main__":
     main_menu()
