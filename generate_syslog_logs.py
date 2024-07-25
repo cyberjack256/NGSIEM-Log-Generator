@@ -9,9 +9,9 @@ from faker import Faker
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
-CONFIG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/config.json'
-SYSLOG_FILE = '/home/ec2-user/NGSIEM-Log-Generator/syslog.log'
-EXECUTION_LOG = '/home/ec2-user/NGSIEM-Log-Generator/generate_syslog_logs_execution.log'
+CONFIG_FILE = '~/NGSIEM-Log-Generator/config.json'
+SYSLOG_FILE = '~/NGSIEM-Log-Generator/syslog.log'
+EXECUTION_LOG = '~/NGSIEM-Log-Generator/generate_syslog_logs_execution.log'
 fake = Faker()
 
 # Load configuration
