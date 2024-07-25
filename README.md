@@ -19,7 +19,7 @@ The NGSIEM Log Generator is a versatile tool designed for cybersecurity professi
 ```
 3. Install the required dependencies:
  ```bash
-    pip3 install -r requirements.txt
+    cat requirements.txt | xargs -n 1 pip3 install
 ```
 ## Usage
 
