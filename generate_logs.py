@@ -3,7 +3,7 @@ import logging
 import os
 import random
 import requests
-import time
+import subprocess
 from datetime import datetime, timedelta, timezone
 from faker import Faker
 
@@ -79,102 +79,58 @@ def generate_zscaler_log(config, user, hostname, url, referer, action, reason):
     }
     return log_entry
 
-# Generate regular logs
-def generate_regular_logs(config, count):
-    users = config.get("users", [])
-    logs = []
-    
-    for _ in range(count):
-        user_info = random.choice(users)
+# Generate regular log
+def generate_regular_log(config):
+    user_info = random.choice(config.get("users", []))
+    url = f"https://{random.choice(['birdsite.com', 'adminbird.com', 'birdnet.org'])}/{random.choice(['home', 'photos', 'posts', 'videos', 'articles'])}"
+    log = generate_zscaler_log(
+        config=config,
+        user=user_info,
+        hostname=user_info['hostname'],
+        url=url,
+        referer="https://birdsite.com",
+        action="allowed",
+        reason="Normal traffic"
+    )
+    return log
+
+# Generate bad traffic log
+def generate_bad_traffic_log(config):
+    user_info = next((u for u in config.get("users", []) if u['username'] == "eagle"), None)
+    if user_info:
         log = generate_zscaler_log(
             config=config,
             user=user_info,
             hostname=user_info['hostname'],
-            url="https://birdsite.com/home",
-            referer="https://birdsite.com",
-            action="allowed",
-            reason="Normal traffic"
+            url="https://adminbird.com/login",
+            referer="https://birdsite.com/home",
+            action="blocked",
+            reason="Unauthorized access attempt"
         )
-        logs.append(log)
-    
-    return logs
+        return log
+    return None
 
-# Generate bad traffic logs
-def generate_bad_traffic_logs(config):
-    users = config.get("users", [])
-    logs = []
-    
-    # Malicious traffic from "eagle"
-    user_info = next((u for u in users if u['username'] == "eagle"), None)
-    if user_info:
-        for _ in range(10):  # Generate 10 bad traffic logs every 15 minutes
-            log = generate_zscaler_log(
-                config=config,
-                user=user_info,
-                hostname=user_info['hostname'],
-                url="https://adminbird.com/login",
-                referer="https://birdsite.com/home",
-                action="blocked",
-                reason="Unauthorized access attempt"
-            )
-            logs.append(log)
-    
-    return logs
+# Display sample log and curl command
+def display_sample_log_and_curl():
+    config = load_config()
+    good_log = generate_regular_log(config)
+    bad_log = generate_bad_traffic_log(config)
 
-# Send logs to NGSIEM
-def send_logs(api_url, api_key, logs):
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
+    sample_logs = {
+        "Good Traffic Log": good_log,
+        "Bad Traffic Log": bad_log
     }
-    
-    for log in logs:
-        response = requests.post(api_url, headers=headers, json=log)
-        if response.status_code == 200:
-            print("Log sent successfully.")
-        else:
-            print(f"Failed to send log: {response.status_code} {response.text}")
 
-# Generate sample logs
-def generate_sample_logs():
-    config = load_config()
-    all_logs = []
-    
-    # Generate 270 regular logs
-    regular_logs = generate_regular_logs(config, 270)
-    all_logs.extend(regular_logs)
-    
-    # Generate 30 bad traffic logs
-    bad_traffic_logs = generate_bad_traffic_logs(config)
-    all_logs.extend(bad_traffic_logs)
-    
-    # Write logs to a file
-    with open('zscaler_sample_logs.json', 'w') as f:
-        json.dump(all_logs, f, indent=2)
+    for log_type, log in sample_logs.items():
+        log_str = json.dumps(log, indent=4)
+        print(f"\n--- {log_type} ---")
+        print(log_str)
+        api_url = config.get('zscaler_api_url')
+        api_key = config.get('zscaler_api_key')
+        curl_command = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{log_str}'"
+        print(f"\nCurl command to send the {log_type.lower()} to NGSIEM:\n\n{curl_command}\n")
 
-# Continuous log generation for cron job
-def continuous_log_generation():
-    config = load_config()
-    while True:
-        all_logs = []
-        
-        # Generate 20-30 regular logs every minute
-        regular_logs = generate_regular_logs(config, random.randint(20, 30))
-        all_logs.extend(regular_logs)
-        
-        # Generate bad traffic logs every 15 minutes
-        current_time = datetime.now(timezone.utc)
-        if current_time.minute % 15 == 0:
-            bad_traffic_logs = generate_bad_traffic_logs(config)
-            all_logs.extend(bad_traffic_logs)
-        
-        # Write logs to a file
-        with open('zscaler_continuous_logs.json', 'a') as f:  # Append to file
-            json.dump(all_logs, f, indent=2)
-            f.write('\n')  # Ensure each set of logs is on a new line
-        
-        # Sleep for 1 minute before generating the next set of logs
-        time.sleep(60)
+    print("\nNote: The logs above are samples and have not been sent to NGSIEM. The curl commands provided can be used to send these logs to NGSIEM.\n")
 
 if __name__ == "__main__":
-    continuous_log_generation()
+    display_sample_log_and_curl()
