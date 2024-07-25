@@ -4,7 +4,7 @@ import os
 import random
 import requests
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from faker import Faker
 
 # Set up logging
@@ -27,7 +27,7 @@ def save_config(config):
 
 # Generate Zscaler log
 def generate_zscaler_log(config, user, hostname, url, referer, action, reason):
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     log_entry = {
         "sourcetype": "zscalernss-web",
         "event": {
@@ -44,7 +44,7 @@ def generate_zscaler_log(config, user, hostname, url, referer, action, reason):
             "clienttranstime": random.randint(200, 500),
             "requestmethod": random.choice(["GET", "POST"]),
             "refererURL": referer,
-            "useragent": user["user_agent"],
+            "useragent": random.choice(config.get('user_agents', ['Mozilla/5.0'])),
             "product": "NSS",
             "location": "New York",
             "ClientIP": user["client_ip"],
@@ -81,16 +81,7 @@ def generate_zscaler_log(config, user, hostname, url, referer, action, reason):
 
 # Generate regular logs
 def generate_regular_logs(config, count):
-    users = config.get("users", [
-        {
-            "username": "default_user",
-            "email": "default_user@domain.com",
-            "hostname": "default_host",
-            "mac_address": "00:00:00:00:00:00",
-            "client_ip": "127.0.0.1",
-            "user_agent": "Mozilla/5.0"
-        }
-    ])
+    users = config.get("users", [])
     logs = []
     
     for _ in range(count):
@@ -110,16 +101,7 @@ def generate_regular_logs(config, count):
 
 # Generate bad traffic logs
 def generate_bad_traffic_logs(config):
-    users = config.get("users", [
-        {
-            "username": "default_user",
-            "email": "default_user@domain.com",
-            "hostname": "default_host",
-            "mac_address": "00:00:00:00:00:00",
-            "client_ip": "127.0.0.1",
-            "user_agent": "Mozilla/5.0"
-        }
-    ])
+    users = config.get("users", [])
     logs = []
     
     # Malicious traffic from "eagle"
@@ -181,7 +163,7 @@ def continuous_log_generation():
         all_logs.extend(regular_logs)
         
         # Generate bad traffic logs every 15 minutes
-        current_time = datetime.utcnow()
+        current_time = datetime.now(timezone.utc)
         if current_time.minute % 15 == 0:
             bad_traffic_logs = generate_bad_traffic_logs(config)
             all_logs.extend(bad_traffic_logs)
