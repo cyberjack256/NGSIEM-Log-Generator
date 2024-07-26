@@ -1,7 +1,8 @@
 {
   "zscaler_api_url": "https://your-ngsiem-api-url",
   "zscaler_api_key": "your_api_key",
-  "observer_id": "your_observer_id",
+  "observer.id": "observer123",
+  "encounter.alias": "encounterX",
   "domains": ["birdsite.com", "adminbird.com", "birdnet.org"],
   "users": [
     {
