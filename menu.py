@@ -1,7 +1,7 @@
 import os
 import json
 import subprocess
-from generate_logs import generate_sample_zscaler_logs, display_sample_log_and_curl
+from generate_logs import generate_regular_log, generate_bad_traffic_log, display_sample_log_and_curl
 from generate_syslog_logs import generate_sample_syslogs_main as generate_syslog_logs, write_syslog_to_file
 
 CONFIG_FILE = '/home/robin/NGSIEM-Log-Generator/config.json'
@@ -232,8 +232,8 @@ def zscaler_menu():
             api_url = config.get('zscaler_api_url')
             api_key = config.get('zscaler_api_key')
             if api_url and api_key:
-                sample_logs = [generate_regular_log(config), generate_bad_traffic_log(config)]
-                send_logs(api_url, api_key, sample_logs)
+                logs = [generate_regular_log(config), generate_bad_traffic_log(config)]
+                send_logs(api_url, api_key, logs)
             else:
                 print("API URL or API Key is missing from configuration.")
         elif choice == '6':
