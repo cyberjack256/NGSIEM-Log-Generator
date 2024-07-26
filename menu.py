@@ -1,9 +1,16 @@
-import os
 import json
+import logging
+import os
+import random
 import subprocess
-from generate_logs import generate_regular_log, generate_bad_traffic_log, display_sample_log_and_curl, send_logs, check_required_fields
-from generate_syslog_logs import generate_sample_syslogs_main as generate_syslog_logs, write_syslog_to_file
+from datetime import datetime, timedelta, timezone
+from generate_logs import display_sample_log_and_curl, generate_regular_log, generate_bad_traffic_log, send_logs
+from generate_syslog_logs import generate_sample_syslogs, write_syslog_to_file
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+
+# Dynamically get the user home directory
 CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
 ZS_LOG_EXECUTION_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/generate_logs_execution.log')
 SYSLOG_EXECUTION_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/generate_syslog_logs_execution.log')
@@ -29,15 +36,13 @@ def show_config():
 # Add configuration value
 def add_config_value(field, example):
     config = load_config()
-    if field in config and config[field]:
-        print(f"The '{field}' field already has a value: {config[field]}. Only one value per field is allowed.")
-        return
-    print(f"You are updating the '{field}' field. Example: {example}")
-    new_value = input(f"Enter a value for {field}: ").strip()
-    if new_value:
-        config[field] = new_value
+    value = input(f"Enter a value for {field} (Example: {example}): ").strip()
+    if value:
+        config[field] = value
         save_config(config)
         print(f"Configuration updated: {field} set to {config[field]}")
+    else:
+        print("No value entered. Configuration not updated.")
 
 # Clear configuration value
 def clear_config_value():
@@ -121,6 +126,21 @@ def status_logshipper():
 def pager(content):
     pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
     pager_process.communicate(input=content.encode('utf-8'))
+
+# Set log level
+def set_log_level():
+    config = load_config()
+    print("Select log level to set:")
+    log_levels = ["info", "warning", "error"]
+    for i, level in enumerate(log_levels, 1):
+        print(f"{i}. {level}")
+    choice = input("Select a log level: ").strip()
+    if choice.isdigit() and 1 <= int(choice) <= len(log_levels):
+        config['log_level'] = log_levels[int(choice) - 1]
+        save_config(config)
+        print(f"Log level set to: {config['log_level']}")
+    else:
+        print("Invalid choice.")
 
 # Main menu
 def main_menu():
@@ -208,13 +228,13 @@ def zscaler_menu():
             display_sample_log_and_curl()
         elif choice == '5':
             config = load_config()
-            if check_required_fields(config):
-                api_url = config.get('zscaler_api_url')
-                api_key = config.get('zscaler_api_key')
+            api_url = config.get('zscaler_api_url')
+            api_key = config.get('zscaler_api_key')
+            if api_url and api_key and check_required_fields(config):
                 sample_logs = [generate_regular_log(config), generate_bad_traffic_log(config)]
                 send_logs(api_url, api_key, sample_logs)
             else:
-                input("\nPress Enter to return to the main menu...")
+                print("API URL or API Key is missing from configuration.")
         elif choice == '6':
             set_cron_job('generate_logs.py', 2)
         elif choice == '7':
@@ -256,14 +276,14 @@ def syslog_menu():
         if choice == '1':
             show_config()
         elif choice == '2':
-            sample_logs = generate_syslog_logs()
+            sample_logs = generate_sample_syslogs()
             if sample_logs:
                 sample_log_str = json.dumps(sample_logs[0], indent=4)
                 pager(f"Sample log:\n{sample_log_str}")
             else:
                 print("No sample logs generated.")
         elif choice == '3':
-            write_syslog_to_file(generate_syslog_logs())
+            write_syslog_to_file(generate_sample_syslogs())
             print("Batch of syslog logs generated and saved to log folder.")
         elif choice == '4':
             set_cron_job('generate_syslog_logs.py', 15)
@@ -292,6 +312,15 @@ def edit_logscale_config():
         subprocess.run(['sudo', 'nano', logscale_config_path])
     else:
         print("LogScale configuration file not found.")
+
+# Check required fields
+def check_required_fields(config):
+    required_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
+    missing_fields = [field for field in required_fields if field not in config or not config[field]]
+    if missing_fields:
+        print(f"Missing required configuration fields: {', '.join(missing_fields)}")
+        return False
+    return True
 
 if __name__ == "__main__":
     main_menu()
