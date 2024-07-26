@@ -110,6 +110,20 @@ def generate_bad_traffic_log(config):
         return log
     return None
 
+# Send logs to NGSIEM
+def send_logs(api_url, api_key, logs):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+    
+    for log in logs:
+        response = requests.post(api_url, headers=headers, json=log)
+        if response.status_code == 200:
+            print("Log sent successfully.")
+        else:
+            print(f"Failed to send log: {response.status_code} {response.text}")
+
 # Display sample log and curl command
 def display_sample_log_and_curl():
     config = load_config()
