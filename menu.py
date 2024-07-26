@@ -1,9 +1,8 @@
 import os
 import json
 import subprocess
-from generate_logs import generate_sample_logs, send_logs
+from generate_logs import generate_sample_logs, display_sample_log_and_curl, send_logs
 from generate_syslog_logs import generate_sample_syslogs_main as generate_syslog_logs, write_syslog_to_file
-from datetime import datetime, timezone
 
 CONFIG_FILE = '/home/robin/NGSIEM-Log-Generator/config.json'
 ZS_LOG_EXECUTION_FILE = '/home/robin/NGSIEM-Log-Generator/generate_logs_execution.log'
@@ -192,7 +191,7 @@ def zscaler_menu():
 ║  1. Show current configuration                              ║
 ║  2. Add a configuration value                               ║
 ║  3. Clear a configuration value                             ║
-║  4. Generate sample Zscaler logs                            ║
+║  4. Display sample Zscaler logs                             ║
 ║  5. Send logs to NGSIEM                                     ║
 ║  6. Set cron job for Zscaler logs                           ║
 ║  7. Delete cron job for Zscaler logs                        ║
@@ -227,12 +226,7 @@ def zscaler_menu():
         elif choice == '3':
             clear_config_value()
         elif choice == '4':
-            sample_logs = generate_sample_logs()
-            if sample_logs:
-                sample_log_str = json.dumps(sample_logs[0], indent=4)
-                pager(f"Sample log:\n{sample_log_str}")
-            else:
-                print("No sample logs generated.")
+            display_sample_log_and_curl()
         elif choice == '5':
             config = load_config()
             api_url = config.get('zscaler_api_url')
