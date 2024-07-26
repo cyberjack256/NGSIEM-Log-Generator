@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import random
-import requests
+import time
 from datetime import datetime, timedelta, timezone
 from faker import Faker
 
@@ -11,6 +11,8 @@ logging.basicConfig(level=logging.INFO)
 
 # Dynamically get the user home directory
 CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
+SYSLOG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/syslog.log')
+EXECUTION_LOG = os.path.expanduser('~/NGSIEM-Log-Generator/generate_syslog_logs_execution.log')
 fake = Faker()
 
 # Load configuration
@@ -25,144 +27,151 @@ def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
         json.dump(config, file, indent=4)
 
-# Generate Zscaler log
-def generate_zscaler_log(config, user, hostname, url, referer, action, reason):
-    now = datetime.now(timezone.utc)
-    log_entry = {
-        "sourcetype": "zscalernss-web",
-        "event": {
-            "datetime": (now - timedelta(minutes=random.randint(1, 5))).strftime("%Y-%m-%d %H:%M:%S"),
-            "reason": reason,
-            "event_id": random.randint(100000, 999999),
-            "protocol": "HTTPS",
-            "action": action,
-            "transactionsize": random.randint(1000, 2000),
-            "responsesize": random.randint(500, 1000),
-            "requestsize": random.randint(100, 500),
-            "urlcategory": "news" if "birdsite.com" in url else "external",
-            "serverip": random.choice(config.get('server_ips', ['192.168.1.2'])),
-            "clienttranstime": random.randint(200, 500),
-            "requestmethod": random.choice(["GET", "POST"]),
-            "refererURL": referer,
-            "useragent": random.choice(config.get('user_agents', ['Mozilla/5.0'])),
-            "product": "NSS",
-            "location": "New York",
-            "ClientIP": user["client_ip"],
-            "status": random.choice(["200", "404", "500"]),
-            "user": user["email"],
-            "url": url,
-            "vendor": "Zscaler",
-            "hostname": hostname,
-            "clientpublicIP": fake.ipv4(),
-            "threatcategory": "none",
-            "threatname": "none",
-            "filetype": "none",
-            "appname": "browser",
-            "pagerisk": random.randint(1, 100),
-            "department": random.choice(["IT", "SOC", "Help-Desk"]),
-            "urlsupercategory": "information",
-            "appclass": "web",
-            "dlpengine": "none",
-            "urlclass": "news",
-            "threatclass": "none",
-            "dlpdictionaries": "none",
-            "fileclass": "none",
-            "bwthrottle": "none",
-            "servertranstime": random.randint(100, 300),
-            "contenttype": "application/octet-stream",
-            "unscannabletype": "none",
-            "deviceowner": "Admin",
-            "devicehostname": hostname,
-            "decrypted": random.choice(["yes", "no"]),
-            "resource_accessed": url if "sensitive-data" in url else "N/A"
-        }
-    }
-    return log_entry
+# Generate realistic sample syslogs following RFC 5424
+def generate_syslog_message(hostname, app_name, procid, msgid, message, timestamp, log_level):
+    pri = {
+        'info': 6,
+        'warning': 4,
+        'error': 3
+    }[log_level]
+    version = 1
+    return f"<{pri}>{version} {timestamp} {hostname} {app_name} {procid} {msgid} - {message}"
 
-# Generate regular log
-def generate_regular_log(config):
-    users = config.get("users", [])
+# Generate sample syslogs
+def generate_sample_syslogs():
+    config = load_config()
+    now = datetime.now(timezone.utc)
+
+    hostnames = config.get('hostnames', ['server1.example.com', 'server2.example.com'])
+    users = config.get('users', [])
+    log_level = config.get('log_level', 'info')
+
     if not users:
         raise ValueError("No users found in the configuration.")
-    user_info = random.choice(users)
-    url = f"https://{random.choice(['birdsite.com', 'adminbird.com', 'birdnet.org'])}/{random.choice(['home', 'photos', 'posts', 'videos', 'articles'])}"
-    log = generate_zscaler_log(
-        config=config,
-        user=user_info,
-        hostname=user_info['hostname'],
-        url=url,
-        referer="https://birdsite.com",
-        action="allowed",
-        reason="Normal traffic"
-    )
-    return log
+    if log_level not in ['info', 'warning', 'error']:
+        raise ValueError("Invalid log level in the configuration. Choose from 'info', 'warning', or 'error'.")
 
-# Generate bad traffic log
-def generate_bad_traffic_log(config):
-    user_info = next((u for u in config.get("users", []) if u['username'] == "eagle"), None)
+    messages = {
+        'info': [
+            "Routine check: User 'robin' logged in to update the bird photo gallery.",
+            "Maintenance alert: Server uptime confirmed by a cheerful chirp from the CPU.",
+            "System notification: User 'sparrow' changed the default homepage to a picture of a red cardinal.",
+            "Backup complete: All server data safely stored, including the secret bird watching spots.",
+            "Update success: The server successfully updated to the latest version of 'FeatherOS'.",
+            "Log entry: User 'eagle' set a reminder to refill the bird feeders through the server.",
+            "System notice: The server is feeling fresh after a routine cleanup and reboot.",
+            "Access granted: User 'hawk' accessed the server to check on the nest cam live feed.",
+            "Routine operation: The server automatically cleared out old logs and freed up space for more bird data.",
+            "Notification: User 'finch' uploaded a new background image of a beautiful hummingbird for the login screen."
+        ],
+        'warning': [
+            "Warning: High memory usage detected, considering flying south for the winter.",
+            "System warning: User 'robin' attempted to upload a large bird photo, exceeding the size limit.",
+            "Warning: Disk space running low, feathers may start to ruffle.",
+            "Alert: Unusual login pattern detected for user 'eagle'.",
+            "Warning: Potential phishing attempt detected in the email logs.",
+            "System alert: User 'sparrow' attempted to access restricted files.",
+            "Warning: CPU temperature rising, consider cooling measures.",
+            "System warning: Multiple failed login attempts detected.",
+            "Warning: Network traffic spike detected, possible DDoS attack.",
+            "Alert: Unauthorized access attempt detected on port 22."
+        ],
+        'error': [
+            "Error: User 'eagle' failed to login after multiple attempts.",
+            "Critical error: Server disk failure detected.",
+            "Error: Backup process failed for the bird watching spots data.",
+            "System error: Unable to update to the latest version of 'FeatherOS'.",
+            "Error: Unauthorized access attempt detected and blocked.",
+            "Critical alert: Server overheating, immediate action required.",
+            "Error: User 'sparrow' attempted to access restricted files and was blocked.",
+            "System failure: Network interface down.",
+            "Error: Malware detected in the email attachments.",
+            "Critical error: Database connection failed, services impacted."
+        ]
+    }
+
+    sample_logs = []
+    for _ in range(80):  # 80 logs from servers
+        user = random.choice(users)
+        hostname = random.choice(hostnames)
+        app_name = "app"
+        procid = str(random.randint(1000, 9999))
+        msgid = "ID" + str(random.randint(100, 999))
+        timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        message = random.choice(messages[log_level])
+
+        log_entry = generate_syslog_message(hostname, app_name, procid, msgid, message, timestamp, log_level)
+        sample_logs.append(log_entry)
+    
+    return sample_logs
+
+# Generate syslogs for Eagle's bad login attempts
+def generate_bad_syslogs(config):
+    users = config.get("users", [])
+    now = datetime.now(timezone.utc)
+    logs = []
+
+    # Malicious traffic from "eagle"
+    user_info = next((u for u in users if u['username'] == "eagle"), None)
     if not user_info:
         raise ValueError("User 'eagle' not found in the configuration.")
-    log = generate_zscaler_log(
-        config=config,
-        user=user_info,
-        hostname=user_info['hostname'],
-        url="https://adminbird.com/login",
-        referer="https://birdsite.com/home",
-        action="blocked",
-        reason="Unauthorized access attempt"
-    )
-    return log
+    for _ in range(10):  # Generate 10 bad traffic logs every 15 minutes
+        hostname = user_info['hostname']
+        app_name = "auth"
+        procid = str(random.randint(1000, 9999))
+        msgid = "ID" + str(random.randint(100, 999))
+        timestamp = (now - timedelta(minutes=random.randint(1, 5))).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        message = "Failed login attempt detected for user eagle"
 
-# Send logs to NGSIEM
-def send_logs(api_url, api_key, logs):
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
-    }
+        log_entry = generate_syslog_message(hostname, app_name, procid, msgid, message, timestamp, 'error')
+        logs.append(log_entry)
     
-    for log in logs:
-        response = requests.post(api_url, headers=headers, json=log)
-        if response.status_code == 200:
-            print("Log sent successfully.")
-        else:
-            print(f"Failed to send log: {response.status_code} {response.text}")
+    return logs
 
-# Display sample log and curl command
-def display_sample_log_and_curl():
+# Write syslog to file
+def write_syslog_to_file(logs):
+    log_dir = os.path.dirname(SYSLOG_FILE)
+    os.makedirs(log_dir, exist_ok=True)
+    
+    with open(SYSLOG_FILE, "a") as log_file:
+        for log_entry in logs:
+            log_file.write(log_entry + "\n")
+
+# Generate sample syslogs
+def generate_sample_syslogs_main():
     try:
-        config = load_config()
-        if not check_required_fields(config):
-            return
-        
-        good_log = generate_regular_log(config)
-        bad_log = generate_bad_traffic_log(config)
-
-        sample_logs = {
-            "Good Traffic Log": good_log,
-            "Bad Traffic Log": bad_log
-        }
-
-        for log_type, log in sample_logs.items():
-            log_str = json.dumps(log, indent=4)
-            print(f"\n--- {log_type} ---")
-            print(log_str)
-            api_url = config.get('zscaler_api_url')
-            api_key = config.get('zscaler_api_key')
-            curl_command = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{log_str}'"
-            print(f"\nCurl command to send the {log_type.lower()} to NGSIEM:\n\n{curl_command}\n")
-
-        print("\nNote: The logs above are samples and have not been sent to NGSIEM. The curl commands provided can be used to send these logs to NGSIEM.\n")
+        sample_logs = generate_sample_syslogs()
+        bad_syslogs = generate_bad_syslogs(load_config())
+        all_logs = sample_logs + bad_syslogs
+        write_syslog_to_file(all_logs)
     except ValueError as e:
         print(f"Error: {e}")
 
-# Check required fields
-def check_required_fields(config):
-    required_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
-    missing_fields = [field for field in required_fields if field not in config or not config[field]]
-    if missing_fields:
-        print(f"Missing required configuration fields: {', '.join(missing_fields)}")
-        return False
-    return True
+# Continuous log generation for cron job
+def continuous_log_generation():
+    config = load_config()
+    while True:
+        all_logs = []
+        
+        # Generate regular syslogs every minute
+        regular_logs = generate_sample_syslogs()
+        all_logs.extend(regular_logs)
+        
+        # Generate bad traffic logs every 15 minutes
+        current_time = datetime.utcnow()
+        if current_time.minute % 15 == 0:
+            bad_traffic_logs = generate_bad_syslogs(config)
+            all_logs.extend(bad_traffic_logs)
+        
+        # Write logs to file
+        write_syslog_to_file(all_logs)
+        
+        # Log execution time
+        with open(EXECUTION_LOG, 'a') as exec_log:
+            exec_log.write(f"Executed at: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        
+        # Sleep for 1 minute before generating the next set of logs
+        time.sleep(60)
 
 if __name__ == "__main__":
-    display_sample_log_and_curl()
+    continuous_log_generation()
