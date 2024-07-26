@@ -1,7 +1,7 @@
 import os
 import json
 import subprocess
-from generate_logs import generate_regular_log, generate_bad_traffic_log, display_sample_log_and_curl
+from generate_logs import generate_zscaler_log, generate_regular_log, generate_bad_traffic_log, display_sample_log_and_curl, send_logs
 from generate_syslog_logs import generate_sample_syslogs_main as generate_syslog_logs, write_syslog_to_file
 
 CONFIG_FILE = '/home/robin/NGSIEM-Log-Generator/config.json'
