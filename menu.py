@@ -1,12 +1,12 @@
 import os
 import json
 import subprocess
-from generate_logs import generate_zscaler_log, generate_regular_log, generate_bad_traffic_log, display_sample_log_and_curl, send_logs
+from generate_logs import generate_regular_log, generate_bad_traffic_log, display_sample_log_and_curl
 from generate_syslog_logs import generate_sample_syslogs_main as generate_syslog_logs, write_syslog_to_file
 
-CONFIG_FILE = '/home/robin/NGSIEM-Log-Generator/config.json'
-ZS_LOG_EXECUTION_FILE = '/home/robin/NGSIEM-Log-Generator/generate_logs_execution.log'
-SYSLOG_EXECUTION_FILE = '/home/robin/NGSIEM-Log-Generator/generate_syslog_logs_execution.log'
+CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
+ZS_LOG_EXECUTION_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/generate_logs_execution.log')
+SYSLOG_EXECUTION_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/generate_syslog_logs_execution.log')
 
 # Load configuration
 def load_config():
@@ -20,6 +20,15 @@ def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
         json.dump(config, file, indent=4)
 
+# Check required configuration values
+def check_required_fields(config):
+    required_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
+    missing_fields = [field for field in required_fields if field not in config or not config[field]]
+    if missing_fields:
+        print(f"Missing required configuration fields: {', '.join(missing_fields)}")
+        return False
+    return True
+
 # Show current configuration
 def show_config():
     config = load_config()
@@ -29,21 +38,17 @@ def show_config():
 # Add configuration value
 def add_config_value(field, example):
     config = load_config()
-    values = []
+    if field in config and config[field]:
+        print(f"The '{field}' field already has a value: {config[field]}. Only one value per field is allowed.")
+        return
     print(f"You are updating the '{field}' field. Example: {example}")
-    print("Press [Enter] without typing anything to stop adding values and return to the main menu.")
-    while True:
-        new_value = input(f"Enter a value for {field} (or press [Enter] to finish): ").strip()
-        if not new_value:
-            break
-        values.append(new_value)
-    if values:
-        if isinstance(config.get(field), list):
-            config[field].extend(values)
-        else:
-            config[field] = values if len(values) > 1 else values[0]
+    new_value = input(f"Enter a value for {field}: ").strip()
+    if new_value:
+        config[field] = new_value
         save_config(config)
         print(f"Configuration updated: {field} set to {config[field]}")
+    else:
+        print("No value entered. Returning to the main menu.")
 
 # Clear configuration value
 def clear_config_value():
@@ -55,7 +60,7 @@ def clear_config_value():
     choice = input("Select a field: ").strip()
     if choice.isdigit() and 1 <= int(choice) <= len(fields):
         field = fields[int(choice) - 1]
-        config[field] = [] if isinstance(config[field], list) else ""
+        config[field] = ""
         save_config(config)
         print(f"Configuration cleared for field: {field}")
     else:
@@ -71,7 +76,7 @@ def view_cron_job():
 
 # Set cron job
 def set_cron_job(script_name, interval):
-    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/robin/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
+    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/ubuntu/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job not in cron_jobs:
@@ -86,7 +91,7 @@ def set_cron_job(script_name, interval):
 
 # Delete cron job
 def delete_cron_job(script_name, interval):
-    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/robin/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
+    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/ubuntu/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job in cron_jobs:
@@ -229,13 +234,13 @@ def zscaler_menu():
             display_sample_log_and_curl()
         elif choice == '5':
             config = load_config()
-            api_url = config.get('zscaler_api_url')
-            api_key = config.get('zscaler_api_key')
-            if api_url and api_key:
-                logs = [generate_regular_log(config), generate_bad_traffic_log(config)]
-                send_logs(api_url, api_key, logs)
+            if check_required_fields(config):
+                api_url = config.get('zscaler_api_url')
+                api_key = config.get('zscaler_api_key')
+                sample_logs = [generate_regular_log(config), generate_bad_traffic_log(config)]
+                send_logs(api_url, api_key, sample_logs)
             else:
-                print("API URL or API Key is missing from configuration.")
+                input("\nPress Enter to return to the main menu...")
         elif choice == '6':
             set_cron_job('generate_logs.py', 2)
         elif choice == '7':
