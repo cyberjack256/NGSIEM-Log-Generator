@@ -1,7 +1,7 @@
 import os
 import json
 import subprocess
-from generate_logs import display_sample_log_and_curl
+from generate_logs import display_sample_log_and_curl, send_logs
 from generate_syslog_logs import generate_sample_syslogs_main as generate_syslog_logs, write_syslog_to_file
 
 CONFIG_FILE = '/home/robin/NGSIEM-Log-Generator/config.json'
@@ -71,7 +71,7 @@ def view_cron_job():
 
 # Set cron job
 def set_cron_job(script_name, interval):
-    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/robin/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
+    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/ec2-user/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job not in cron_jobs:
@@ -86,7 +86,7 @@ def set_cron_job(script_name, interval):
 
 # Delete cron job
 def delete_cron_job(script_name, interval):
-    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/robin/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
+    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/ec2-user/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job in cron_jobs:
@@ -191,7 +191,7 @@ def zscaler_menu():
 ║  1. Show current configuration                              ║
 ║  2. Add a configuration value                               ║
 ║  3. Clear a configuration value                             ║
-║  4. Display sample Zscaler logs                             ║
+║  4. Generate sample Zscaler logs                            ║
 ║  5. Send logs to NGSIEM                                     ║
 ║  6. Set cron job for Zscaler logs                           ║
 ║  7. Delete cron job for Zscaler logs                        ║
@@ -232,8 +232,8 @@ def zscaler_menu():
             api_url = config.get('zscaler_api_url')
             api_key = config.get('zscaler_api_key')
             if api_url and api_key:
-                sample_logs = generate_regular_log(config)
-                send_logs(api_url, api_key, [sample_logs])
+                sample_logs = [generate_regular_log(config), generate_bad_traffic_log(config)]
+                send_logs(api_url, api_key, sample_logs)
             else:
                 print("API URL or API Key is missing from configuration.")
         elif choice == '6':
