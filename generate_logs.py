@@ -3,14 +3,14 @@ import logging
 import os
 import random
 import requests
-import subprocess
 from datetime import datetime, timedelta, timezone
 from faker import Faker
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
-CONFIG_FILE = '/home/robin/NGSIEM-Log-Generator/config.json'
+# Dynamically get the user home directory
+CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
 fake = Faker()
 
 # Load configuration
@@ -81,7 +81,10 @@ def generate_zscaler_log(config, user, hostname, url, referer, action, reason):
 
 # Generate regular log
 def generate_regular_log(config):
-    user_info = random.choice(config.get("users", []))
+    users = config.get("users", [])
+    if not users:
+        raise ValueError("No users found in the configuration.")
+    user_info = random.choice(users)
     url = f"https://{random.choice(['birdsite.com', 'adminbird.com', 'birdnet.org'])}/{random.choice(['home', 'photos', 'posts', 'videos', 'articles'])}"
     log = generate_zscaler_log(
         config=config,
@@ -97,18 +100,18 @@ def generate_regular_log(config):
 # Generate bad traffic log
 def generate_bad_traffic_log(config):
     user_info = next((u for u in config.get("users", []) if u['username'] == "eagle"), None)
-    if user_info:
-        log = generate_zscaler_log(
-            config=config,
-            user=user_info,
-            hostname=user_info['hostname'],
-            url="https://adminbird.com/login",
-            referer="https://birdsite.com/home",
-            action="blocked",
-            reason="Unauthorized access attempt"
-        )
-        return log
-    return None
+    if not user_info:
+        raise ValueError("User 'eagle' not found in the configuration.")
+    log = generate_zscaler_log(
+        config=config,
+        user=user_info,
+        hostname=user_info['hostname'],
+        url="https://adminbird.com/login",
+        referer="https://birdsite.com/home",
+        action="blocked",
+        reason="Unauthorized access attempt"
+    )
+    return log
 
 # Send logs to NGSIEM
 def send_logs(api_url, api_key, logs):
@@ -126,25 +129,40 @@ def send_logs(api_url, api_key, logs):
 
 # Display sample log and curl command
 def display_sample_log_and_curl():
-    config = load_config()
-    good_log = generate_regular_log(config)
-    bad_log = generate_bad_traffic_log(config)
+    try:
+        config = load_config()
+        if not check_required_fields(config):
+            return
+        
+        good_log = generate_regular_log(config)
+        bad_log = generate_bad_traffic_log(config)
 
-    sample_logs = {
-        "Good Traffic Log": good_log,
-        "Bad Traffic Log": bad_log
-    }
+        sample_logs = {
+            "Good Traffic Log": good_log,
+            "Bad Traffic Log": bad_log
+        }
 
-    for log_type, log in sample_logs.items():
-        log_str = json.dumps(log, indent=4)
-        print(f"\n--- {log_type} ---")
-        print(log_str)
-        api_url = config.get('zscaler_api_url')
-        api_key = config.get('zscaler_api_key')
-        curl_command = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{log_str}'"
-        print(f"\nCurl command to send the {log_type.lower()} to NGSIEM:\n\n{curl_command}\n")
+        for log_type, log in sample_logs.items():
+            log_str = json.dumps(log, indent=4)
+            print(f"\n--- {log_type} ---")
+            print(log_str)
+            api_url = config.get('zscaler_api_url')
+            api_key = config.get('zscaler_api_key')
+            curl_command = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{log_str}'"
+            print(f"\nCurl command to send the {log_type.lower()} to NGSIEM:\n\n{curl_command}\n")
 
-    print("\nNote: The logs above are samples and have not been sent to NGSIEM. The curl commands provided can be used to send these logs to NGSIEM.\n")
+        print("\nNote: The logs above are samples and have not been sent to NGSIEM. The curl commands provided can be used to send these logs to NGSIEM.\n")
+    except ValueError as e:
+        print(f"Error: {e}")
+
+# Check required fields
+def check_required_fields(config):
+    required_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
+    missing_fields = [field for field in required_fields if field not in config or not config[field]]
+    if missing_fields:
+        print(f"Missing required configuration fields: {', '.join(missing_fields)}")
+        return False
+    return True
 
 if __name__ == "__main__":
     display_sample_log_and_curl()
