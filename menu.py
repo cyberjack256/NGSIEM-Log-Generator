@@ -1,7 +1,7 @@
 import os
 import json
 import subprocess
-from generate_logs import generate_regular_log, generate_bad_traffic_log, display_sample_log_and_curl
+from generate_logs import generate_regular_log, generate_bad_traffic_log, display_sample_log_and_curl, send_logs, check_required_fields
 from generate_syslog_logs import generate_sample_syslogs_main as generate_syslog_logs, write_syslog_to_file
 
 CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
@@ -19,15 +19,6 @@ def load_config():
 def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
         json.dump(config, file, indent=4)
-
-# Check required configuration values
-def check_required_fields(config):
-    required_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
-    missing_fields = [field for field in required_fields if field not in config or not config[field]]
-    if missing_fields:
-        print(f"Missing required configuration fields: {', '.join(missing_fields)}")
-        return False
-    return True
 
 # Show current configuration
 def show_config():
@@ -47,8 +38,6 @@ def add_config_value(field, example):
         config[field] = new_value
         save_config(config)
         print(f"Configuration updated: {field} set to {config[field]}")
-    else:
-        print("No value entered. Returning to the main menu.")
 
 # Clear configuration value
 def clear_config_value():
@@ -76,7 +65,7 @@ def view_cron_job():
 
 # Set cron job
 def set_cron_job(script_name, interval):
-    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/ubuntu/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
+    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/ec2-user/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job not in cron_jobs:
@@ -91,7 +80,7 @@ def set_cron_job(script_name, interval):
 
 # Delete cron job
 def delete_cron_job(script_name, interval):
-    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/ubuntu/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
+    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/ec2-user/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
     result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
     cron_jobs = result.stdout if result.returncode == 0 else ""
     if job in cron_jobs:
@@ -132,21 +121,6 @@ def status_logshipper():
 def pager(content):
     pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
     pager_process.communicate(input=content.encode('utf-8'))
-
-# Set log level
-def set_log_level():
-    config = load_config()
-    print("Select log level to set:")
-    log_levels = ["info", "warning", "error"]
-    for i, level in enumerate(log_levels, 1):
-        print(f"{i}. {level}")
-    choice = input("Select a log level: ").strip()
-    if choice.isdigit() and 1 <= int(choice) <= len(log_levels):
-        config['log_level'] = log_levels[int(choice) - 1]
-        save_config(config)
-        print(f"Log level set to: {config['log_level']}")
-    else:
-        print("Invalid choice.")
 
 # Main menu
 def main_menu():
