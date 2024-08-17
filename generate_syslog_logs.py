@@ -26,14 +26,14 @@ def resolve_domain_to_ip(domain):
 
 # List of bird conservatorship-related domains
 bird_related_domains = [
-    "bird.merlinlabs.com",
     "birdlife.org",
     "audubon.org",
-    "birdwatchingdaily.com",
     "allaboutbirds.org",
-    "birdsinbackyards.net",
-    "cornellbirds.com",
-    "merlinbird.id"
+    "ebird.org",
+    "nestwatch.org",
+    "merlin.allaboutbirds.org",
+    "birdwatchingdaily.com",
+    "birdsna.org"
 ]
 
 # Resolve these domains to their IP addresses
