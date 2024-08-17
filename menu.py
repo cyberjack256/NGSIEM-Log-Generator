@@ -148,11 +148,6 @@ def zscaler_menu():
     while True:
         os.system('clear')
         print(f"""
-# Zscaler menu
-def zscaler_menu():
-    while True:
-        os.system('clear')
-        print(f"""
 ╔═════════════════════════════════════════════════════════════╗
 ║                     Zscaler Log Actions                     ║
 ║═════════════════════════════════════════════════════════════║
@@ -163,7 +158,7 @@ def zscaler_menu():
 ║  3. Clear a configuration value                             ║
 ║  4. Generate sample Zscaler logs                            ║
 ║  5. Send logs to NGSIEM                                     ║
-║  6. Back to main menu                                       ║
+║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
         choice = input("Enter your choice: ").strip()
@@ -171,23 +166,27 @@ def zscaler_menu():
         if choice == '1':
             show_config()
         elif choice == '2':
-            # (add the code to add a configuration value)
-            pass
+            add_config_value()
         elif choice == '3':
-            # (add the code to clear a configuration value)
-            pass
+            clear_config_value()
         elif choice == '4':
-            # (add the code to generate sample Zscaler logs)
-            pass
+            display_sample_log_and_curl()
         elif choice == '5':
-            # (add the code to send logs to NGSIEM)
-            pass
-        elif choice == '6':
+            config = load_config()
+            api_url = config.get('zscaler_api_url')
+            api_key = config.get('zscaler_api_key')
+            if api_url and api_key and check_required_fields(config):
+                sample_logs = [generate_regular_log(config), generate_bad_traffic_log(config)]
+                send_logs(api_url, api_key, sample_logs)
+            else:
+                print("API URL or API Key is missing from configuration.")
+        elif choice == '0':
             break
         else:
             print("Invalid choice. Please try again.")
         
         input("\nPress Enter to continue...")
+
 # Syslog menu
 def syslog_menu():
     while True:
