@@ -1,9 +1,8 @@
 import json
 import logging
 import os
-import random
 import subprocess
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from generate_logs import display_sample_log_and_curl, generate_regular_log, generate_bad_traffic_log, send_logs
 from generate_syslog_logs import generate_sample_syslogs, write_syslog_to_file
 
@@ -60,52 +59,23 @@ def clear_config_value():
     else:
         print("Invalid field choice.")
 
-# View cron job
-def view_cron_job():
-    result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
-    if result.returncode == 0:
-        pager("Current cron jobs:\n" + result.stdout)
-    else:
-        print("No cron jobs set.")
+# Start logging service
+def start_logging_service():
+    subprocess.Popen(["python3", "/path/to/generate_syslog_logs.py"])
+    print("Logging service started.")
 
-# Set cron job
-def set_cron_job(script_name, interval):
-    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/ec2-user/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
-    result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
-    cron_jobs = result.stdout if result.returncode == 0 else ""
-    if job not in cron_jobs:
-        cron_jobs += f"{job}\n"
-        with open('mycron', 'w') as f:
-            f.write(cron_jobs)
-        subprocess.run(['crontab', 'mycron'])
-        os.remove('mycron')
-        print(f"Cron job set to run {script_name} every {interval} minutes.")
-    else:
-        print("Cron job already set.")
+# Stop logging service
+def stop_logging_service():
+    subprocess.run(["pkill", "-f", "generate_syslog_logs.py"])
+    print("Logging service stopped.")
 
-# Delete cron job
-def delete_cron_job(script_name, interval):
-    job = f"*/{interval} * * * * for i in {{1..200}}; do python3 /home/ec2-user/NGSIEM-Log-Generator/{script_name} > /dev/null 2>&1; sleep 1; done"
-    result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
-    cron_jobs = result.stdout if result.returncode == 0 else ""
-    if job in cron_jobs:
-        cron_jobs = cron_jobs.replace(f"{job}\n", "")
-        with open('mycron', 'w') as f:
-            f.write(cron_jobs)
-        subprocess.run(['crontab', 'mycron'])
-        os.remove('mycron')
-        print(f"Cron job deleted for {script_name}.")
+# Check logging service status
+def check_logging_service_status():
+    result = subprocess.run(["pgrep", "-fl", "generate_syslog_logs.py"], capture_output=True, text=True)
+    if result.stdout:
+        print("Logging service is running.")
     else:
-        print("No matching cron job found.")
-
-# Get last execution time
-def get_last_execution_time(log_file):
-    if os.path.exists(log_file):
-        with open(log_file, 'r') as file:
-            lines = file.readlines()
-        if lines:
-            return lines[-1].strip()
-    return "No execution log found."
+        print("Logging service is not running.")
 
 # Start LogScale log collector
 def start_logshipper():
@@ -127,21 +97,6 @@ def pager(content):
     pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
     pager_process.communicate(input=content.encode('utf-8'))
 
-# Set log level
-def set_log_level():
-    config = load_config()
-    print("Select log level to set:")
-    log_levels = ["info", "warning", "error"]
-    for i, level in enumerate(log_levels, 1):
-        print(f"{i}. {level}")
-    choice = input("Select a log level: ").strip()
-    if choice.isdigit() and 1 <= int(choice) <= len(log_levels):
-        config['log_level'] = log_levels[int(choice) - 1]
-        save_config(config)
-        print(f"Log level set to: {config['log_level']}")
-    else:
-        print("Invalid choice.")
-
 # Main menu
 def main_menu():
     while True:
@@ -155,7 +110,7 @@ def main_menu():
 ║                                                             ║
 ║  1. Zscaler log actions                                     ║
 ║  2. Syslog log actions                                      ║
-║  3. Edit LogScale Configuration                             ║
+║  3. LogScale Configuration and Controls                     ║
 ║  4. Set log level                                           ║
 ║  0. Exit                                                    ║
 ╚═════════════════════════════════════════════════════════════╝
@@ -167,7 +122,7 @@ def main_menu():
         elif choice == '2':
             syslog_menu()
         elif choice == '3':
-            edit_logscale_config()
+            logscale_menu()
         elif choice == '4':
             set_log_level()
         elif choice == '0':
@@ -261,13 +216,9 @@ def syslog_menu():
 ║                                                             ║
 ║  1. Show current configuration                              ║
 ║  2. Generate sample Syslog logs                             ║
-║  3. Generate batch of Syslog logs to log folder             ║
-║  4. Set cron job for Syslogs                                ║
-║  5. Delete cron job for Syslogs                             ║
-║  6. View last execution time of Syslog cron job             ║
-║  7. Start LogScale log collector                            ║
-║  8. Stop LogScale log collector                             ║
-║  9. Status of LogScale log collector                        ║
+║  3. Start logging service                                   ║
+║  4. Stop logging service                                    ║
+║  5. Check logging service status                            ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -283,21 +234,45 @@ def syslog_menu():
             else:
                 print("No sample logs generated.")
         elif choice == '3':
-            write_syslog_to_file(generate_sample_syslogs())
-            print("Batch of syslog logs generated and saved to log folder.")
+            start_logging_service()
         elif choice == '4':
-            set_cron_job('generate_syslog_logs.py', 15)
+            stop_logging_service()
         elif choice == '5':
-            delete_cron_job('generate_syslog_logs.py', 15)
-        elif choice == '6':
-            last_execution = get_last_execution_time(SYSLOG_EXECUTION_FILE)
-            print(f"Last execution time of Syslog cron job: {last_execution}")
-        elif choice == '7':
+            check_logging_service_status()
+        elif choice == '0':
+            break
+        else:
+            print("Invalid choice. Please try again.")
+        
+        input("\nPress Enter to continue...")
+
+# LogScale Configuration and Controls
+def logscale_menu():
+    while True:
+        os.system('clear')
+        print(f"""
+╔═════════════════════════════════════════════════════════════╗
+║               LogScale Configuration and Controls           ║
+║═════════════════════════════════════════════════════════════║
+║  Please select an option:                                   ║
+║                                                             ║
+║  1. Start LogScale log collector                            ║
+║  2. Stop LogScale log collector                             ║
+║  3. Check LogScale log collector status                     ║
+║  4. Edit LogScale configuration file                        ║
+║  0. Back to main menu                                       ║
+╚═════════════════════════════════════════════════════════════╝
+        """)
+        choice = input("Enter your choice: ").strip()
+
+        if choice == '1':
             start_logshipper()
-        elif choice == '8':
+        elif choice == '2':
             stop_logshipper()
-        elif choice == '9':
+        elif choice == '3':
             status_logshipper()
+        elif choice == '4':
+            edit_logscale_config()
         elif choice == '0':
             break
         else:
