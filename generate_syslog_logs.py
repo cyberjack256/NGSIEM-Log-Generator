@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Paths to config files
 CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
-MESSAGE_CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/messages.config')  # Corrected the file name here
+MESSAGE_CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/message.config')
 SYSLOG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/syslog.log')
 EXECUTION_LOG = os.path.expanduser('~/NGSIEM-Log-Generator/generate_syslog_logs_execution.log')
 
@@ -26,7 +26,7 @@ def calculate_pri(facility, severity):
     return (facility * 8) + severity
 
 # Generate realistic sample syslogs following RFC 5424
-def generate_syslog_message(template, pri, timestamp, hostname, app_name, procid, client_ip, public_ip, srcPort, srcIF=None, dstIF=None, srcMAC=None, sentBytes=None, sentPackets=None, receivedBytes=None, receivedPackets=None, duration=None, other_metric=None):
+def generate_syslog_message(template, pri, timestamp, hostname, app_name, procid, client_ip, public_ip, srcPort, username=None, mac_address=None, user_agent=None):
     return template.format(
         pri=pri,
         timestamp=timestamp,
@@ -36,15 +36,9 @@ def generate_syslog_message(template, pri, timestamp, hostname, app_name, procid
         client_ip=client_ip,
         public_ip=public_ip,
         srcPort=srcPort,
-        srcIF=srcIF or "",
-        dstIF=dstIF or "",
-        srcMAC=srcMAC or "",
-        sentBytes=sentBytes or "",
-        sentPackets=sentPackets or "",
-        receivedBytes=receivedBytes or "",
-        receivedPackets=receivedPackets or "",
-        duration=duration or "",
-        other_metric=other_metric or ""
+        username=username or "",
+        mac_address=mac_address or "",
+        user_agent=user_agent or ""
     )
 
 # Generate sample syslogs
@@ -63,10 +57,7 @@ def generate_sample_syslogs():
     if not users:
         raise ValueError("No users found in the configuration.")
 
-    messages = message_config.get('info', [])  # Correctly accessing 'info' messages for this severity
-
-    if not messages:
-        raise ValueError("No 'info' messages found in the message configuration.")
+    messages = message_config.get('info', [])
 
     sample_logs = []
     for _ in range(80):  # Generate 80 logs from servers
@@ -76,7 +67,6 @@ def generate_sample_syslogs():
         procid = str(random.randint(1000, 9999))
         timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%b %d %H:%M:%S')
         message_template = random.choice(messages)
-        resource = random.choice(resources)
         srcPort = str(random.randint(1024, 65535))
         public_ip = "69.63.134.46"  # Example of a bird-related public IP (could be adjusted)
 
@@ -89,7 +79,10 @@ def generate_sample_syslogs():
             procid=procid,
             client_ip=user["client_ip"],
             public_ip=public_ip,
-            srcPort=srcPort
+            srcPort=srcPort,
+            username=user["username"],
+            mac_address=user["mac_address"],
+            user_agent=user["user_agent"]
         )
 
         sample_logs.append(message)
@@ -113,10 +106,7 @@ def generate_bad_syslogs():
     severity = 3  # Error
     pri = calculate_pri(log_facility, severity)
 
-    messages = message_config.get('error', [])  # Correctly accessing 'error' messages for this severity
-
-    if not messages:
-        raise ValueError("No 'error' messages found in the message configuration.")
+    messages = message_config.get('error', [])
 
     for _ in range(10):  # Generate 10 bad traffic logs
         hostname = user_info['hostname']
@@ -124,7 +114,6 @@ def generate_bad_syslogs():
         procid = str(random.randint(1000, 9999))
         timestamp = (now - timedelta(minutes=random.randint(1, 5))).strftime('%b %d %H:%M:%S')
         message_template = random.choice(messages)
-        resource = random.choice(config.get('domains', ['adminbird.com']))
         srcPort = str(random.randint(1024, 65535))
         public_ip = "69.63.134.46"  # Example of a bird-related public IP (could be adjusted)
 
@@ -137,7 +126,10 @@ def generate_bad_syslogs():
             procid=procid,
             client_ip=user_info["client_ip"],
             public_ip=public_ip,
-            srcPort=srcPort
+            srcPort=srcPort,
+            username=user_info["username"],
+            mac_address=user_info["mac_address"],
+            user_agent=user_info["user_agent"]
         )
 
         logs.append(message)
@@ -165,6 +157,7 @@ def generate_sample_syslogs_main():
 
 # Continuous log generation
 def continuous_log_generation():
+    config = load_config(CONFIG_FILE)
     while True:
         all_logs = []
         
