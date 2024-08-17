@@ -33,26 +33,35 @@ def show_config():
     pager(config_str)
 
 # Add configuration value
-def add_config_value(field, example):
+def add_config_value():
     config = load_config()
-    value = input(f"Enter a value for {field} (Example: {example}): ").strip()
-    if value:
-        config[field] = value
-        save_config(config)
-        print(f"Configuration updated: {field} set to {config[field]}")
+    editable_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
+    print("Select a field to add or update values for:")
+    for i, field in enumerate(editable_fields, 1):
+        print(f"{i}. {field}")
+    choice = input("Select a field: ").strip()
+    if choice.isdigit() and 1 <= int(choice) <= len(editable_fields):
+        field = editable_fields[int(choice) - 1]
+        value = input(f"Enter a value for {field}: ").strip()
+        if value:
+            config[field] = value
+            save_config(config)
+            print(f"Configuration updated: {field} set to {config[field]}")
+        else:
+            print("No value entered. Configuration not updated.")
     else:
-        print("No value entered. Configuration not updated.")
+        print("Invalid field choice.")
 
 # Clear configuration value
 def clear_config_value():
     config = load_config()
+    editable_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
     print("Select a field to clear values from:")
-    fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
-    for i, field in enumerate(fields, 1):
+    for i, field in enumerate(editable_fields, 1):
         print(f"{i}. {field}")
     choice = input("Select a field: ").strip()
-    if choice.isdigit() and 1 <= int(choice) <= len(fields):
-        field = fields[int(choice) - 1]
+    if choice.isdigit() and 1 <= int(choice) <= len(editable_fields):
+        field = editable_fields[int(choice) - 1]
         config[field] = ""
         save_config(config)
         print(f"Configuration cleared for field: {field}")
