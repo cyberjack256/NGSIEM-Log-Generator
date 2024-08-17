@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Paths to config files
 CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
-MESSAGE_CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/message.config')
+MESSAGE_CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/messages.config')  # Corrected the file name here
 SYSLOG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/syslog.log')
 EXECUTION_LOG = os.path.expanduser('~/NGSIEM-Log-Generator/generate_syslog_logs_execution.log')
 
@@ -54,7 +54,10 @@ def generate_sample_syslogs():
     if not users:
         raise ValueError("No users found in the configuration.")
 
-    messages = message_config.get('syslog_messages', [])
+    messages = message_config.get('info', [])  # Correctly accessing 'info' messages for this severity
+
+    if not messages:
+        raise ValueError("No 'info' messages found in the message configuration.")
 
     sample_logs = []
     for _ in range(80):  # Generate 80 logs from servers
@@ -101,7 +104,10 @@ def generate_bad_syslogs():
     severity = 3  # Error
     pri = calculate_pri(log_facility, severity)
 
-    messages = message_config.get('syslog_messages', [])
+    messages = message_config.get('error', [])  # Correctly accessing 'error' messages for this severity
+
+    if not messages:
+        raise ValueError("No 'error' messages found in the message configuration.")
 
     for _ in range(10):  # Generate 10 bad traffic logs
         hostname = user_info['hostname']
@@ -150,7 +156,6 @@ def generate_sample_syslogs_main():
 
 # Continuous log generation
 def continuous_log_generation():
-    config = load_config(CONFIG_FILE)
     while True:
         all_logs = []
         
