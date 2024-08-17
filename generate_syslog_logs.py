@@ -72,7 +72,14 @@ def generate_sample_syslogs():
     message_config = load_config(MESSAGE_CONFIG_FILE)
     now = datetime.now(timezone.utc)
 
-    hostnames = config.get('hostnames', ['server1.example.com', 'server2.example.com'])
+    # Updated hostnames and app names based on the bird-themed logs
+    hostnames = [
+        "birdcentral.nest.local",
+        "nestaccess.adminbird.net",
+        "birdwatch.cams.net",
+        "birdnet.secure.local",
+        "nestwall.firewall.local"
+    ]
     users = config.get('users', [])
     log_facility = 1  # User-level messages (typically facility 1)
     severity = 6  # Informational
@@ -87,7 +94,13 @@ def generate_sample_syslogs():
     for _ in range(80):  # Generate 80 logs from servers
         user = random.choice(users)
         hostname = random.choice(hostnames)
-        app_name = "srv_S1_NGFW"
+        app_name = random.choice([
+            "NestAccess",
+            "BirdNet",
+            "BirdWatch",
+            "NestWall",
+            "BirdCentral"
+        ])
         procid = str(random.randint(1000, 9999))
         timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%b %d %H:%M:%S')
         message_template = random.choice(messages)
@@ -133,7 +146,7 @@ def generate_bad_syslogs():
 
     for _ in range(10):  # Generate 10 bad traffic logs
         hostname = user_info['hostname']
-        app_name = "auth"
+        app_name = "NestWall"
         procid = str(random.randint(1000, 9999))
         timestamp = (now - timedelta(minutes=random.randint(1, 5))).strftime('%b %d %H:%M:%S')
         message_template = random.choice(messages)
