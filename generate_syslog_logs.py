@@ -1,3 +1,4 @@
+import socket
 import json
 import logging
 import os
@@ -13,6 +14,30 @@ CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
 MESSAGE_CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/message.config')
 SYSLOG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/syslog.log')
 EXECUTION_LOG = os.path.expanduser('~/NGSIEM-Log-Generator/generate_syslog_logs_execution.log')
+
+# Function to resolve domain names to IP addresses
+def resolve_domain_to_ip(domain):
+    try:
+        return socket.gethostbyname(domain)
+    except socket.gaierror:
+        # Handle the case where the domain cannot be resolved
+        logging.warning(f"Could not resolve domain: {domain}")
+        return "0.0.0.0"
+
+# List of bird conservatorship-related domains
+bird_related_domains = [
+    "bird.merlinlabs.com",
+    "birdlife.org",
+    "audubon.org",
+    "birdwatchingdaily.com",
+    "allaboutbirds.org",
+    "birdsinbackyards.net",
+    "cornellbirds.com",
+    "merlinbird.id"
+]
+
+# Resolve these domains to their IP addresses
+bird_related_ips = [resolve_domain_to_ip(domain) for domain in bird_related_domains]
 
 # Load configuration
 def load_config(file_path):
@@ -47,11 +72,11 @@ def generate_sample_syslogs():
     message_config = load_config(MESSAGE_CONFIG_FILE)
     now = datetime.now(timezone.utc)
 
+    hostnames = config.get('hostnames', ['server1.example.com', 'server2.example.com'])
     users = config.get('users', [])
     log_facility = 1  # User-level messages (typically facility 1)
     severity = 6  # Informational
     pri = calculate_pri(log_facility, severity)
-    resources = config.get('domains', ['birdsite.com', 'adminbird.com', 'birdnet.org'])
 
     if not users:
         raise ValueError("No users found in the configuration.")
@@ -61,23 +86,22 @@ def generate_sample_syslogs():
     sample_logs = []
     for _ in range(80):  # Generate 80 logs from servers
         user = random.choice(users)
-        hostname = user['hostname']  # Directly use hostname from config
+        hostname = random.choice(hostnames)
         app_name = "srv_S1_NGFW"
         procid = str(random.randint(1000, 9999))
         timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%b %d %H:%M:%S')
         message_template = random.choice(messages)
         srcPort = str(random.randint(1024, 65535))
-        public_ip = "69.63.134.46"  # Example of a bird-related public IP (could be adjusted)
 
         message = generate_syslog_message(
             template=message_template,
             pri=pri,
             timestamp=timestamp,
-            hostname=hostname,  # Use the user's hostname
+            hostname=hostname,
             app_name=app_name,
             procid=procid,
             client_ip=user["client_ip"],
-            public_ip=public_ip,
+            public_ip=random.choice(bird_related_ips),  # Use bird-related IP
             srcPort=srcPort,
             username=user["username"],
             mac_address=user["mac_address"],
@@ -114,7 +138,6 @@ def generate_bad_syslogs():
         timestamp = (now - timedelta(minutes=random.randint(1, 5))).strftime('%b %d %H:%M:%S')
         message_template = random.choice(messages)
         srcPort = str(random.randint(1024, 65535))
-        public_ip = "69.63.134.46"  # Example of a bird-related public IP (could be adjusted)
 
         message = generate_syslog_message(
             template=message_template,
@@ -124,7 +147,7 @@ def generate_bad_syslogs():
             app_name=app_name,
             procid=procid,
             client_ip=user_info["client_ip"],
-            public_ip=public_ip,
+            public_ip=random.choice(bird_related_ips),  # Use bird-related IP
             srcPort=srcPort,
             username=user_info["username"],
             mac_address=user_info["mac_address"],
