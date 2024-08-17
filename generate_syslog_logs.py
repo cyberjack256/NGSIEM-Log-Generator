@@ -47,33 +47,21 @@ def generate_sample_syslogs():
     message_config = load_config(MESSAGE_CONFIG_FILE)
     now = datetime.now(timezone.utc)
 
-    # Validation: Ensure required keys are present
-    if not config.get('users'):
-        raise ValueError("No users found in the configuration.")
-    if not message_config.get('info'):
-        raise ValueError("No 'info' messages found in the message configuration.")
-
-    hostnames = config.get('hostnames', ['server1.example.com', 'server2.example.com'])
     users = config.get('users', [])
-    resources = config.get('domains', ['birdsite.com', 'adminbird.com', 'birdnet.org'])
-
     log_facility = 1  # User-level messages (typically facility 1)
     severity = 6  # Informational
     pri = calculate_pri(log_facility, severity)
+    resources = config.get('domains', ['birdsite.com', 'adminbird.com', 'birdnet.org'])
+
+    if not users:
+        raise ValueError("No users found in the configuration.")
 
     messages = message_config.get('info', [])
 
     sample_logs = []
     for _ in range(80):  # Generate 80 logs from servers
         user = random.choice(users)
-
-        # Validation: Ensure user details are complete
-        required_user_fields = ['client_ip', 'username', 'mac_address', 'user_agent']
-        for field in required_user_fields:
-            if field not in user or not user[field]:
-                raise ValueError(f"Missing required user field: {field}")
-
-        hostname = random.choice(hostnames)
+        hostname = user['hostname']  # Directly use hostname from config
         app_name = "srv_S1_NGFW"
         procid = str(random.randint(1000, 9999))
         timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%b %d %H:%M:%S')
@@ -81,24 +69,20 @@ def generate_sample_syslogs():
         srcPort = str(random.randint(1024, 65535))
         public_ip = "69.63.134.46"  # Example of a bird-related public IP (could be adjusted)
 
-        # Validation: Ensure all placeholders in the template have corresponding data
-        try:
-            message = generate_syslog_message(
-                template=message_template,
-                pri=pri,
-                timestamp=timestamp,
-                hostname=hostname,
-                app_name=app_name,
-                procid=procid,
-                client_ip=user["client_ip"],
-                public_ip=public_ip,
-                srcPort=srcPort,
-                username=user["username"],
-                mac_address=user["mac_address"],
-                user_agent=user["user_agent"]
-            )
-        except KeyError as e:
-            raise ValueError(f"Template error: Missing placeholder in data - {e}")
+        message = generate_syslog_message(
+            template=message_template,
+            pri=pri,
+            timestamp=timestamp,
+            hostname=hostname,  # Use the user's hostname
+            app_name=app_name,
+            procid=procid,
+            client_ip=user["client_ip"],
+            public_ip=public_ip,
+            srcPort=srcPort,
+            username=user["username"],
+            mac_address=user["mac_address"],
+            user_agent=user["user_agent"]
+        )
 
         sample_logs.append(message)
     
