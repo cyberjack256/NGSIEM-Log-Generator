@@ -1,4 +1,4 @@
-import json
+hi import json
 import logging
 import os
 import random
@@ -26,7 +26,7 @@ def calculate_pri(facility, severity):
     return (facility * 8) + severity
 
 # Generate realistic sample syslogs following RFC 5424
-def generate_syslog_message(template, pri, timestamp, hostname, app_name, procid, client_ip, public_ip, srcPort):
+def generate_syslog_message(template, pri, timestamp, hostname, app_name, procid, client_ip, public_ip, srcPort, srcIF=None, dstIF=None, srcMAC=None, sentBytes=None, sentPackets=None, receivedBytes=None, receivedPackets=None, duration=None, other_metric=None):
     return template.format(
         pri=pri,
         timestamp=timestamp,
@@ -35,7 +35,16 @@ def generate_syslog_message(template, pri, timestamp, hostname, app_name, procid
         procid=procid,
         client_ip=client_ip,
         public_ip=public_ip,
-        srcPort=srcPort
+        srcPort=srcPort,
+        srcIF=srcIF or "",
+        dstIF=dstIF or "",
+        srcMAC=srcMAC or "",
+        sentBytes=sentBytes or "",
+        sentPackets=sentPackets or "",
+        receivedBytes=receivedBytes or "",
+        receivedPackets=receivedPackets or "",
+        duration=duration or "",
+        other_metric=other_metric or ""
     )
 
 # Generate sample syslogs
