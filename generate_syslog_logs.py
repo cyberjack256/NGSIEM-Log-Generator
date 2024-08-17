@@ -4,109 +4,90 @@ import os
 import random
 import time
 from datetime import datetime, timedelta, timezone
-from faker import Faker
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
-# Dynamically get the user home directory
+# Paths to config files
 CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
+MESSAGE_CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/message.config')
 SYSLOG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/syslog.log')
 EXECUTION_LOG = os.path.expanduser('~/NGSIEM-Log-Generator/generate_syslog_logs_execution.log')
-fake = Faker()
 
 # Load configuration
-def load_config():
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, 'r') as file:
+def load_config(file_path):
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as file:
             return json.load(file)
     return {}
 
-# Save configuration
-def save_config(config):
-    with open(CONFIG_FILE, 'w') as file:
-        json.dump(config, file, indent=4)
+# Generate the PRI value based on RFC 5424
+def calculate_pri(facility, severity):
+    return (facility * 8) + severity
 
 # Generate realistic sample syslogs following RFC 5424
-def generate_syslog_message(hostname, app_name, procid, msgid, message, timestamp, log_level):
-    pri = {
-        'info': 6,
-        'warning': 4,
-        'error': 3
-    }[log_level]
-    version = 1
-    return f"<{pri}>{version} {timestamp} {hostname} {app_name} {procid} {msgid} - {message}"
+def generate_syslog_message(template, pri, timestamp, hostname, app_name, procid, client_ip, public_ip, srcPort):
+    return template.format(
+        pri=pri,
+        timestamp=timestamp,
+        hostname=hostname,
+        app_name=app_name,
+        procid=procid,
+        client_ip=client_ip,
+        public_ip=public_ip,
+        srcPort=srcPort
+    )
 
 # Generate sample syslogs
 def generate_sample_syslogs():
-    config = load_config()
+    config = load_config(CONFIG_FILE)
+    message_config = load_config(MESSAGE_CONFIG_FILE)
     now = datetime.now(timezone.utc)
 
     hostnames = config.get('hostnames', ['server1.example.com', 'server2.example.com'])
     users = config.get('users', [])
-    log_level = config.get('log_level', 'info')
+    log_facility = 1  # User-level messages (typically facility 1)
+    severity = 6  # Informational
+    pri = calculate_pri(log_facility, severity)
+    resources = config.get('domains', ['birdsite.com', 'adminbird.com', 'birdnet.org'])
 
     if not users:
         raise ValueError("No users found in the configuration.")
-    if log_level not in ['info', 'warning', 'error']:
-        raise ValueError("Invalid log level in the configuration. Choose from 'info', 'warning', or 'error'.")
 
-    messages = {
-        'info': [
-            "Routine check: User 'robin' logged in to update the bird photo gallery.",
-            "Maintenance alert: Server uptime confirmed by a cheerful chirp from the CPU.",
-            "System notification: User 'sparrow' changed the default homepage to a picture of a red cardinal.",
-            "Backup complete: All server data safely stored, including the secret bird watching spots.",
-            "Update success: The server successfully updated to the latest version of 'FeatherOS'.",
-            "Log entry: User 'eagle' set a reminder to refill the bird feeders through the server.",
-            "System notice: The server is feeling fresh after a routine cleanup and reboot.",
-            "Access granted: User 'hawk' accessed the server to check on the nest cam live feed.",
-            "Routine operation: The server automatically cleared out old logs and freed up space for more bird data.",
-            "Notification: User 'finch' uploaded a new background image of a beautiful hummingbird for the login screen."
-        ],
-        'warning': [
-            "Warning: High memory usage detected, considering flying south for the winter.",
-            "System warning: User 'robin' attempted to upload a large bird photo, exceeding the size limit.",
-            "Warning: Disk space running low, feathers may start to ruffle.",
-            "Alert: Unusual login pattern detected for user 'eagle'.",
-            "Warning: Potential phishing attempt detected in the email logs.",
-            "System alert: User 'sparrow' attempted to access restricted files.",
-            "Warning: CPU temperature rising, consider cooling measures.",
-            "System warning: Multiple failed login attempts detected.",
-            "Warning: Network traffic spike detected, possible DDoS attack.",
-            "Alert: Unauthorized access attempt detected on port 22."
-        ],
-        'error': [
-            "Error: User 'eagle' failed to login after multiple attempts.",
-            "Critical error: Server disk failure detected.",
-            "Error: Backup process failed for the bird watching spots data.",
-            "System error: Unable to update to the latest version of 'FeatherOS'.",
-            "Error: Unauthorized access attempt detected and blocked.",
-            "Critical alert: Server overheating, immediate action required.",
-            "Error: User 'sparrow' attempted to access restricted files and was blocked.",
-            "System failure: Network interface down.",
-            "Error: Malware detected in the email attachments.",
-            "Critical error: Database connection failed, services impacted."
-        ]
-    }
+    messages = message_config.get('syslog_messages', [])
 
     sample_logs = []
-    for _ in range(80):  # 80 logs from servers
+    for _ in range(80):  # Generate 80 logs from servers
         user = random.choice(users)
         hostname = random.choice(hostnames)
-        app_name = "app"
+        app_name = "srv_S1_NGFW"
         procid = str(random.randint(1000, 9999))
-        msgid = "ID" + str(random.randint(100, 999))
-        timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        message = random.choice(messages[log_level])
+        timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%b %d %H:%M:%S')
+        message_template = random.choice(messages)
+        resource = random.choice(resources)
+        srcPort = str(random.randint(1024, 65535))
+        public_ip = "69.63.134.46"  # Example of a bird-related public IP (could be adjusted)
 
-        log_entry = generate_syslog_message(hostname, app_name, procid, msgid, message, timestamp, log_level)
-        sample_logs.append(log_entry)
+        message = generate_syslog_message(
+            template=message_template,
+            pri=pri,
+            timestamp=timestamp,
+            hostname=hostname,
+            app_name=app_name,
+            procid=procid,
+            client_ip=user["client_ip"],
+            public_ip=public_ip,
+            srcPort=srcPort
+        )
+
+        sample_logs.append(message)
     
     return sample_logs
 
 # Generate syslogs for Eagle's bad login attempts
-def generate_bad_syslogs(config):
+def generate_bad_syslogs():
+    config = load_config(CONFIG_FILE)
+    message_config = load_config(MESSAGE_CONFIG_FILE)
     users = config.get("users", [])
     now = datetime.now(timezone.utc)
     logs = []
@@ -115,16 +96,36 @@ def generate_bad_syslogs(config):
     user_info = next((u for u in users if u['username'] == "eagle"), None)
     if not user_info:
         raise ValueError("User 'eagle' not found in the configuration.")
-    for _ in range(10):  # Generate 10 bad traffic logs every 15 minutes
+    
+    log_facility = 4  # Security/authorization messages (typically facility 4)
+    severity = 3  # Error
+    pri = calculate_pri(log_facility, severity)
+
+    messages = message_config.get('syslog_messages', [])
+
+    for _ in range(10):  # Generate 10 bad traffic logs
         hostname = user_info['hostname']
         app_name = "auth"
         procid = str(random.randint(1000, 9999))
-        msgid = "ID" + str(random.randint(100, 999))
-        timestamp = (now - timedelta(minutes=random.randint(1, 5))).strftime('%Y-%m-%dT%H:%M:%S.%fZ')
-        message = "Failed login attempt detected for user eagle"
+        timestamp = (now - timedelta(minutes=random.randint(1, 5))).strftime('%b %d %H:%M:%S')
+        message_template = random.choice(messages)
+        resource = random.choice(config.get('domains', ['adminbird.com']))
+        srcPort = str(random.randint(1024, 65535))
+        public_ip = "69.63.134.46"  # Example of a bird-related public IP (could be adjusted)
 
-        log_entry = generate_syslog_message(hostname, app_name, procid, msgid, message, timestamp, 'error')
-        logs.append(log_entry)
+        message = generate_syslog_message(
+            template=message_template,
+            pri=pri,
+            timestamp=timestamp,
+            hostname=hostname,
+            app_name=app_name,
+            procid=procid,
+            client_ip=user_info["client_ip"],
+            public_ip=public_ip,
+            srcPort=srcPort
+        )
+
+        logs.append(message)
     
     return logs
 
@@ -141,15 +142,15 @@ def write_syslog_to_file(logs):
 def generate_sample_syslogs_main():
     try:
         sample_logs = generate_sample_syslogs()
-        bad_syslogs = generate_bad_syslogs(load_config())
+        bad_syslogs = generate_bad_syslogs()
         all_logs = sample_logs + bad_syslogs
         write_syslog_to_file(all_logs)
     except ValueError as e:
         print(f"Error: {e}")
 
-# Continuous log generation for cron job
+# Continuous log generation
 def continuous_log_generation():
-    config = load_config()
+    config = load_config(CONFIG_FILE)
     while True:
         all_logs = []
         
@@ -160,7 +161,7 @@ def continuous_log_generation():
         # Generate bad traffic logs every 15 minutes
         current_time = datetime.utcnow()
         if current_time.minute % 15 == 0:
-            bad_traffic_logs = generate_bad_syslogs(config)
+            bad_traffic_logs = generate_bad_syslogs()
             all_logs.extend(bad_traffic_logs)
         
         # Write logs to file
