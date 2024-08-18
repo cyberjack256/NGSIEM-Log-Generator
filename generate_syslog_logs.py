@@ -15,6 +15,10 @@ MESSAGE_CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/message.config'
 SYSLOG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/syslog.log')
 EXECUTION_LOG = os.path.expanduser('~/NGSIEM-Log-Generator/generate_syslog_logs_execution.log')
 
+# Syslog server details
+SYSLOG_SERVER = "127.0.0.1"
+SYSLOG_PORT = 514
+
 # Function to resolve domain names to IP addresses
 def resolve_domain_to_ip(domain):
     try:
@@ -65,6 +69,11 @@ def generate_syslog_message(template, pri, timestamp, hostname, app_name, procid
         mac_address=mac_address or "",
         user_agent=user_agent or ""
     )
+
+# Function to send syslog messages over UDP
+def send_syslog_message(message):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.sendto(message.encode('utf-8'), (SYSLOG_SERVER, SYSLOG_PORT))
 
 # Generate sample syslogs
 def generate_sample_syslogs():
@@ -122,6 +131,7 @@ def generate_sample_syslogs():
         )
 
         sample_logs.append(message)
+        send_syslog_message(message)  # Send syslog message over UDP
     
     return sample_logs
 
@@ -168,6 +178,7 @@ def generate_bad_syslogs():
         )
 
         logs.append(message)
+        send_syslog_message(message)  # Send syslog message over UDP
     
     return logs
 
