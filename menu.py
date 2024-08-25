@@ -3,8 +3,12 @@ import logging
 import os
 import subprocess
 from datetime import datetime
-from generate_logs import display_sample_log_and_curl, generate_regular_log, generate_bad_traffic_log, send_logs
-from generate_syslog_logs import generate_sample_syslogs, write_syslog_to_file
+from generate_syslog_logs import (
+    generate_sample_syslogs,
+    write_syslog_to_file,
+    send_logs_to_syslog,
+    continuous_log_generation
+)
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -71,7 +75,7 @@ def clear_config_value():
 
 # Start logging service
 def start_logging_service():
-    subprocess.Popen(["python3", "/path/to/generate_syslog_logs.py"])
+    subprocess.Popen(["python3", "/home/ubuntu/NGSIEM-Log-Generator/generate_syslog_logs.py"])
     print("Logging service started.")
 
 # Stop logging service
@@ -87,20 +91,16 @@ def check_logging_service_status():
     else:
         print("Logging service is not running.")
 
-# Start LogScale log collector
-def start_logshipper():
-    subprocess.run(['sudo', 'systemctl', 'start', 'humio-log-collector.service'])
-    print("LogScale log collector started.")
+# Generate logs to file
+def generate_logs_to_file():
+    sample_logs = generate_sample_syslogs()
+    write_syslog_to_file(sample_logs)
+    print(f"Generated 500 logs and written to file: {SYSLOG_FILE}")
 
-# Stop LogScale log collector
-def stop_logshipper():
-    subprocess.run(['sudo', 'systemctl', 'stop', 'humio-log-collector.service'])
-    print("LogScale log collector stopped.")
-
-# Status of LogScale log collector
-def status_logshipper():
-    result = subprocess.run(['sudo', 'systemctl', 'status', 'humio-log-collector.service'], capture_output=True, text=True)
-    pager(result.stdout)
+# Start sending logs to syslog server
+def start_sending_logs_to_syslog():
+    subprocess.Popen(["python3", "/home/ubuntu/NGSIEM-Log-Generator/generate_syslog_logs.py", "--send"])
+    print("Started sending logs to syslog server.")
 
 # Use less for scrolling output
 def pager(content):
@@ -112,7 +112,6 @@ def main_menu():
     while True:
         os.system('clear')
         print("""
-
 ╔═════════════════════════════════════════════════════════════╗
 ║                     NGSIEM Log Generator                    ║
 ║═════════════════════════════════════════════════════════════║
@@ -198,9 +197,9 @@ def syslog_menu():
 ║  Please select an option:                                   ║
 ║                                                             ║
 ║  1. Show current configuration                              ║
-║  2. Generate sample Syslog logs                             ║
-║  3. Start logging service                                   ║
-║  4. Stop logging service                                    ║
+║  2. Generate logs to file                                   ║
+║  3. Start sending logs to syslog server                     ║
+║  4. Stop sending logs to syslog server                      ║
 ║  5. Check logging service status                            ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
@@ -210,14 +209,9 @@ def syslog_menu():
         if choice == '1':
             show_config()
         elif choice == '2':
-            sample_logs = generate_sample_syslogs()
-            if sample_logs:
-                sample_log_str = json.dumps(sample_logs[0], indent=4)
-                pager(f"Sample log:\n{sample_log_str}")
-            else:
-                print("No sample logs generated.")
+            generate_logs_to_file()
         elif choice == '3':
-            start_logging_service()
+            start_sending_logs_to_syslog()
         elif choice == '4':
             stop_logging_service()
         elif choice == '5':
