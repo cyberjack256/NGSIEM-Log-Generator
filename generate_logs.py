@@ -1,175 +1,168 @@
-import socket
 import json
 import logging
 import os
 import random
-import time
+import requests
 from datetime import datetime, timedelta, timezone
+from faker import Faker
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
-# Paths to config files
+# Dynamically get the user home directory
 CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
-MESSAGE_CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/message.config')
-SYSLOG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/syslog.log')
-EXECUTION_LOG = os.path.expanduser('~/NGSIEM-Log-Generator/generate_syslog_logs_execution.log')
-
-# Function to resolve domain names to IP addresses
-def resolve_domain_to_ip(domain):
-    try:
-        return socket.gethostbyname(domain)
-    except socket.gaierror:
-        logging.warning(f"Could not resolve domain: {domain}")
-        return "0.0.0.0"
-
-# List of bird conservatorship-related domains
-bird_related_domains = [
-    "birdlife.org",
-    "audubon.org",
-    "allaboutbirds.org",
-    "ebird.org",
-    "nestwatch.org",
-    "merlin.allaboutbirds.org",
-    "birdwatchingdaily.com",
-    "birdsna.org"
-]
-
-# Resolve these domains to their IP addresses
-bird_related_ips = [resolve_domain_to_ip(domain) for domain in bird_related_domains]
+fake = Faker()
 
 # Load configuration
-def load_config(file_path):
-    if os.path.exists(file_path):
-        with open(file_path, 'r') as file:
+def load_config():
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r') as file:
             return json.load(file)
     return {}
 
-# Generate the PRI value based on RFC 5424
-def calculate_pri(facility, severity):
-    return (facility * 8) + severity
+# Save configuration
+def save_config(config):
+    with open(CONFIG_FILE, 'w') as file:
+        json.dump(config, file, indent=4)
 
-# Generate realistic sample syslogs following RFC 5424
-def generate_syslog_message(template, pri, timestamp, hostname, app_name, procid, client_ip, public_ip, srcPort, username=None, mac_address=None, user_agent=None):
-    return template.format(
-        pri=pri,
-        timestamp=timestamp,
-        hostname=hostname,
-        app_name=app_name,
-        procid=procid,
-        client_ip=client_ip,
-        public_ip=public_ip,
-        srcPort=srcPort,
-        username=username or "",
-        mac_address=mac_address or "",
-        user_agent=user_agent or ""
-    )
-
-# Generate sample syslogs
-def generate_sample_syslogs():
-    config = load_config(CONFIG_FILE)
-    message_config = load_config(MESSAGE_CONFIG_FILE)
+# Generate Zscaler log
+def generate_zscaler_log(config, user, hostname, url, referer, action, reason):
     now = datetime.now(timezone.utc)
+    log_entry = {
+        "sourcetype": "zscalernss-web",
+        "event": {
+            "datetime": (now - timedelta(minutes=random.randint(1, 5))).strftime("%Y-%m-%d %H:%M:%S"),
+            "reason": reason,
+            "event_id": random.randint(100000, 999999),
+            "protocol": "HTTPS",
+            "action": action,
+            "transactionsize": random.randint(1000, 2000),
+            "responsesize": random.randint(500, 1000),
+            "requestsize": random.randint(100, 500),
+            "urlcategory": "news" if "birdsite.com" in url else "external",
+            "serverip": random.choice(config.get('server_ips', ['192.168.1.2'])),
+            "clienttranstime": random.randint(200, 500),
+            "requestmethod": random.choice(["GET", "POST"]),
+            "refererURL": referer,
+            "useragent": random.choice(config.get('user_agents', ['Mozilla/5.0'])),
+            "product": "NSS",
+            "location": "New York",
+            "ClientIP": user["client_ip"],
+            "status": random.choice(["200", "404", "500"]),
+            "user": user["email"],
+            "url": url,
+            "vendor": "Zscaler",
+            "hostname": hostname,
+            "clientpublicIP": fake.ipv4(),
+            "threatcategory": "none",
+            "threatname": "none",
+            "filetype": "none",
+            "appname": "browser",
+            "pagerisk": random.randint(1, 100),
+            "department": random.choice(["IT", "SOC", "Help-Desk"]),
+            "urlsupercategory": "information",
+            "appclass": "web",
+            "dlpengine": "none",
+            "urlclass": "news",
+            "threatclass": "none",
+            "dlpdictionaries": "none",
+            "fileclass": "none",
+            "bwthrottle": "none",
+            "servertranstime": random.randint(100, 300),
+            "contenttype": "application/octet-stream",
+            "unscannabletype": "none",
+            "deviceowner": "Admin",
+            "devicehostname": hostname,
+            "decrypted": random.choice(["yes", "no"]),
+            "resource_accessed": url if "sensitive-data" in url else "N/A"
+        }
+    }
+    return log_entry
 
-    hostnames = [
-        "birdcentral.nest.local",
-        "nestaccess.adminbird.net",
-        "birdwatch.cams.net",
-        "birdnet.secure.local",
-        "nestwall.firewall.local"
-    ]
-    users = config.get('users', [])
-    log_facility = 1  # User-level messages (typically facility 1)
-    severity = 6  # Informational
-    pri = calculate_pri(log_facility, severity)
-
+# Generate regular log
+def generate_regular_log(config):
+    users = config.get("users", [])
     if not users:
         raise ValueError("No users found in the configuration.")
+    user_info = random.choice(users)
+    url = f"https://{random.choice(['birdsite.com', 'adminbird.com', 'birdnet.org'])}/{random.choice(['home', 'photos', 'posts', 'videos', 'articles'])}"
+    log = generate_zscaler_log(
+        config=config,
+        user=user_info,
+        hostname=user_info['hostname'],
+        url=url,
+        referer="https://birdsite.com",
+        action="allowed",
+        reason="Normal traffic"
+    )
+    return log
 
-    messages = message_config.get('info', [])
+# Generate bad traffic log
+def generate_bad_traffic_log(config):
+    user_info = next((u for u in config.get("users", []) if u['username'] == "eagle"), None)
+    if not user_info:
+        raise ValueError("User 'eagle' not found in the configuration.")
+    log = generate_zscaler_log(
+        config=config,
+        user=user_info,
+        hostname=user_info['hostname'],
+        url="https://adminbird.com/login",
+        referer="https://birdsite.com/home",
+        action="blocked",
+        reason="Unauthorized access attempt"
+    )
+    return log
 
-    sample_logs = []
-    for _ in range(500):  # Generate 500 logs from servers
-        user = random.choice(users)
-        hostname = random.choice(hostnames)
-        app_name = random.choice([
-            "NestAccess",
-            "BirdNet",
-            "BirdWatch",
-            "NestWall",
-            "BirdCentral"
-        ])
-        procid = str(random.randint(1000, 9999))
-        timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%b %d %H:%M:%S')
-        message_template = random.choice(messages)
-        srcPort = str(random.randint(1024, 65535))
-
-        message = generate_syslog_message(
-            template=message_template,
-            pri=pri,
-            timestamp=timestamp,
-            hostname=hostname,
-            app_name=app_name,
-            procid=procid,
-            client_ip=user["client_ip"],
-            public_ip=random.choice(bird_related_ips),  # Use bird-related IP
-            srcPort=srcPort,
-            username=user["username"],
-            mac_address=user["mac_address"],
-            user_agent=user["user_agent"]
-        )
-
-        sample_logs.append(message)
+# Send logs to NGSIEM
+def send_logs(api_url, api_key, logs):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
     
-    return sample_logs
+    for log in logs:
+        response = requests.post(api_url, headers=headers, json=log)
+        if response.status_code == 200:
+            print("Log sent successfully.")
+        else:
+            print(f"Failed to send log: {response.status_code} {response.text}")
 
-# Write syslog to file
-def write_syslog_to_file(logs):
-    log_dir = os.path.dirname(SYSLOG_FILE)
-    os.makedirs(log_dir, exist_ok=True)
-    
-    with open(SYSLOG_FILE, "a") as log_file:
-        for log_entry in logs:
-            log_file.write(log_entry + "\n")
-
-# Send logs to syslog server via UDP
-def send_logs_to_syslog(logs):
-    syslog_server = ('localhost', 514)  # Adjust as necessary
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    for log_entry in logs:
-        sock.sendto(log_entry.encode('utf-8'), syslog_server)
-
-    sock.close()
-
-# Generate and send syslog logs
-def generate_and_send_syslogs():
-    sample_logs = generate_sample_syslogs()
-    send_logs_to_syslog(sample_logs)
-
-# Continuous log generation for syslog server aggregator
-def continuous_log_generation():
-    config = load_config(CONFIG_FILE)
-    while True:
-        all_logs = []
+# Display sample log and curl command
+def display_sample_log_and_curl():
+    try:
+        config = load_config()
+        if not check_required_fields(config):
+            return
         
-        # Generate regular syslogs every minute
-        regular_logs = generate_sample_syslogs()
-        all_logs.extend(regular_logs)
-        
-        # Write to syslog
-        send_logs_to_syslog(all_logs)
-        
-        # Sleep for 1 minute before generating the next set of logs
-        time.sleep(60)
+        good_log = generate_regular_log(config)
+        bad_log = generate_bad_traffic_log(config)
+
+        sample_logs = {
+            "Good Traffic Log": good_log,
+            "Bad Traffic Log": bad_log
+        }
+
+        for log_type, log in sample_logs.items():
+            log_str = json.dumps(log, indent=4)
+            print(f"\n--- {log_type} ---")
+            print(log_str)
+            api_url = config.get('zscaler_api_url')
+            api_key = config.get('zscaler_api_key')
+            curl_command = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{log_str}'"
+            print(f"\nCurl command to send the {log_type.lower()} to NGSIEM:\n\n{curl_command}\n")
+
+        print("\nNote: The logs above are samples and have not been sent to NGSIEM. The curl commands provided can be used to send these logs to NGSIEM.\n")
+    except ValueError as e:
+        print(f"Error: {e}")
+
+# Check required fields
+def check_required_fields(config):
+    required_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
+    missing_fields = [field for field in required_fields if field not in config or not config[field]]
+    if missing_fields:
+        print(f"Missing required configuration fields: {', '.join(missing_fields)}")
+        return False
+    return True
 
 if __name__ == "__main__":
-    # Example usage: Generate logs to file
-    sample_logs = generate_sample_syslogs()
-    write_syslog_to_file(sample_logs)
-    
-    # Example usage: Send logs to syslog server
-    generate_and_send_syslogs()
-    
-    # To run continuously as a background service:
-    # continuous_log_generation()
+    display_sample_log_and_curl()
