@@ -44,6 +44,14 @@ def generate_additional_users():
             additional_users.append(user)
     return additional_users
 
+# Generate a regular Zscaler log entry
+def generate_regular_log(config):
+    return generate_zscaler_logs(config, log_type="regular")
+
+# Generate a bad traffic Zscaler log entry
+def generate_bad_traffic_log(config):
+    return generate_zscaler_logs(config, log_type="bad_traffic")
+
 # Generate a variety of Zscaler log entries
 def generate_zscaler_logs(config, log_type="regular"):
     all_users = config['users'] + generate_additional_users()
