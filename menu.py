@@ -7,7 +7,23 @@ from generate_logs import display_sample_log_and_curl, generate_regular_log, gen
 # Paths to config files and directories
 CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
 LOG_GENERATOR_DIR = os.path.expanduser('~/NGSIEM-Log-Generator')
-LOG_COLLECTOR_DIR = os.path.expanduser('~/')
+
+# Base LogScale configuration
+BASE_LOGSCALE_CONFIG = """
+dataDirectory: /var/lib/humio-log-collector
+sources:
+  syslogfile:
+    type: syslog
+    mode: udp
+    port: 514
+    sink: syslogsink
+sinks:
+  syslogsink:
+    type: hec
+    proxy: none
+    token: <API_key_generated_during_connector_setup>
+    url: <generated_API_URL>
+"""
 
 # Load configuration
 def load_config():
@@ -87,53 +103,7 @@ def pager(content):
     pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
     pager_process.communicate(input=content.encode('utf-8'))
 
-# Syslog menu
-def syslog_menu():
-    while True:
-        os.system('clear')
-        print(f"""
-╔═════════════════════════════════════════════════════════════╗
-║                     Syslog Log Actions                      ║
-║═════════════════════════════════════════════════════════════║
-║  Please select an option:                                   ║
-║                                                             ║
-║  1. Show current configuration                              ║
-║  2. Generate sample Syslog logs                             ║
-║  3. Generate logs to file                                   ║
-║  4. Start sending logs to syslog server                     ║
-║  5. Stop sending logs to syslog server                      ║
-║  6. Check logging service status                            ║
-║  0. Back to main menu                                       ║
-╚═════════════════════════════════════════════════════════════╝
-        """)
-        choice = input("Enter your choice: ").strip()
-
-        if choice == '1':
-            show_config()
-        elif choice == '2':
-            sample_logs = generate_sample_syslogs()
-            if sample_logs:
-                sample_log_str = json.dumps(sample_logs[0], indent=4)
-                pager(f"Sample log:\n{sample_log_str}")
-            else:
-                print("No sample logs generated.")
-        elif choice == '3':
-            sample_logs = generate_sample_syslogs()
-            write_syslog_to_file(sample_logs)
-        elif choice == '4':
-            start_logging_service()
-        elif choice == '5':
-            stop_logging_service()
-        elif choice == '6':
-            check_logging_service_status()
-        elif choice == '0':
-            break
-        else:
-            print("Invalid choice. Please try again.")
-        
-        input("\nPress Enter to continue...")
-
-# LogScale Configuration and Controls
+# LogScale Menu
 def logscale_menu():
     while True:
         os.system('clear')
@@ -146,10 +116,11 @@ def logscale_menu():
 ║  1. Install LogScale log collector                          ║
 ║  2. Edit LogScale configuration file                        ║
 ║  3. Set file access permissions                             ║
-║  4. Enable LogScale service                                  ║
+║  4. Enable LogScale service                                 ║
 ║  5. Start LogScale service                                  ║
 ║  6. Stop LogScale service                                   ║
 ║  7. Check LogScale service status                           ║
+║  8. Set LogScale configuration                              ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -169,6 +140,8 @@ def logscale_menu():
             stop_logscale_service()
         elif choice == '7':
             check_logscale_service_status()
+        elif choice == '8':
+            set_logscale_config()
         elif choice == '0':
             break
         else:
@@ -179,7 +152,7 @@ def logscale_menu():
 # Install LogScale log collector
 def install_logscale_collector():
     print("Installing LogScale log collector...")
-    os.chdir(LOG_COLLECTOR_DIR)  # Change to the directory containing the collector package
+    os.chdir(LOG_GENERATOR_DIR)  # Change to the directory containing the collector package
     subprocess.run(["mv", "humio-log-collector*", "humio-log-collector.deb"])
     subprocess.run(["sudo", "dpkg", "-i", "humio-log-collector.deb"])
     subprocess.run(["sudo", "chown", "-R", "humio-log-collector:humio-log-collector", "/var/lib/humio-log-collector"])
@@ -192,6 +165,20 @@ def edit_logscale_config():
         subprocess.run(['sudo', 'nano', logscale_config_path])
     else:
         print("LogScale configuration file not found.")
+
+# Set LogScale configuration
+def set_logscale_config():
+    logscale_config_path = "/etc/humio-log-collector/config.yaml"
+    confirmation = input("If this is your first time setting the configuration, proceed. If not, note that this will overwrite the existing config. Proceed? (yes/no): ").strip().lower()
+    if confirmation == "yes":
+        try:
+            with open(logscale_config_path, 'w') as file:
+                file.write(BASE_LOGSCALE_CONFIG)
+            print("LogScale configuration has been set.")
+        except Exception as e:
+            print(f"Failed to set configuration: {e}")
+    else:
+        print("Operation canceled.")
 
 # Set file access permissions
 def set_file_access_permissions():
