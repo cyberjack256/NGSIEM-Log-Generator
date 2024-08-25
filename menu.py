@@ -167,6 +167,7 @@ def main_menu():
         input("\nPress Enter to continue...")
 
 # Zscaler menu
+# Zscaler menu
 def zscaler_menu():
     while True:
         os.system('clear')
@@ -193,14 +194,14 @@ def zscaler_menu():
         elif choice == '3':
             clear_config_value()
         elif choice == '4':
-            display_sample_log_and_curl()
+            display_sample_log_and_curl()  # Make sure this function is defined in generate_logs.py
         elif choice == '5':
             config = load_config()
             api_url = config.get('zscaler_api_url')
             api_key = config.get('zscaler_api_key')
             if api_url and api_key and check_required_fields(config):
                 sample_logs = [generate_regular_log(config), generate_bad_traffic_log(config)]
-                send_logs(api_url, api_key, sample_logs)
+                send_logs(api_url, api_key, sample_logs)  # Ensure send_logs is defined in generate_logs.py
             else:
                 print("API URL or API Key is missing from configuration.")
         elif choice == '0':
