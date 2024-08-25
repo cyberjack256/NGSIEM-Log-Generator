@@ -124,6 +124,19 @@ def generate_and_send_logs(config):
 
         time.sleep(60)  # Wait for a minute before sending the next batch
 
+# Generate sample Zscaler logs for testing purposes
+def display_sample_log_and_curl():
+    config = load_config()
+    sample_log = generate_zscaler_logs(config, log_type="regular")
+    print(f"Sample Zscaler log: {sample_log}")
+    
+    curl_command = (
+        f"curl -X POST -H 'Content-Type: application/json' "
+        f"-H 'Authorization: Bearer {config['zscaler_api_key']}' "
+        f"-d '{json.dumps(sample_log)}' {config['zscaler_api_url']}"
+    )
+    print(f"\nCurl command for testing:\n{curl_command}\n")
+
 if __name__ == "__main__":
     config = load_config()
     generate_and_send_logs(config)
