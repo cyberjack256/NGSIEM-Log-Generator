@@ -131,49 +131,95 @@ def syslog_menu():
         
         input("\nPress Enter to continue...")
 
-# Zscaler menu
-def zscaler_menu():
+# LogScale Configuration and Controls
+def logscale_menu():
     while True:
         os.system('clear')
         print(f"""
 ╔═════════════════════════════════════════════════════════════╗
-║                     Zscaler Log Actions                     ║
+║              LogScale Configuration and Controls            ║
 ║═════════════════════════════════════════════════════════════║
 ║  Please select an option:                                   ║
 ║                                                             ║
-║  1. Show current configuration                              ║
-║  2. Add a configuration value                               ║
-║  3. Clear a configuration value                             ║
-║  4. Generate sample Zscaler logs                            ║
-║  5. Send logs to NGSIEM                                     ║
+║  1. Install LogScale log collector                          ║
+║  2. Edit LogScale configuration file                        ║
+║  3. Set file access permissions                             ║
+║  4. Enable LogScale service                                  ║
+║  5. Start LogScale service                                  ║
+║  6. Stop LogScale service                                   ║
+║  7. Check LogScale service status                           ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
         choice = input("Enter your choice: ").strip()
 
         if choice == '1':
-            show_config()
+            install_logscale_collector()
         elif choice == '2':
-            add_config_value()
+            edit_logscale_config()
         elif choice == '3':
-            clear_config_value()
+            set_file_access_permissions()
         elif choice == '4':
-            display_sample_log_and_curl()  # Ensure this function is implemented in generate_logs.py
+            enable_logscale_service()
         elif choice == '5':
-            config = load_config()
-            api_url = config.get('zscaler_api_url')
-            api_key = config.get('zscaler_api_key')
-            if api_url and api_key:
-                sample_logs = [generate_regular_log(config), generate_bad_traffic_log(config)]
-                send_logs(api_url, api_key, sample_logs)  # Ensure send_logs is implemented in generate_logs.py
-            else:
-                print("API URL or API Key is missing from configuration.")
+            start_logscale_service()
+        elif choice == '6':
+            stop_logscale_service()
+        elif choice == '7':
+            check_logscale_service_status()
         elif choice == '0':
             break
         else:
             print("Invalid choice. Please try again.")
         
         input("\nPress Enter to continue...")
+
+# Install LogScale log collector
+def install_logscale_collector():
+    print("Installing LogScale log collector...")
+    subprocess.run(["mv", "humio-log-collector*", "humio-log-collector.deb"])
+    subprocess.run(["sudo", "dpkg", "-i", "humio-log-collector.deb"])
+    subprocess.run(["sudo", "chown", "-R", "humio-log-collector:humio-log-collector", "/var/lib/humio-log-collector"])
+    print("LogScale log collector installed.")
+
+# Edit LogScale Configuration
+def edit_logscale_config():
+    logscale_config_path = "/etc/humio-log-collector/config.yaml"
+    if os.path.exists(logscale_config_path):
+        subprocess.run(['sudo', 'nano', logscale_config_path])
+    else:
+        print("LogScale configuration file not found.")
+
+# Set file access permissions
+def set_file_access_permissions():
+    print("Setting file access permissions...")
+    subprocess.run(['sudo', 'setcap', 'cap_dac_read_search,cap_net_bind_service+ep', '/usr/bin/humio-log-collector'])
+    subprocess.run(['sudo', 'systemctl', 'restart', 'humio-log-collector'])
+    print("File access permissions set.")
+
+# Enable LogScale service
+def enable_logscale_service():
+    print("Enabling LogScale service...")
+    subprocess.run(['sudo', 'systemctl', 'enable', '--now', 'humio-log-collector.service'])
+    print("LogScale service enabled.")
+
+# Start LogScale service
+def start_logscale_service():
+    print("Starting LogScale service...")
+    subprocess.run(['sudo', 'systemctl', 'start', 'humio-log-collector.service'])
+    print("LogScale service started.")
+
+# Stop LogScale service
+def stop_logscale_service():
+    print("Stopping LogScale service...")
+    subprocess.run(['sudo', 'systemctl', 'stop', 'humio-log-collector.service'])
+    print("LogScale service stopped.")
+
+# Check LogScale service status
+def check_logscale_service_status():
+    print("Checking LogScale service status...")
+    result = subprocess.run(['sudo', 'systemctl', 'status', 'humio-log-collector.service'], capture_output=True, text=True)
+    pager(result.stdout)
 
 # Main menu
 def main_menu():
@@ -189,6 +235,8 @@ def main_menu():
 ║                                                             ║
 ║  1. Zscaler log actions                                     ║
 ║  2. Syslog log actions                                      ║
+║  3. LogScale Configuration and Controls                     ║
+║  4. Set log level                                           ║
 ║  0. Exit                                                    ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -198,6 +246,10 @@ def main_menu():
             zscaler_menu()
         elif choice == '2':
             syslog_menu()
+        elif choice == '3':
+            logscale_menu()
+        elif choice == '4':
+            set_log_level()
         elif choice == '0':
             break
         else:
