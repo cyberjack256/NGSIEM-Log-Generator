@@ -50,48 +50,42 @@ def calculate_pri(facility, severity):
     return (facility * 8) + severity
 
 # Generate realistic sample syslogs following RFC 5424
-def generate_syslog_message(template, **kwargs):
-    # Provide default values if any required fields are missing
+def generate_syslog_message(template, **log_data):
+    # Default values for missing keys
     default_values = {
-        "pri": "165",
-        "timestamp": datetime.now(timezone.utc).strftime('%b %d %H:%M:%S'),
-        "hostname": "default_host",
-        "app_name": "default_app",
-        "procid": "1001",
-        "client_ip": "0.0.0.0",
-        "public_ip": "0.0.0.0",
-        "srcPort": "0",
-        "username": "",
-        "mac_address": "",
-        "user_agent": "",
-        "source_ip": "0.0.0.0",
-        "destination_ip": "0.0.0.0",
-        "source_port": "0",
-        "destination_port": "0",
-        "drone_id": "DRONE-001",
-        "station_id": "STATION-001",
-        "battery_level": "100",
-        "product_gps_longitude": "0.0",
-        "product_gps_latitude": "0.0",
-        "flying_state": "idle",
-        "speed_vx": "0",
-        "speed_vy": "0",
-        "speed_vz": "0",
-        "altitude": "0",
-        "angle_phi": "0",
-        "angle_theta": "0",
-        "angle_psi": "0",
-        "wifi_signal": "100%",
-        "ip_address": "0.0.0.0",
-        "translated_ip": "0.0.0.0",
-        "duration": "0",
-        "bytes": "0",
-        "attack_type": "default_attack",
-        "command": "default_command",
-        "rack_id": "RACK-001",
-        "storage_usage": "0"
+        'drone_id': 'N/A',
+        'station_id': 'N/A',
+        'battery_level': '100',
+        'product_gps_longitude': '0.0',
+        'product_gps_latitude': '0.0',
+        'flying_state': 'landed',
+        'speed_vx': '0',
+        'speed_vy': '0',
+        'speed_vz': '0',
+        'altitude': '0',
+        'angle_phi': '0',
+        'angle_theta': '0',
+        'angle_psi': '0',
+        'wifi_signal': 'strong',
+        'ip_address': '0.0.0.0',
+        'source_ip': '0.0.0.0',
+        'destination_ip': '0.0.0.0',
+        'source_port': '0',
+        'destination_port': '0',
+        'username': 'unknown',
+        'command': 'none',
+        'translated_ip': '0.0.0.0',
+        'attack_type': 'none',
+        'duration': '0',
+        'bytes': '0',
+        'port': '0'
     }
-    
+
+    # Update log_data with default values where keys are missing
+    for key, value in default_values.items():
+        log_data.setdefault(key, value)
+
+    return template.format(**log_data)    
     # Merge default values with provided kwargs
     log_data = {**default_values, **kwargs}
     return template.format(**log_data)
