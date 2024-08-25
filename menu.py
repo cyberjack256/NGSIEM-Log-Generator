@@ -115,7 +115,7 @@ def syslog_menu():
             else:
                 print("No sample logs generated.")
         elif choice == '3':
-            generate_logs('file')
+            generate_syslog_message('file')
             print("Generated logs to file.")
         elif choice == '4':
             start_logging_service()
