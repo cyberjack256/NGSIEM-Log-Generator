@@ -53,6 +53,8 @@ def calculate_pri(facility, severity):
 def generate_syslog_message(template, **log_data):
     # Default values for missing keys
     default_values = {
+        'timestamp': 'Jan 01 00:00:00',
+        'hostname': 'default-host',
         'drone_id': 'N/A',
         'station_id': 'N/A',
         'battery_level': '100',
@@ -78,8 +80,17 @@ def generate_syslog_message(template, **log_data):
         'attack_type': 'none',
         'duration': '0',
         'bytes': '0',
-        'port': '0'
+        'port': '0',
+        'syslog_ip': '0.0.0.0',
+        'rack_id': '1',
+        'eventID': '0000'
     }
+
+    # Update log_data with default values where keys are missing
+    for key, value in default_values.items():
+        log_data.setdefault(key, value)
+
+    return template.format(**log_data)
 
     # Update log_data with default values where keys are missing
     for key, value in default_values.items():
