@@ -4,8 +4,9 @@ import json
 from generate_syslog_logs import generate_sample_syslogs, generate_syslog_message, write_syslog_to_file
 from generate_logs import display_sample_log_and_curl, generate_regular_log, generate_bad_traffic_log, send_logs
 
-# Paths to config files
+# Paths to config files and directories
 CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
+LOG_GENERATOR_DIR = os.path.expanduser('~/NGSIEM-Log-Generator')
 
 # Load configuration
 def load_config():
@@ -64,7 +65,7 @@ def clear_config_value():
 
 # Start logging service
 def start_logging_service():
-    subprocess.Popen(["python3", os.path.expanduser("~/NGSIEM-Log-Generator/generate_syslog_logs.py")])
+    subprocess.Popen(["python3", os.path.join(LOG_GENERATOR_DIR, "generate_syslog_logs.py")])
     print("Logging service started.")
 
 # Stop logging service
@@ -177,6 +178,7 @@ def logscale_menu():
 # Install LogScale log collector
 def install_logscale_collector():
     print("Installing LogScale log collector...")
+    os.chdir(LOG_GENERATOR_DIR)  # Change to the directory containing the collector package
     subprocess.run(["mv", "humio-log-collector*", "humio-log-collector.deb"])
     subprocess.run(["sudo", "dpkg", "-i", "humio-log-collector.deb"])
     subprocess.run(["sudo", "chown", "-R", "humio-log-collector:humio-log-collector", "/var/lib/humio-log-collector"])
