@@ -9,7 +9,6 @@ CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
 LOG_GENERATOR_DIR = os.path.expanduser('~/NGSIEM-Log-Generator')
 LOG_COLLECTOR_DIR = os.path.expanduser('~/')
 
-
 # Base LogScale configuration
 BASE_LOGSCALE_CONFIG = """
 dataDirectory: /var/lib/humio-log-collector
@@ -164,6 +163,7 @@ def install_logscale_collector():
 def edit_logscale_config():
     logscale_config_path = "/etc/humio-log-collector/config.yaml"
     if os.path.exists(logscale_config_path):
+        print("Opening LogScale configuration for editing...")
         subprocess.run(['sudo', 'nano', logscale_config_path])
     else:
         print("LogScale configuration file not found.")
@@ -174,8 +174,11 @@ def set_logscale_config():
     confirmation = input("If this is your first time setting the configuration, proceed. If not, note that this will overwrite the existing config. Proceed? (yes/no): ").strip().lower()
     if confirmation == "yes":
         try:
-            with open(logscale_config_path, 'w') as file:
-                file.write(BASE_LOGSCALE_CONFIG)
+            temp_config_path = os.path.join(LOG_GENERATOR_DIR, "temp_config.yaml")
+            with open(temp_config_path, 'w') as temp_file:
+                temp_file.write(BASE_LOGSCALE_CONFIG)
+            subprocess.run(['sudo', 'cp', temp_config_path, logscale_config_path])
+            os.remove(temp_config_path)  # Clean up temp file
             print("LogScale configuration has been set.")
         except Exception as e:
             print(f"Failed to set configuration: {e}")
