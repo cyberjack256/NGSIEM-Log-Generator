@@ -7,6 +7,7 @@ from generate_logs import display_sample_log_and_curl, generate_regular_log, gen
 # Paths to config files and directories
 CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
 LOG_GENERATOR_DIR = os.path.expanduser('~/NGSIEM-Log-Generator')
+LOG_COLLECTOR_DIR = os.path.expanduser('~/')
 
 # Load configuration
 def load_config():
@@ -178,7 +179,7 @@ def logscale_menu():
 # Install LogScale log collector
 def install_logscale_collector():
     print("Installing LogScale log collector...")
-    os.chdir(LOG_GENERATOR_DIR)  # Change to the directory containing the collector package
+    os.chdir(LOG_COLLECTOR_DIR)  # Change to the directory containing the collector package
     subprocess.run(["mv", "humio-log-collector*", "humio-log-collector.deb"])
     subprocess.run(["sudo", "dpkg", "-i", "humio-log-collector.deb"])
     subprocess.run(["sudo", "chown", "-R", "humio-log-collector:humio-log-collector", "/var/lib/humio-log-collector"])
