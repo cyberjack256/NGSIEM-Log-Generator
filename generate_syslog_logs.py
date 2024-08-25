@@ -61,6 +61,44 @@ def generate_syslog_message(template, **log_data):
 
     return template.format(**log_data)
 
+def generate_random_high_port():
+    return random.randint(1024, 65535)
+
+def generate_random_gps_coordinates(region):
+    coordinates = {
+        "US": {"lat": random.uniform(25.0, 49.0), "long": random.uniform(-125.0, -66.0)},
+        "SouthAmerica": {"lat": random.uniform(-55.0, 12.0), "long": random.uniform(-81.0, -34.0)},
+        "Australia": {"lat": random.uniform(-44.0, -10.0), "long": random.uniform(113.0, 154.0)},
+        "Africa": {"lat": random.uniform(-35.0, 37.0), "long": random.uniform(-17.0, 51.0)},
+        "Japan": {"lat": random.uniform(24.0, 46.0), "long": random.uniform(123.0, 146.0)}
+    }
+    return coordinates[region]
+
+def generate_drones(num_drones):
+    drones = []
+    regions = ["US", "SouthAmerica", "Australia", "Africa", "Japan"]
+    for i in range(num_drones):
+        region = random.choice(regions)
+        gps = generate_random_gps_coordinates(region)
+        drone = {
+            "drone_id": f"DRONE_{i+1}",
+            "station_id": f"ST_{region}_{i+1}",
+            "battery_level": random.randint(20, 100),
+            "product_gps_longitude": gps["long"],
+            "product_gps_latitude": gps["lat"],
+            "flying_state": random.choice(["hovering", "moving", "landing", "idle"]),
+            "speed_vx": random.randint(-20, 20),
+            "speed_vy": random.randint(-20, 20),
+            "speed_vz": random.randint(-10, 10),
+            "altitude": random.randint(0, 500),
+            "angle_phi": random.uniform(-10.0, 10.0),
+            "angle_theta": random.uniform(-10.0, 10.0),
+            "angle_psi": random.uniform(-10.0, 10.0),
+            "wifi_signal": random.choice(["excellent", "good", "weak", "critical"])
+        }
+        drones.append(drone)
+    return drones
+
 def generate_sample_syslogs():
     config = load_config(CONFIG_FILE)
     message_config = load_config(MESSAGE_CONFIG_FILE)
@@ -97,7 +135,6 @@ def generate_sample_syslogs():
         procid = str(random.randint(1000, 9999))
         timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%b %d %H:%M:%S')
         message_template = random.choice(messages)
-        srcPort = str(random.randint(1024, 65535))
 
         log_data = {
             'pri': pri,
@@ -106,8 +143,10 @@ def generate_sample_syslogs():
             'app_name': app_name,
             'procid': procid,
             'client_ip': user["client_ip"],
-            'public_ip': random.choice(config.get('bird_related_ips', ['0.0.0.0'])),  # Use bird-related IP
-            'srcPort': srcPort,
+            'source_ip': user["client_ip"],
+            'destination_ip': random.choice(config.get('bird_related_ips', ['0.0.0.0'])),
+            'source_port': generate_random_high_port(),
+            'destination_port': generate_random_high_port(),
             'username': user["username"],
             'mac_address': user["mac_address"],
             'user_agent': user["user_agent"]
@@ -130,14 +169,21 @@ def write_syslog_to_file(logs):
         for log_entry in logs:
             log_file.write(log_entry + "\n")
 
-# Add code to generate and save logs to a file
-def generate_and_save_logs():
+def send_logs_to_syslog_server(logs, server_ip='127.0.0.1', port=514):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    for log_entry in logs:
+        sock.sendto(log_entry.encode(), (server_ip, port))
+    sock.close()
+
+# Function to generate and send logs to syslog server or file
+def generate_and_send_logs():
     try:
         sample_logs = generate_sample_syslogs()
         write_syslog_to_file(sample_logs)
-        print(f"Generated {len(sample_logs)} logs and saved to {SYSLOG_FILE}.")
+        send_logs_to_syslog_server(sample_logs)
+        print(f"Generated {len(sample_logs)} logs, saved to {SYSLOG_FILE}, and sent to syslog server.")
     except Exception as e:
         print(f"Error generating logs: {e}")
 
 if __name__ == "__main__":
-    generate_and_save_logs()
+    generate_and_send_logs()
