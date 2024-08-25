@@ -20,7 +20,6 @@ def resolve_domain_to_ip(domain):
     try:
         return socket.gethostbyname(domain)
     except socket.gaierror:
-        # Handle the case where the domain cannot be resolved
         logging.warning(f"Could not resolve domain: {domain}")
         return "0.0.0.0"
 
@@ -51,20 +50,51 @@ def calculate_pri(facility, severity):
     return (facility * 8) + severity
 
 # Generate realistic sample syslogs following RFC 5424
-def generate_syslog_message(template, pri, timestamp, hostname, app_name, procid, client_ip, public_ip, srcPort, username=None, mac_address=None, user_agent=None):
-    return template.format(
-        pri=pri,
-        timestamp=timestamp,
-        hostname=hostname,
-        app_name=app_name,
-        procid=procid,
-        client_ip=client_ip,
-        public_ip=public_ip,
-        srcPort=srcPort,
-        username=username or "",
-        mac_address=mac_address or "",
-        user_agent=user_agent or ""
-    )
+def generate_syslog_message(template, **kwargs):
+    # Provide default values if any required fields are missing
+    default_values = {
+        "pri": "165",
+        "timestamp": datetime.now(timezone.utc).strftime('%b %d %H:%M:%S'),
+        "hostname": "default_host",
+        "app_name": "default_app",
+        "procid": "1001",
+        "client_ip": "0.0.0.0",
+        "public_ip": "0.0.0.0",
+        "srcPort": "0",
+        "username": "",
+        "mac_address": "",
+        "user_agent": "",
+        "source_ip": "0.0.0.0",
+        "destination_ip": "0.0.0.0",
+        "source_port": "0",
+        "destination_port": "0",
+        "drone_id": "DRONE-001",
+        "station_id": "STATION-001",
+        "battery_level": "100",
+        "product_gps_longitude": "0.0",
+        "product_gps_latitude": "0.0",
+        "flying_state": "idle",
+        "speed_vx": "0",
+        "speed_vy": "0",
+        "speed_vz": "0",
+        "altitude": "0",
+        "angle_phi": "0",
+        "angle_theta": "0",
+        "angle_psi": "0",
+        "wifi_signal": "100%",
+        "ip_address": "0.0.0.0",
+        "translated_ip": "0.0.0.0",
+        "duration": "0",
+        "bytes": "0",
+        "attack_type": "default_attack",
+        "command": "default_command",
+        "rack_id": "RACK-001",
+        "storage_usage": "0"
+    }
+    
+    # Merge default values with provided kwargs
+    log_data = {**default_values, **kwargs}
+    return template.format(**log_data)
 
 # Generate sample syslogs
 def generate_sample_syslogs():
@@ -113,12 +143,16 @@ def generate_sample_syslogs():
             hostname=hostname,
             app_name=app_name,
             procid=procid,
-            client_ip=user["client_ip"],
-            public_ip=random.choice(bird_related_ips),  # Use bird-related IP
+            client_ip=user.get("client_ip", "0.0.0.0"),
+            public_ip=random.choice(bird_related_ips),
             srcPort=srcPort,
-            username=user["username"],
-            mac_address=user["mac_address"],
-            user_agent=user["user_agent"]
+            username=user.get("username", ""),
+            mac_address=user.get("mac_address", ""),
+            user_agent=user.get("user_agent", ""),
+            source_ip=user.get("source_ip", "0.0.0.0"),
+            destination_ip=user.get("destination_ip", "0.0.0.0"),
+            source_port=user.get("source_port", "0"),
+            destination_port=user.get("destination_port", "0")
         )
 
         sample_logs.append(message)
@@ -159,12 +193,16 @@ def generate_bad_syslogs():
             hostname=hostname,
             app_name=app_name,
             procid=procid,
-            client_ip=user_info["client_ip"],
-            public_ip=random.choice(bird_related_ips),  # Use bird-related IP
+            client_ip=user_info.get("client_ip", "0.0.0.0"),
+            public_ip=random.choice(bird_related_ips),
             srcPort=srcPort,
-            username=user_info["username"],
-            mac_address=user_info["mac_address"],
-            user_agent=user_info["user_agent"]
+            username=user_info.get("username", ""),
+            mac_address=user_info.get("mac_address", ""),
+            user_agent=user_info.get("user_agent", ""),
+            source_ip=user_info.get("source_ip", "0.0.0.0"),
+            destination_ip=user_info.get("destination_ip", "0.0.0.0"),
+            source_port=user_info.get("source_port", "0"),
+            destination_port=user_info.get("destination_port", "0")
         )
 
         logs.append(message)
@@ -180,28 +218,25 @@ def write_syslog_to_file(logs):
         for log_entry in logs:
             log_file.write(log_entry + "\n")
 
-# Send logs via UDP to a syslog server
-def send_logs_to_syslog_server(logs):
-    server_address = ("127.0.0.1", 514)  # Update to your syslog server address and port
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    for log_entry in logs:
-        sock.sendto(log_entry.encode('utf-8'), server_address)
-
-    sock.close()
-
-# Generate logs and send to file or syslog server
-def generate_logs(output='file'):
-    sample_logs = generate_sample_syslogs()
-    bad_syslogs = generate_bad_syslogs()
-    all_logs = sample_logs + bad_syslogs
-    
-    if output == 'file':
+# Generate sample syslogs
+def generate_sample_syslogs_main():
+    try:
+        sample_logs = generate_sample_syslogs()
+        bad_syslogs = generate_bad_syslogs()
+        all_logs = sample_logs + bad_syslogs
         write_syslog_to_file(all_logs)
-    elif output == 'syslog':
-        send_logs_to_syslog_server(all_logs)
-    else:
-        print("Invalid output option specified.")
+    except ValueError as e:
+        print(f"Error: {e}")
+
+# Send logs to syslog server using UDP
+def send_logs_to_syslog_server(logs):
+    syslog_server_ip = "127.0.0.1"  # Replace with actual syslog server IP
+    syslog_port = 514
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    for log in logs:
+        sock.sendto(log.encode('utf-8'), (syslog_server_ip, syslog_port))
+    sock.close()
 
 # Continuous log generation
 def continuous_log_generation():
@@ -219,7 +254,7 @@ def continuous_log_generation():
             bad_traffic_logs = generate_bad_syslogs()
             all_logs.extend(bad_traffic_logs)
         
-        # Send logs via UDP
+        # Send logs to syslog server
         send_logs_to_syslog_server(all_logs)
         
         # Log execution time
