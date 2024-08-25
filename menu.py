@@ -1,7 +1,7 @@
 import os
 import subprocess
 import json
-from generate_syslog_logs import generate_sample_syslogs, generate_syslog_message, generate_and_save_logs
+from generate_syslog_logs import generate_sample_syslogs, generate_syslog_message, write_syslog_to_file
 
 # Paths to config files
 CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
@@ -115,7 +115,7 @@ def syslog_menu():
             else:
                 print("No sample logs generated.")
         elif choice == '3':
-            generate_and_save_logs()
+            write_syslog_to_file()
         elif choice == '4':
             start_logging_service()
         elif choice == '5':
