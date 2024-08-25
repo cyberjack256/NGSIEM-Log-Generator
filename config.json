@@ -1,91 +1,79 @@
 {
-  "zscaler_api_url": "https://your-ngsiem-api-url",
-  "zscaler_api_key": "your_api_key",
-  "observer.id": "observer123",
-  "encounter.alias": "encounterX",
-  "domains": ["birdsite.com", "adminbird.com", "birdnet.org"],
   "users": [
     {
-      "username": "robin",
-      "email": "robin@birdsite.com",
-      "hostname": "workstation.birdsite.com",
-      "mac_address": "00:1A:2B:3C:4D:5E",
-      "client_ip": "10.0.0.1",
+      "username": "eagle",
+      "client_ip": "192.168.1.10",
+      "hostname": "nestwall.firewall.local",
+      "mac_address": "00:0a:95:9d:68:16",
       "user_agent": "Mozilla/5.0"
     },
     {
       "username": "sparrow",
-      "email": "sparrow@birdsite.com",
-      "hostname": "workstation2.birdsite.com",
-      "mac_address": "11:22:33:44:55:66",
-      "client_ip": "10.0.0.2",
-      "user_agent": "Chrome/91.0"
-    },
-    {
-      "username": "eagle",
-      "email": "eagle@adminbird.com",
-      "hostname": "adminworkstation.adminbird.com",
-      "mac_address": "22:33:44:55:66:77",
-      "client_ip": "10.0.0.3",
+      "client_ip": "192.168.1.11",
+      "hostname": "birdcentral.nest.local",
+      "mac_address": "00:0a:95:9d:68:17",
       "user_agent": "Mozilla/5.0"
-    },
-    {
-      "username": "finch",
-      "email": "finch@birdnet.org",
-      "hostname": "workstation3.birdnet.org",
-      "mac_address": "33:44:55:66:77:88",
-      "client_ip": "10.0.0.4",
-      "user_agent": "Chrome/91.0"
-    },
-    {
-      "username": "hawk",
-      "email": "hawk@birdsite.com",
-      "hostname": "workstation4.birdsite.com",
-      "mac_address": "44:55:66:77:88:99",
-      "client_ip": "10.0.0.5",
-      "user_agent": "Mozilla/5.0"
-    },
-    {
-      "username": "owl",
-      "email": "owl@birdnet.org",
-      "hostname": "workstation5.birdnet.org",
-      "mac_address": "55:66:77:88:99:AA",
-      "client_ip": "10.0.0.6",
-      "user_agent": "Chrome/91.0"
     },
     {
       "username": "falcon",
-      "email": "falcon@adminbird.com",
-      "hostname": "adminworkstation2.adminbird.com",
-      "mac_address": "66:77:88:99:AA:BB",
-      "client_ip": "10.0.0.7",
-      "user_agent": "Mozilla/5.0"
+      "client_ip": "192.168.1.12",
+      "hostname": "birdwatch.cams.net",
+      "mac_address": "00:0a:95:9d:68:18",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
     },
     {
-      "username": "dove",
-      "email": "dove@birdsite.com",
-      "hostname": "workstation6.birdsite.com",
-      "mac_address": "77:88:99:AA:BB:CC",
-      "client_ip": "10.0.0.8",
-      "user_agent": "Chrome/91.0"
-    },
-    {
-      "username": "parrot",
-      "email": "parrot@birdsite.com",
-      "hostname": "workstation7.birdsite.com",
-      "mac_address": "88:99:AA:BB:CC:DD",
-      "client_ip": "10.0.0.9",
-      "user_agent": "Mozilla/5.0"
-    },
-    {
-      "username": "pigeon",
-      "email": "pigeon@birdnet.org",
-      "hostname": "workstation8.birdnet.org",
-      "mac_address": "99:AA:BB:CC:DD:EE",
-      "client_ip": "10.0.0.10",
-      "user_agent": "Chrome/91.0"
+      "username": "owl",
+      "client_ip": "192.168.1.13",
+      "hostname": "birdnet.secure.local",
+      "mac_address": "00:0a:95:9d:68:19",
+      "user_agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64)"
     }
   ],
-  "server_ips": ["192.168.1.1", "192.168.1.2"],
-  "log_levels": ["info", "warning", "error"]
+  "bird_related_ips": [
+    "192.168.10.10",
+    "192.168.10.11",
+    "192.168.10.12",
+    "192.168.10.13",
+    "192.168.10.14"
+  ],
+  "drones": [
+    {
+      "drone_id": "DRONE_{i}",
+      "station_id": "ST_{region}_{i}",
+      "battery_level": "{battery_level}",
+      "product_gps_longitude": "{longitude}",
+      "product_gps_latitude": "{latitude}",
+      "flying_state": "{flying_state}",
+      "speed_vx": "{speed_vx}",
+      "speed_vy": "{speed_vy}",
+      "speed_vz": "{speed_vz}",
+      "altitude": "{altitude}",
+      "angle_phi": "{angle_phi}",
+      "angle_theta": "{angle_theta}",
+      "angle_psi": "{angle_psi}",
+      "wifi_signal": "{wifi_signal}"
+    }
+  ],
+  "network": {
+    "connections": [
+      {
+        "source_ip": "192.168.1.{i}",
+        "destination_ip": "10.0.0.{i}",
+        "source_port": "{random_high_port}",
+        "destination_port": "{random_high_port}",
+        "translated_ip": "10.0.0.{i+1}",
+        "attack_type": "Brute Force",
+        "duration": "10",
+        "bytes": "{random_bytes}",
+        "port": "{random_high_port}",
+        "syslog_ip": "192.168.1.{i+100}",
+        "rack_id": "RACK{i}",
+        "eventID": "EVT{i}"
+      }
+    ]
+  },
+  "zscaler_api_url": "https://api.zscaler.net",
+  "zscaler_api_key": "YOUR_API_KEY",
+  "observer.id": "1234",
+  "encounter.alias": "Encounter1"
 }
