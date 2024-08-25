@@ -1,22 +1,10 @@
-import json
-import logging
 import os
 import subprocess
-from datetime import datetime
-from generate_syslog_logs import (
-    generate_sample_syslogs,
-    write_syslog_to_file,
-    send_logs_to_syslog,
-    continuous_log_generation
-)
+import json
+from generate_syslog_logs import generate_sample_syslogs, generate_logs, write_syslog_to_file
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-
-# Dynamically get the user home directory
+# Paths to config files
 CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
-ZS_LOG_EXECUTION_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/generate_logs_execution.log')
-SYSLOG_EXECUTION_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/generate_syslog_logs_execution.log')
 
 # Load configuration
 def load_config():
@@ -24,11 +12,6 @@ def load_config():
         with open(CONFIG_FILE, 'r') as file:
             return json.load(file)
     return {}
-
-# Save configuration
-def save_config(config):
-    with open(CONFIG_FILE, 'w') as file:
-        json.dump(config, file, indent=4)
 
 # Show current configuration
 def show_config():
@@ -57,6 +40,11 @@ def add_config_value():
     else:
         print("Invalid field choice.")
 
+# Save configuration
+def save_config(config):
+    with open(CONFIG_FILE, 'w') as file:
+        json.dump(config, file, indent=4)
+
 # Clear configuration value
 def clear_config_value():
     config = load_config()
@@ -75,7 +63,7 @@ def clear_config_value():
 
 # Start logging service
 def start_logging_service():
-    subprocess.Popen(["python3", "/home/ubuntu/NGSIEM-Log-Generator/generate_syslog_logs.py"])
+    subprocess.Popen(["python3", os.path.expanduser("~/NGSIEM-Log-Generator/generate_syslog_logs.py")])
     print("Logging service started.")
 
 # Stop logging service
@@ -91,27 +79,63 @@ def check_logging_service_status():
     else:
         print("Logging service is not running.")
 
-# Generate logs to file
-def generate_logs_to_file():
-    sample_logs = generate_sample_syslogs()
-    write_syslog_to_file(sample_logs)
-    print(f"Generated 500 logs and written to file: {SYSLOG_FILE}")
-
-# Start sending logs to syslog server
-def start_sending_logs_to_syslog():
-    subprocess.Popen(["python3", "/home/ubuntu/NGSIEM-Log-Generator/generate_syslog_logs.py", "--send"])
-    print("Started sending logs to syslog server.")
-
 # Use less for scrolling output
 def pager(content):
     pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
     pager_process.communicate(input=content.encode('utf-8'))
+
+# Syslog menu
+def syslog_menu():
+    while True:
+        os.system('clear')
+        print(f"""
+╔═════════════════════════════════════════════════════════════╗
+║                     Syslog Log Actions                      ║
+║═════════════════════════════════════════════════════════════║
+║  Please select an option:                                   ║
+║                                                             ║
+║  1. Show current configuration                              ║
+║  2. Generate sample Syslog logs                             ║
+║  3. Generate logs to file                                   ║
+║  4. Start sending logs to syslog server                     ║
+║  5. Stop sending logs to syslog server                      ║
+║  6. Check logging service status                            ║
+║  0. Back to main menu                                       ║
+╚═════════════════════════════════════════════════════════════╝
+        """)
+        choice = input("Enter your choice: ").strip()
+
+        if choice == '1':
+            show_config()
+        elif choice == '2':
+            sample_logs = generate_sample_syslogs()
+            if sample_logs:
+                sample_log_str = json.dumps(sample_logs[0], indent=4)
+                pager(f"Sample log:\n{sample_log_str}")
+            else:
+                print("No sample logs generated.")
+        elif choice == '3':
+            generate_logs('file')
+            print("Generated logs to file.")
+        elif choice == '4':
+            start_logging_service()
+        elif choice == '5':
+            stop_logging_service()
+        elif choice == '6':
+            check_logging_service_status()
+        elif choice == '0':
+            break
+        else:
+            print("Invalid choice. Please try again.")
+        
+        input("\nPress Enter to continue...")
 
 # Main menu
 def main_menu():
     while True:
         os.system('clear')
         print("""
+
 ╔═════════════════════════════════════════════════════════════╗
 ║                     NGSIEM Log Generator                    ║
 ║═════════════════════════════════════════════════════════════║
@@ -185,102 +209,6 @@ def zscaler_menu():
             print("Invalid choice. Please try again.")
         
         input("\nPress Enter to continue...")
-
-# Syslog menu
-def syslog_menu():
-    while True:
-        os.system('clear')
-        print(f"""
-╔═════════════════════════════════════════════════════════════╗
-║                     Syslog Log Actions                      ║
-║═════════════════════════════════════════════════════════════║
-║  Please select an option:                                   ║
-║                                                             ║
-║  1. Show current configuration                              ║
-║  2. Generate sample Syslog logs                             ║
-║  3. Generate logs to file                                   ║
-║  4. Start sending logs to syslog server                     ║
-║  5. Stop sending logs to syslog server                      ║
-║  6. Check logging service status                            ║
-║  0. Back to main menu                                       ║
-╚═════════════════════════════════════════════════════════════╝
-        """)
-        choice = input("Enter your choice: ").strip()
-
-        if choice == '1':
-            show_config()
-        elif choice == '2':
-            sample_logs = generate_sample_syslogs()
-            if sample_logs:
-                sample_log_str = json.dumps(sample_logs[0], indent=4)
-                pager(f"Sample log:\n{sample_log_str}")
-            else:
-                print("No sample logs generated.")
-        elif choice == '3':
-            generate_logs_to_file()
-        elif choice == '4':
-            start_sending_logs_to_syslog()
-        elif choice == '5':
-            stop_logging_service()
-        elif choice == '6':
-            check_logging_service_status()
-        elif choice == '0':
-            break
-        else:
-            print("Invalid choice. Please try again.")
-        
-        input("\nPress Enter to continue...")
-
-# LogScale Configuration and Controls
-def logscale_menu():
-    while True:
-        os.system('clear')
-        print(f"""
-╔═════════════════════════════════════════════════════════════╗
-║               LogScale Configuration and Controls           ║
-║═════════════════════════════════════════════════════════════║
-║  Please select an option:                                   ║
-║                                                             ║
-║  1. Start LogScale log collector                            ║
-║  2. Stop LogScale log collector                             ║
-║  3. Check LogScale log collector status                     ║
-║  4. Edit LogScale configuration file                        ║
-║  0. Back to main menu                                       ║
-╚═════════════════════════════════════════════════════════════╝
-        """)
-        choice = input("Enter your choice: ").strip()
-
-        if choice == '1':
-            start_logshipper()
-        elif choice == '2':
-            stop_logshipper()
-        elif choice == '3':
-            status_logshipper()
-        elif choice == '4':
-            edit_logscale_config()
-        elif choice == '0':
-            break
-        else:
-            print("Invalid choice. Please try again.")
-        
-        input("\nPress Enter to continue...")
-
-# Edit LogScale Configuration
-def edit_logscale_config():
-    logscale_config_path = "/etc/humio-logcollector/config.yaml"
-    if os.path.exists(logscale_config_path):
-        subprocess.run(['sudo', 'nano', logscale_config_path])
-    else:
-        print("LogScale configuration file not found.")
-
-# Check required fields
-def check_required_fields(config):
-    required_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
-    missing_fields = [field for field in required_fields if field not in config or not config[field]]
-    if missing_fields:
-        print(f"Missing required configuration fields: {', '.join(missing_fields)}")
-        return False
-    return True
 
 if __name__ == "__main__":
     main_menu()
