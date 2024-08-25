@@ -1,7 +1,7 @@
 import os
 import subprocess
 import json
-from generate_syslog_logs import generate_sample_syslogs, generate_syslog_message, write_syslog_to_file
+from generate_syslog_logs import generate_sample_syslogs, generate_syslog_message, generate_and_save_logs
 
 # Paths to config files
 CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
