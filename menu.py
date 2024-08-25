@@ -2,7 +2,7 @@ import os
 import subprocess
 import json
 from generate_syslog_logs import generate_sample_syslogs, generate_syslog_message, write_syslog_to_file
-from generate_logs import display_sample_log_and_curl
+from generate_logs import display_sample_log_and_curl, generate_regular_log, generate_bad_traffic_log, send_logs
 
 # Paths to config files
 CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
@@ -131,43 +131,6 @@ def syslog_menu():
         
         input("\nPress Enter to continue...")
 
-# Main menu
-def main_menu():
-    while True:
-        os.system('clear')
-        print("""
-
-╔═════════════════════════════════════════════════════════════╗
-║                     NGSIEM Log Generator                    ║
-║═════════════════════════════════════════════════════════════║
-║  Welcome to the NGSIEM Log Generator Menu                   ║
-║  Please select an option:                                   ║
-║                                                             ║
-║  1. Zscaler log actions                                     ║
-║  2. Syslog log actions                                      ║
-║  3. LogScale Configuration and Controls                     ║
-║  4. Set log level                                           ║
-║  0. Exit                                                    ║
-╚═════════════════════════════════════════════════════════════╝
-        """)
-        choice = input("Enter your choice: ").strip()
-
-        if choice == '1':
-            zscaler_menu()
-        elif choice == '2':
-            syslog_menu()
-        elif choice == '3':
-            logscale_menu()
-        elif choice == '4':
-            set_log_level()
-        elif choice == '0':
-            break
-        else:
-            print("Invalid choice. Please try again.")
-        
-        input("\nPress Enter to continue...")
-
-# Zscaler menu
 # Zscaler menu
 def zscaler_menu():
     while True:
@@ -195,16 +158,46 @@ def zscaler_menu():
         elif choice == '3':
             clear_config_value()
         elif choice == '4':
-            display_sample_log_and_curl()  # Make sure this function is defined in generate_logs.py
+            display_sample_log_and_curl()  # Ensure this function is implemented in generate_logs.py
         elif choice == '5':
             config = load_config()
             api_url = config.get('zscaler_api_url')
             api_key = config.get('zscaler_api_key')
-            if api_url and api_key and check_required_fields(config):
+            if api_url and api_key:
                 sample_logs = [generate_regular_log(config), generate_bad_traffic_log(config)]
-                send_logs(api_url, api_key, sample_logs)  # Ensure send_logs is defined in generate_logs.py
+                send_logs(api_url, api_key, sample_logs)  # Ensure send_logs is implemented in generate_logs.py
             else:
                 print("API URL or API Key is missing from configuration.")
+        elif choice == '0':
+            break
+        else:
+            print("Invalid choice. Please try again.")
+        
+        input("\nPress Enter to continue...")
+
+# Main menu
+def main_menu():
+    while True:
+        os.system('clear')
+        print("""
+
+╔═════════════════════════════════════════════════════════════╗
+║                     NGSIEM Log Generator                    ║
+║═════════════════════════════════════════════════════════════║
+║  Welcome to the NGSIEM Log Generator Menu                   ║
+║  Please select an option:                                   ║
+║                                                             ║
+║  1. Zscaler log actions                                     ║
+║  2. Syslog log actions                                      ║
+║  0. Exit                                                    ║
+╚═════════════════════════════════════════════════════════════╝
+        """)
+        choice = input("Enter your choice: ").strip()
+
+        if choice == '1':
+            zscaler_menu()
+        elif choice == '2':
+            syslog_menu()
         elif choice == '0':
             break
         else:
