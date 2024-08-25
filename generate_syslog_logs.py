@@ -4,8 +4,7 @@ import logging
 import os
 import random
 import time
-import threading
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -16,9 +15,29 @@ MESSAGE_CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/message.config'
 SYSLOG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/syslog.log')
 EXECUTION_LOG = os.path.expanduser('~/NGSIEM-Log-Generator/generate_syslog_logs_execution.log')
 
-# Syslog server details
-SYSLOG_SERVER_IP = '127.0.0.1'  # Change to your aggregator IP if needed
-SYSLOG_SERVER_PORT = 514
+# Function to resolve domain names to IP addresses
+def resolve_domain_to_ip(domain):
+    try:
+        return socket.gethostbyname(domain)
+    except socket.gaierror:
+        # Handle the case where the domain cannot be resolved
+        logging.warning(f"Could not resolve domain: {domain}")
+        return "0.0.0.0"
+
+# List of bird conservatorship-related domains
+bird_related_domains = [
+    "birdlife.org",
+    "audubon.org",
+    "allaboutbirds.org",
+    "ebird.org",
+    "nestwatch.org",
+    "merlin.allaboutbirds.org",
+    "birdwatchingdaily.com",
+    "birdsna.org"
+]
+
+# Resolve these domains to their IP addresses
+bird_related_ips = [resolve_domain_to_ip(domain) for domain in bird_related_domains]
 
 # Load configuration
 def load_config(file_path):
@@ -32,81 +51,139 @@ def calculate_pri(facility, severity):
     return (facility * 8) + severity
 
 # Generate realistic sample syslogs following RFC 5424
-def generate_syslog_message(template, pri, timestamp, hostname, app_name, procid, **kwargs):
+def generate_syslog_message(template, pri, timestamp, hostname, app_name, procid, client_ip, public_ip, srcPort, username=None, mac_address=None, user_agent=None):
     return template.format(
         pri=pri,
         timestamp=timestamp,
         hostname=hostname,
         app_name=app_name,
         procid=procid,
-        **kwargs
+        client_ip=client_ip,
+        public_ip=public_ip,
+        srcPort=srcPort,
+        username=username or "",
+        mac_address=mac_address or "",
+        user_agent=user_agent or ""
     )
 
-# Generate a single syslog log
-def generate_single_syslog():
-    config = load_config(MESSAGE_CONFIG_FILE)
+# Generate a single sample syslog log for demonstration
+def generate_sample_log():
+    config = load_config(CONFIG_FILE)
+    message_config = load_config(MESSAGE_CONFIG_FILE)
     now = datetime.now(timezone.utc)
-    
-    hostnames = [
-        "dronebase.local",
-        "firewallcontrol.local",
-        "analyticsengine.local",
-        "securitygateway.local",
-        "datacenter.local"
-    ]
-    
-    hostname = random.choice(hostnames)
-    app_name = "DroneController"
-    procid = str(random.randint(1000, 9999))
-    timestamp = now.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
-    message_template = random.choice(config['info'])  # Change 'info' to any other log type as needed
-    kwargs = {
-        "drone_id": f"DR{random.randint(100, 999)}",
-        "station_id": f"ST{random.randint(1, 10)}",
-        "battery_level": random.randint(0, 100),
-        "product_gps_longitude": round(random.uniform(-180, 180), 6),
-        "product_gps_latitude": round(random.uniform(-90, 90), 6),
-        "flying_state": random.choice(["hovering", "flying", "landed"]),
-        "speed_vx": random.randint(-50, 50),
-        "speed_vy": random.randint(-50, 50),
-        "speed_vz": random.randint(-50, 50),
-        "altitude": round(random.uniform(0, 500), 2),
-        "angle_phi": round(random.uniform(-180, 180), 2),
-        "angle_theta": round(random.uniform(-90, 90), 2),
-        "angle_psi": round(random.uniform(0, 360), 2),
-        "wifi_signal": random.randint(0, 100),
-        "source_ip": f"192.168.{random.randint(0, 255)}.{random.randint(0, 255)}",
-        "destination_ip": f"192.168.{random.randint(0, 255)}.{random.randint(0, 255)}",
-        "username": random.choice(["admin", "guest", "operator"]),
-        "command": random.choice(["reboot", "shutdown", "status check"]),
-        "attack_type": random.choice(["SQL Injection", "DDoS", "Phishing"]),
-    }
 
-    pri = calculate_pri(1, 6)  # Example PRI calculation
-    return generate_syslog_message(
+    hostnames = [
+        "birdcentral.nest.local",
+        "nestaccess.adminbird.net",
+        "birdwatch.cams.net",
+        "birdnet.secure.local",
+        "nestwall.firewall.local"
+    ]
+    users = config.get('users', [])
+    log_facility = 1  # User-level messages (typically facility 1)
+    severity = 6  # Informational
+    pri = calculate_pri(log_facility, severity)
+
+    if not users:
+        raise ValueError("No users found in the configuration.")
+
+    messages = message_config.get('info', [])
+
+    user = random.choice(users)
+    hostname = random.choice(hostnames)
+    app_name = random.choice([
+        "NestAccess",
+        "BirdNet",
+        "BirdWatch",
+        "NestWall",
+        "BirdCentral"
+    ])
+    procid = str(random.randint(1000, 9999))
+    timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%b %d %H:%M:%S')
+    message_template = random.choice(messages)
+    srcPort = str(random.randint(1024, 65535))
+
+    message = generate_syslog_message(
         template=message_template,
         pri=pri,
         timestamp=timestamp,
         hostname=hostname,
         app_name=app_name,
         procid=procid,
-        **kwargs
+        client_ip=user["client_ip"],
+        public_ip=random.choice(bird_related_ips),  # Use bird-related IP
+        srcPort=srcPort,
+        username=user["username"],
+        mac_address=user["mac_address"],
+        user_agent=user["user_agent"]
     )
 
-# Generate and send a batch of syslog logs
-def generate_batch_syslogs(num_logs=100):
-    config = load_config(MESSAGE_CONFIG_FILE)
-    logs = []
+    return message
 
-    for _ in range(num_logs):
-        log = generate_single_syslog()
-        logs.append(log)
+# Generate a batch of syslogs
+def generate_sample_syslogs():
+    config = load_config(CONFIG_FILE)
+    message_config = load_config(MESSAGE_CONFIG_FILE)
+    now = datetime.now(timezone.utc)
 
-    # Write logs to file
-    write_syslog_to_file(logs)
+    hostnames = [
+        "birdcentral.nest.local",
+        "nestaccess.adminbird.net",
+        "birdwatch.cams.net",
+        "birdnet.secure.local",
+        "nestwall.firewall.local"
+    ]
+    users = config.get('users', [])
+    log_facility = 1  # User-level messages (typically facility 1)
+    severity = 6  # Informational
+    pri = calculate_pri(log_facility, severity)
+
+    if not users:
+        raise ValueError("No users found in the configuration.")
+
+    messages = message_config.get('info', [])
+
+    sample_logs = []
+    for _ in range(500):  # Generate 500 logs for file output
+        user = random.choice(users)
+        hostname = random.choice(hostnames)
+        app_name = random.choice([
+            "NestAccess",
+            "BirdNet",
+            "BirdWatch",
+            "NestWall",
+            "BirdCentral"
+        ])
+        procid = str(random.randint(1000, 9999))
+        timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%b %d %H:%M:%S')
+        message_template = random.choice(messages)
+        srcPort = str(random.randint(1024, 65535))
+
+        message = generate_syslog_message(
+            template=message_template,
+            pri=pri,
+            timestamp=timestamp,
+            hostname=hostname,
+            app_name=app_name,
+            procid=procid,
+            client_ip=user["client_ip"],
+            public_ip=random.choice(bird_related_ips),  # Use bird-related IP
+            srcPort=srcPort,
+            username=user["username"],
+            mac_address=user["mac_address"],
+            user_agent=user["user_agent"]
+        )
+
+        sample_logs.append(message)
     
-    # Send logs via UDP to the syslog server
-    send_logs_via_udp(logs)
+    return sample_logs
+
+# Send logs to a remote syslog server
+def send_logs_to_syslog(logs, server="localhost", port=514):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    for log in logs:
+        sock.sendto(log.encode('utf-8'), (server, port))
+    sock.close()
 
 # Write syslog to file
 def write_syslog_to_file(logs):
@@ -117,27 +194,31 @@ def write_syslog_to_file(logs):
         for log_entry in logs:
             log_file.write(log_entry + "\n")
 
-# Send syslog logs via UDP to a syslog server
-def send_logs_via_udp(logs):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    for log in logs:
-        sock.sendto(log.encode('utf-8'), (SYSLOG_SERVER_IP, SYSLOG_SERVER_PORT))
-    sock.close()
-
-# Background service to generate and send logs continuously
-def background_log_service():
+# Continuous log generation
+def continuous_log_generation():
+    config = load_config(CONFIG_FILE)
     while True:
-        generate_batch_syslogs(num_logs=random.randint(80, 120))  # Generates between 80 to 120 logs per batch
-        time.sleep(random.uniform(0.5, 1.5))  # Sleep for a random time between 0.5 to 1.5 seconds
+        all_logs = []
+        
+        # Generate regular syslogs every minute
+        regular_logs = generate_sample_syslogs()
+        all_logs.extend(regular_logs)
+        
+        # Generate bad traffic logs every 15 minutes
+        current_time = datetime.utcnow()
+        if current_time.minute % 15 == 0:
+            bad_traffic_logs = generate_bad_syslogs()
+            all_logs.extend(bad_traffic_logs)
+        
+        # Send logs to syslog server
+        send_logs_to_syslog(all_logs)
+        
+        # Log execution time
+        with open(EXECUTION_LOG, 'a') as exec_log:
+            exec_log.write(f"Executed at: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        
+        # Sleep for 1 minute before generating the next set of logs
+        time.sleep(60)
 
-# Start background service
-def start_background_service():
-    thread = threading.Thread(target=background_log_service)
-    thread.daemon = True  # Run in background
-    thread.start()
-    print("Background log generation service started.")
-
-# Main function to generate logs
 if __name__ == "__main__":
-    start_background_service()
-    input("Press Enter to stop the service...\n")
+    continuous_log_generation()
