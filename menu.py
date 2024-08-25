@@ -197,10 +197,11 @@ def syslog_menu():
 ║  Please select an option:                                   ║
 ║                                                             ║
 ║  1. Show current configuration                              ║
-║  2. Generate logs to file                                   ║
-║  3. Start sending logs to syslog server                     ║
-║  4. Stop sending logs to syslog server                      ║
-║  5. Check logging service status                            ║
+║  2. Generate sample Syslog logs                             ║
+║  3. Generate logs to file                                   ║
+║  4. Start sending logs to syslog server                     ║
+║  5. Stop sending logs to syslog server                      ║
+║  6. Check logging service status                            ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -209,12 +210,19 @@ def syslog_menu():
         if choice == '1':
             show_config()
         elif choice == '2':
-            generate_logs_to_file()
+            sample_logs = generate_sample_syslogs()
+            if sample_logs:
+                sample_log_str = json.dumps(sample_logs[0], indent=4)
+                pager(f"Sample log:\n{sample_log_str}")
+            else:
+                print("No sample logs generated.")
         elif choice == '3':
-            start_sending_logs_to_syslog()
+            generate_logs_to_file()
         elif choice == '4':
-            stop_logging_service()
+            start_sending_logs_to_syslog()
         elif choice == '5':
+            stop_logging_service()
+        elif choice == '6':
             check_logging_service_status()
         elif choice == '0':
             break
