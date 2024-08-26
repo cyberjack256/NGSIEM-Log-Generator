@@ -163,7 +163,11 @@ def install_logscale_collector():
 def edit_logscale_config():
     logscale_config_path = "/etc/humio-log-collector/config.yaml"
     
-    if os.path.exists(logscale_config_path):
+    # Use sudo to check if the file exists, since ubuntu user can't see the file
+    check_file_exists_command = f"sudo test -f {logscale_config_path}"
+    check_file_exists = subprocess.run(check_file_exists_command, shell=True)
+    
+    if check_file_exists.returncode == 0:
         try:
             print("Opening LogScale configuration for editing...")
             # Use sudo to run nano with elevated privileges
@@ -171,7 +175,8 @@ def edit_logscale_config():
         except subprocess.CalledProcessError as e:
             print(f"Failed to open the configuration file: {e}")
     else:
-        print("LogScale configuration file not found.")
+        print("LogScale configuration file not found or you don't have the necessary permissions.")
+
 # Set LogScale configuration
 def set_logscale_config():
     logscale_config_path = "/etc/humio-log-collector/config.yaml"
