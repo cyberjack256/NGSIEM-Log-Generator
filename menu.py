@@ -273,8 +273,11 @@ def set_logscale_config():
     confirmation = input("If this is your first time setting the configuration, proceed. If not, note that this will overwrite the existing config. Proceed? (yes/no): ").strip().lower()
     if confirmation == "yes":
         try:
-            with open(logscale_config_path, 'w') as file:
-                file.write(BASE_LOGSCALE_CONFIG)
+            temp_config_path = os.path.join(LOG_GENERATOR_DIR, "temp_config.yaml")
+            with open(temp_config_path, 'w') as temp_file:
+                temp_file.write(BASE_LOGSCALE_CONFIG)
+            subprocess.run(['sudo', 'cp', temp_config_path, logscale_config_path])
+            os.remove(temp_config_path)  # Clean up temp file
             print("LogScale configuration has been set.")
         except Exception as e:
             print(f"Failed to set configuration: {e}")
