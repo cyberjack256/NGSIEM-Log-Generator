@@ -19,19 +19,7 @@ git clone https://github.com/cyberjack256/NGSIEM-Log-Generator.git
 cd NGSIEM-Log-Generator
 ```
 
-### 2. Install System Requirements
-
-To ensure all system dependencies are installed, use `xargs` with `apt-get`:
-
-```bash
-cat requirements.txt | xargs -n 1 sudo apt-get install -y
-l
-```
-
-**Explanation:**
-- This command installs `nano`, `less`, `wget`, and `curl` if they are not already installed on the system.
-
-### 3. Install Python Dependencies
+### 2. Install Python Dependencies
 
 Install the required Python libraries using `pip`. If you have a `requirements.txt` file, use the following command:
 
@@ -39,7 +27,7 @@ Install the required Python libraries using `pip`. If you have a `requirements.t
 cat requirements.txt | xargs -n 1 sudo pip3 install
 ```
 
-### 4. Set Up LogScale Collector
+### 3. Set Up LogScale Collector
 
 Move and install the LogScale collector package:
 
