@@ -162,9 +162,15 @@ def install_logscale_collector():
 # Edit LogScale Configuration
 def edit_logscale_config():
     logscale_config_path = "/etc/humio-log-collector/config.yaml"
+    
+    # Check if the script is running as root
+    if os.geteuid() != 0:
+        print("This action requires root privileges. Please run the script as root or use sudo.")
+        return
+
     if os.path.exists(logscale_config_path):
         print("Opening LogScale configuration for editing...")
-        subprocess.run(['sudo', 'nano', logscale_config_path])
+        subprocess.run(['nano', logscale_config_path])
     else:
         print("LogScale configuration file not found.")
 
