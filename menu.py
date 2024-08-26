@@ -303,6 +303,11 @@ def check_logscale_service_status():
     result = subprocess.run(['sudo', 'systemctl', 'status', 'humio-log-collector.service'], capture_output=True, text=True)
     pager(result.stdout)
 
+# Main menu
+def main_menu():
+    while True:
+        os.system('clear')
+        print("""
 ╔═════════════════════════════════════════════════════════════╗
 ║                     NGSIEM Log Generator                    ║
 ║═════════════════════════════════════════════════════════════║
