@@ -1,9 +1,3 @@
-To update the `README.md` to reflect a more streamlined installation and setup process for the NGSIEM Log Generator, we can add clear steps and use `xargs` to handle package installations efficiently.
-
-Here's an updated version of your README:
-
----
-
 # NGSIEM Log Generator
 
 The NGSIEM Log Generator is a Python-based tool designed to generate realistic logs for Zscaler and Syslog use cases. It supports log generation to files and sending logs to a remote syslog server.
@@ -127,14 +121,5 @@ Follow the on-screen instructions to generate logs, send them to the syslog serv
 - Check service statuses if logs are not being generated or sent properly.
 - Verify configuration files for correct syntax and settings.
 
-## Contributing
 
-Contributions are welcome! Please fork the repository and submit a pull request with your improvements.
 
-## License
-
-This project is licensed under the MIT License.
-
----
-
-With this updated `README.md`, you provide a comprehensive guide that simplifies installation and setup while offering clear instructions for using and managing the NGSIEM Log Generator.
