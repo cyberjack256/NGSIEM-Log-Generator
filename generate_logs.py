@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import random
+import subprocess  # Import subprocess for using less
 from datetime import datetime, timedelta, timezone
 from faker import Faker
 import ipaddress
@@ -188,16 +189,22 @@ def display_sample_log_and_curl():
             "Suspicious Allowed Traffic Log": suspicious_log
         }
 
+        # Prepare output for less
+        output = []
         for log_type, log in sample_logs.items():
             log_str = json.dumps(log, indent=4)
-            print(f"\n--- {log_type} ---")
-            print(log_str)
+            output.append(f"\n--- {log_type} ---")
+            output.append(log_str)
             api_url = config.get('zscaler_api_url')
             api_key = config.get('zscaler_api_key')
             curl_command = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{log_str}'"
-            print(f"\nCurl command to send the {log_type.lower()} to NGSIEM:\n\n{curl_command}\n")
+            output.append(f"\nCurl command to send the {log_type.lower()} to NGSIEM:\n\n{curl_command}\n")
 
-        print("\nNote: The logs above are samples and have not been sent to NGSIEM. The curl commands provided can be used to send these logs to NGSIEM.\n")
+        output.append("\nNote: The logs above are samples and have not been sent to NGSIEM. The curl commands provided can be used to send these logs to NGSIEM.\n")
+        
+        # Use less to display output
+        subprocess.run(['less'], input='\n'.join(output).encode('utf-8'))
+
     except ValueError as e:
         print(f"Error: {e}")
 
