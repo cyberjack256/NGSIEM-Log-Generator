@@ -2,7 +2,8 @@ import json
 import logging
 import os
 import random
-import subprocess  # Import subprocess for using less
+import requests
+import time
 from datetime import datetime, timedelta, timezone
 from faker import Faker
 import ipaddress
@@ -32,30 +33,17 @@ COUNTRY_IP_BLOCKS = {
     "Belgium": ["5.128.0.0/13", "37.72.0.0/14", "185.48.0.0/11", "194.0.0.0/11"],
 }
 
+
 # Function to select a random IP address from a given CIDR block
 def get_random_ip(cidr_block):
-    try:
-        network = ipaddress.IPv4Network(cidr_block, strict=False)
-        # Generate a random IP address within the network
-        ip_address = network.network_address + random.randint(0, network.num_addresses - 1)
-        return str(ip_address)
-    except ipaddress.AddressValueError as e:
-        print(f"Error: {cidr_block} is not a valid network: {e}")
-        return None
-    except Exception as e:
-        print(f"Unexpected error generating IP from {cidr_block}: {e}")
-        return None
-        
+    network = ipaddress.IPv4Network(cidr_block)
+    return str(ipaddress.IPv4Address(network.network_address + random.randint(0, network.num_addresses - 1)))
+
 # Function to select a random IP and its corresponding country
 def get_random_ip_and_country():
     country = random.choice(list(COUNTRY_IP_BLOCKS.keys()))
-    cidr_block = random.choice(COUNTRY_IP_BLOCKS[country])
-    ip = get_random_ip(cidr_block)
-    if ip:
-        return ip, country
-    else:
-        print(f"Failed to generate IP for {country} from {cidr_block}")
-        return get_random_ip_and_country()  # Retry until a valid IP is generated
+    ip = get_random_ip(random.choice(COUNTRY_IP_BLOCKS[country]))
+    return ip, country
 
 # Load configuration
 def load_config():
@@ -70,7 +58,7 @@ def save_config(config):
         json.dump(config, file, indent=4)
 
 # Generate Zscaler log with realistic IPs and content
-def generate_zscaler_log(config, user, hostname, url, referer, action, reason, url_category="General Browsing"):
+def generate_zscaler_log(config, user, hostname, url, referer, action, reason, url_category="General Browsing", event_kind="event", tactic=None, technique=None):
     now = datetime.now(timezone.utc)
     server_ip, server_country = get_random_ip_and_country()
     client_ip, client_country = get_random_ip_and_country()
@@ -79,6 +67,7 @@ def generate_zscaler_log(config, user, hostname, url, referer, action, reason, u
         "sourcetype": "zscalernss-web",
         "event": {
             "datetime": (now - timedelta(minutes=random.randint(1, 5))).strftime("%Y-%m-%d %H:%M:%S"),
+            "kind": event_kind,
             "reason": reason,
             "event_id": random.randint(100000, 999999),
             "protocol": "HTTPS",
@@ -91,12 +80,12 @@ def generate_zscaler_log(config, user, hostname, url, referer, action, reason, u
             "clienttranstime": random.randint(200, 500),
             "requestmethod": random.choice(["GET", "POST"]),
             "refererURL": referer,
-            "useragent": user['user_agent'],  # Use 'user_agent' from config
+            "useragent": random.choice(config.get('user_agents', ['Mozilla/5.0'])),
             "product": "NSS",
             "location": server_country,
             "ClientIP": client_ip,
             "status": random.choice(["200", "404", "500"]),
-            "user": user["username"],  # Changed from 'email' to 'username'
+            "user": user["username"],  # Corrected field from 'email' to 'username'
             "url": url,
             "vendor": "Zscaler",
             "hostname": hostname,
@@ -124,9 +113,15 @@ def generate_zscaler_log(config, user, hostname, url, referer, action, reason, u
             "resource_accessed": url if "sensitive-data" in url else "N/A"
         }
     }
+
+    # Include tactic and technique only for alerts
+    if event_kind == "alert":
+        log_entry["event"]["tactic"] = tactic
+        log_entry["event"]["technique"] = technique
+
     return log_entry
 
-# Generate regular log
+# Generate regular log (normal traffic)
 def generate_regular_log(config):
     users = config.get("users", [])
     if not users:
@@ -140,11 +135,31 @@ def generate_regular_log(config):
         url=url,
         referer="https://birdsite.com",
         action="allowed",
-        reason="Normal traffic"
+        reason="Normal traffic",
+        event_kind="event"  # Normal traffic is an "event"
     )
     return log
 
-# Generate suspicious allowed traffic log
+# Generate bad traffic log (alerts)
+def generate_bad_traffic_log(config):
+    user_info = next((u for u in config.get("users", []) if u['username'] == "eagle"), None)
+    if not user_info:
+        raise ValueError("User 'eagle' not found in the configuration.")
+    log = generate_zscaler_log(
+        config=config,
+        user=user_info,
+        hostname=user_info['hostname'],
+        url="https://adminbird.com/login",
+        referer="https://birdsite.com/home",
+        action="blocked",
+        reason="Unauthorized access attempt",
+        event_kind="alert",  # Bad traffic triggers an "alert"
+        tactic="Credential Access",  # Example tactic
+        technique="Brute Force"  # Example technique
+    )
+    return log
+
+# Generate suspicious allowed traffic log (alerts)
 def generate_suspicious_allowed_log(config):
     users = config.get("users", [])
     if not users:
@@ -166,23 +181,10 @@ def generate_suspicious_allowed_log(config):
         referer="https://birdsite.com",
         action="allowed",
         reason="Suspicious but allowed traffic",
-        url_category=url_category
-    )
-    return log
-
-# Generate bad traffic log
-def generate_bad_traffic_log(config):
-    user_info = next((u for u in config.get("users", []) if u['username'] == "eagle"), None)
-    if not user_info:
-        raise ValueError("User 'eagle' not found in the configuration.")
-    log = generate_zscaler_log(
-        config=config,
-        user=user_info,
-        hostname=user_info['hostname'],
-        url="https://adminbird.com/login",
-        referer="https://birdsite.com/home",
-        action="blocked",
-        reason="Unauthorized access attempt"
+        url_category=url_category,
+        event_kind="alert",  # Suspicious traffic also triggers an "alert"
+        tactic="Defense Evasion",  # Example tactic
+        technique="Obfuscated Files or Information"  # Example technique
     )
     return log
 
@@ -195,53 +197,28 @@ def display_sample_log_and_curl():
         
         good_log = generate_regular_log(config)
         bad_log = generate_bad_traffic_log(config)
+        suspicious_log = generate_suspicious_allowed_log(config)
 
-        # Only display one good and one bad traffic log
         sample_logs = {
             "Good Traffic Log": good_log,
-            "Bad Traffic Log": bad_log
+            "Bad Traffic Log": bad_log,
+            "Suspicious Allowed Traffic Log": suspicious_log
         }
 
         for log_type, log in sample_logs.items():
             log_str = json.dumps(log, indent=4)
             print(f"\n--- {log_type} ---")
             print(log_str)
-            
             api_url = config.get('zscaler_api_url')
             api_key = config.get('zscaler_api_key')
-            
-            # Constructing the curl command
-            curl_command = [
-                "curl", "-X", "POST", api_url,
-                "-H", "Content-Type: application/json",
-                "-H", f"Authorization: Bearer {api_key}",
-                "-d", json.dumps(log)
-            ]
-            
-            print(f"\nExecuting curl command to send the {log_type.lower()} to NGSIEM...\n")
-            
-            # Execute the curl command and output verbosely
-            result = subprocess.run(curl_command, text=True, capture_output=True)
-            print("Curl Command Output:")
-            print(result.stdout)
-            if result.stderr:
-                print("Curl Command Error:")
-                print(result.stderr)
-                
-        print("\nNote: The logs above are samples and have been sent to NGSIEM.\n")
-    
+            curl_command = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{log_str}'"
+            print(f"\nCurl command to send the {log_type.lower()} to NGSIEM:\n\n{curl_command}\n")
+
+        print("\nNote: The logs above are samples and have not been sent to NGSIEM. The curl commands provided can be used to send these logs to NGSIEM.\n")
     except ValueError as e:
         print(f"Error: {e}")
 
-
-# Check required fields
-def check_required_fields(config):
-    required_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
-    missing_fields = [field for field in required_fields if field not in config or not config[field]]
-    if missing_fields:
-        print(f"Missing required configuration fields: {', '.join(missing_fields)}")
-        return False
-    return True
+# Rest of your code (e.g., run_as_service function)
 
 if __name__ == "__main__":
     display_sample_log_and_curl()
