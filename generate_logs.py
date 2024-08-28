@@ -33,7 +33,6 @@ COUNTRY_IP_BLOCKS = {
     "Belgium": ["5.128.0.0/13", "37.72.0.0/14", "185.48.0.0/11", "194.0.0.0/11"],
 }
 
-
 # Function to select a random IP address from a given CIDR block
 def get_random_ip(cidr_block):
     network = ipaddress.IPv4Network(cidr_block)
@@ -85,7 +84,7 @@ def generate_zscaler_log(config, user, hostname, url, referer, action, reason, u
             "location": server_country,
             "ClientIP": client_ip,
             "status": random.choice(["200", "404", "500"]),
-            "user": user["username"],  # Corrected field from 'email' to 'username'
+            "user": user["username"],
             "url": url,
             "vendor": "Zscaler",
             "hostname": hostname,
@@ -188,6 +187,56 @@ def generate_suspicious_allowed_log(config):
     )
     return log
 
+# Function to run log generation as a service
+def run_as_service(config, logs_per_second=5):
+    try:
+        print(f"Starting log generation service with {logs_per_second} logs per second...")
+        while True:
+            for _ in range(logs_per_second):
+                log_type = random.choices(
+                    ["good", "bad", "suspicious"],
+                    weights=[83, 10, 7],
+                    k=1
+                )[0]
+
+                if log_type == "good":
+                    log = generate_regular_log(config)
+                elif log_type == "bad":
+                    log = generate_bad_traffic_log(config)
+                else:
+                    log = generate_suspicious_allowed_log(config)
+
+                api_url = config.get('zscaler_api_url')
+                api_key = config.get('zscaler_api_key')
+
+                if api_url and api_key:
+                    send_log(api_url, api_key, log)
+                else:
+                    print("API URL or API Key is missing from configuration.")
+
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("Log generation service stopped by user.")
+
+# Function to send a single log
+def send_log(api_url, api_key, log):
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {api_key}'
+    }
+
+    response = requests.post(api_url, headers=headers, json=log)
+
+    if response.status_code == 200:
+        logging.info("Log sent successfully.")
+    else:
+        logging.error(f"Failed to send log: {response.status_code} - {response.text}")
+
+# Function to stop the service
+def stop_service():
+    print("Stopping log generation service...")
+    # This can be customized based on how you run the script (e.g., using a PID file or specific process handling)
+
 # Display sample log and curl command
 def display_sample_log_and_curl():
     try:
@@ -218,7 +267,17 @@ def display_sample_log_and_curl():
     except ValueError as e:
         print(f"Error: {e}")
 
-# Rest of your code (e.g., run_as_service function)
+# Check required fields
+def check_required_fields(config):
+    required_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
+    missing_fields = [field for field in required_fields if field not in config or not config[field]]
+    if missing_fields:
+        print(f"Missing required configuration fields: {', '.join(missing_fields)}")
+        return False
+    return True
 
 if __name__ == "__main__":
+    config = load_config()
     display_sample_log_and_curl()
+    # To run as a service, uncomment the following line:
+    # run_as_service(config, logs_per_second=10)
