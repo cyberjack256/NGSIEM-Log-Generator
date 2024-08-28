@@ -179,26 +179,28 @@ def display_sample_log_and_curl():
         if not check_required_fields(config):
             return
         
+        # Generate one good traffic log and one bad traffic log
         good_log = generate_regular_log(config)
         bad_log = generate_bad_traffic_log(config)
-        suspicious_log = generate_suspicious_allowed_log(config)
-
-        sample_logs = {
-            "Good Traffic Log": good_log,
-            "Bad Traffic Log": bad_log,
-            "Suspicious Allowed Traffic Log": suspicious_log
-        }
 
         # Prepare output for less
         output = []
-        for log_type, log in sample_logs.items():
-            log_str = json.dumps(log, indent=4)
-            output.append(f"\n--- {log_type} ---")
-            output.append(log_str)
-            api_url = config.get('zscaler_api_url')
-            api_key = config.get('zscaler_api_key')
-            curl_command = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{log_str}'"
-            output.append(f"\nCurl command to send the {log_type.lower()} to NGSIEM:\n\n{curl_command}\n")
+
+        # Display only one good traffic log
+        log_str = json.dumps(good_log, indent=4)
+        output.append("\n--- Good Traffic Log ---")
+        output.append(log_str)
+        api_url = config.get('zscaler_api_url')
+        api_key = config.get('zscaler_api_key')
+        curl_command = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{log_str}'"
+        output.append(f"\nCurl command to send the good traffic log to NGSIEM:\n\n{curl_command}\n")
+
+        # Display only one bad traffic log
+        log_str = json.dumps(bad_log, indent=4)
+        output.append("\n--- Bad Traffic Log ---")
+        output.append(log_str)
+        curl_command = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{log_str}'"
+        output.append(f"\nCurl command to send the bad traffic log to NGSIEM:\n\n{curl_command}\n")
 
         output.append("\nNote: The logs above are samples and have not been sent to NGSIEM. The curl commands provided can be used to send these logs to NGSIEM.\n")
         
@@ -207,6 +209,7 @@ def display_sample_log_and_curl():
 
     except ValueError as e:
         print(f"Error: {e}")
+
 
 # Check required fields
 def check_required_fields(config):
