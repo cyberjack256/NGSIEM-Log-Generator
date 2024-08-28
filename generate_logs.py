@@ -34,14 +34,28 @@ COUNTRY_IP_BLOCKS = {
 
 # Function to select a random IP address from a given CIDR block
 def get_random_ip(cidr_block):
-    network = ipaddress.IPv4Network(cidr_block)
-    return str(ipaddress.IPv4Address(network.network_address + random.randint(0, network.num_addresses - 1)))
-
+    try:
+        network = ipaddress.IPv4Network(cidr_block, strict=False)
+        # Generate a random IP address within the network
+        ip_address = network.network_address + random.randint(0, network.num_addresses - 1)
+        return str(ip_address)
+    except ipaddress.AddressValueError as e:
+        print(f"Error: {cidr_block} is not a valid network: {e}")
+        return None
+    except Exception as e:
+        print(f"Unexpected error generating IP from {cidr_block}: {e}")
+        return None
+        
 # Function to select a random IP and its corresponding country
 def get_random_ip_and_country():
     country = random.choice(list(COUNTRY_IP_BLOCKS.keys()))
-    ip = get_random_ip(random.choice(COUNTRY_IP_BLOCKS[country]))
-    return ip, country
+    cidr_block = random.choice(COUNTRY_IP_BLOCKS[country])
+    ip = get_random_ip(cidr_block)
+    if ip:
+        return ip, country
+    else:
+        print(f"Failed to generate IP for {country} from {cidr_block}")
+        return get_random_ip_and_country()  # Retry until a valid IP is generated
 
 # Load configuration
 def load_config():
