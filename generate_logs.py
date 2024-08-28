@@ -76,12 +76,12 @@ def generate_zscaler_log(config, user, hostname, url, referer, action, reason, u
             "clienttranstime": random.randint(200, 500),
             "requestmethod": random.choice(["GET", "POST"]),
             "refererURL": referer,
-            "useragent": random.choice(config.get('user_agents', ['Mozilla/5.0'])),
+            "useragent": user['user_agent'],  # Use 'user_agent' from config
             "product": "NSS",
             "location": server_country,
             "ClientIP": client_ip,
             "status": random.choice(["200", "404", "500"]),
-            "user": user["email"],
+            "user": user["username"],  # Changed from 'email' to 'username'
             "url": url,
             "vendor": "Zscaler",
             "hostname": hostname,
