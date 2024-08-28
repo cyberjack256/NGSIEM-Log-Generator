@@ -7,8 +7,9 @@ from generate_logs import (
     generate_regular_log, 
     generate_suspicious_allowed_log, 
     generate_bad_traffic_log,
-    run_as_service,  # New function for running as a service
-    stop_service     # New function to stop the service
+    start_logging_service,  # New function for starting the log service
+    stop_logging_service,   # New function to stop the log service
+    check_logging_service_status  # New function to check the log service status
 )
 
 # Paths to config files and directories
@@ -72,24 +73,6 @@ def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
         json.dump(config, file, indent=4)
 
-# Start logging service
-def start_logging_service():
-    subprocess.Popen(["python3", os.path.join(LOG_GENERATOR_DIR, "generate_syslog_logs.py")])
-    print("Logging service started.")
-
-# Stop logging service
-def stop_logging_service():
-    subprocess.run(["pkill", "-f", "generate_syslog_logs.py"])
-    print("Logging service stopped.")
-
-# Check logging service status
-def check_logging_service_status():
-    result = subprocess.run(["pgrep", "-fl", "generate_syslog_logs.py"], capture_output=True, text=True)
-    if result.stdout:
-        print("Logging service is running.")
-    else:
-        print("Logging service is not running.")
-
 # Use less for scrolling output
 def pager(content):
     pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
@@ -110,6 +93,7 @@ def zscaler_menu():
 ║  3. Generate sample Zscaler logs                            ║
 ║  4. Start generating logs as a service                      ║
 ║  5. Stop log generation service                             ║
+║  6. Check log generation service status                     ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -122,9 +106,11 @@ def zscaler_menu():
         elif choice == '3':
             display_sample_log_and_curl()
         elif choice == '4':
-            run_as_service()  # New function to start generating logs as a service
+            start_logging_service()  # Start generating logs as a service
         elif choice == '5':
-            stop_service()    # New function to stop the service
+            stop_logging_service()    # Stop the log generation service
+        elif choice == '6':
+            check_logging_service_status()  # Check status of the log generation service
         elif choice == '0':
             break
         else:
