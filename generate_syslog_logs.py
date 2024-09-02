@@ -1,6 +1,6 @@
 import os
 import time
-import multiprocessing
+from multiprocessing import Value
 import json
 from datetime import datetime, timedelta, timezone
 import random
@@ -17,7 +17,8 @@ SYSLOG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/syslog.log')
 
 # Global variable to hold the process
 send_logs_process = None
-logs_sent_count = 0
+# Global shared variable for log count
+logs_sent_count = Value('i', 0)  # 'i' is for integer
 
 def load_config(file_path):
     if os.path.exists(file_path):
@@ -134,7 +135,7 @@ def check_send_to_syslog_service_status():
     """
     global send_logs_process, logs_sent_count
     if send_logs_process is not None and send_logs_process.is_alive():
-        print(f"Syslog sending service is running. Logs sent: {logs_sent_count}")
+        print(f"Syslog sending service is running. Logs sent: {logs_sent_count.value}")
     else:
         print("Syslog sending service is not running.")
 
@@ -160,14 +161,16 @@ def send_to_syslog_service():
     syslog_port = config.get('syslog_port', 514)
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    logs_sent_count = 0  # Initialize log counter
 
     try:
         while True:
             sample_logs = generate_sample_syslogs()
             for log in sample_logs:
                 sock.sendto(log.encode('utf-8'), (syslog_server, syslog_port))
-                logs_sent_count += 1  # Increment log counter
+                
+                # Update the shared counter
+                with logs_sent_count.get_lock():
+                    logs_sent_count.value += 1
             
             # To maintain a rate of 200 logs per second
             time.sleep(1 / 200.0)
