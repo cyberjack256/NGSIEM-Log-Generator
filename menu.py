@@ -257,10 +257,13 @@ def edit_token_field_value():
         config_content = result.stdout
 
         token = input("Enter the new token value: ").strip()
-        updated_content = re.sub(r'(token:\s*)(.*)', rf'\1{token}', config_content)
+        # Escape the token value to avoid regex interpretation issues
+        escaped_token = re.escape(token)
+        updated_content = re.sub(r'(token:\s*)(.*)', rf'\1{escaped_token}', config_content)
 
-        # Use sudo to write the changes to the configuration file
-        subprocess.run(['sudo', 'tee', logscale_config_path], input=updated_content.encode('utf-8'))
+        # Use sudo to write the changes to the configuration file using 'tee'
+        write_process = subprocess.Popen(['sudo', 'tee', logscale_config_path], stdin=subprocess.PIPE)
+        write_process.communicate(input=updated_content.encode('utf-8'))
         
         print("Token field value updated successfully.")
     except Exception as e:
@@ -286,10 +289,13 @@ def edit_url_field_value():
             print("Error: URL should not end with '/', '/services', or '/services/collector'.")
             return
 
-        updated_content = re.sub(r'(url:\s*)(.*)', rf'\1{url}', config_content)
+        # Escape the URL value to avoid regex interpretation issues
+        escaped_url = re.escape(url)
+        updated_content = re.sub(r'(url:\s*)(.*)', rf'\1{escaped_url}', config_content)
 
-        # Use sudo to write the changes to the configuration file
-        subprocess.run(['sudo', 'tee', logscale_config_path], input=updated_content.encode('utf-8'))
+        # Use sudo to write the changes to the configuration file using 'tee'
+        write_process = subprocess.Popen(['sudo', 'tee', logscale_config_path], stdin=subprocess.PIPE)
+        write_process.communicate(input=updated_content.encode('utf-8'))
         
         print("URL field value updated successfully.")
     except Exception as e:
