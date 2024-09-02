@@ -3,7 +3,7 @@ import re
 import subprocess
 import json
 import glob
-from generate_syslog_logs import generate_sample_syslogs, generate_syslog_message, write_syslog_to_file, start_send_to_syslog_service, stop_send_to_syslog_service, check_send_to_syslog_service_status
+from generate_syslog_logs import generate_sample_syslogs, generate_syslog_message, write_syslog_to_file, send_to_syslog_service, stop_send_to_syslog_service, check_send_to_syslog_service_status
 from generate_logs import (
     display_sample_log_and_curl, 
     generate_regular_log, 
@@ -161,7 +161,7 @@ def syslog_menu():
             sample_logs = generate_sample_syslogs()
             write_syslog_to_file(sample_logs)
         elif choice == '4':
-            start_send_to_syslog_service()  # Start sending logs to syslog server
+            send_to_syslog_service()  # Start sending logs to syslog server
         elif choice == '5':
             stop_send_to_syslog_service()  # Stop sending logs to syslog server
         elif choice == '6':
