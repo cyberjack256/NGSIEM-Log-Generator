@@ -34,6 +34,31 @@ sinks:
     token: <API_key_generated_during_connector_setup>
     url: <generated_API_URL>
 """
+
+# Load configuration
+def load_config():
+    print("Loading configuration...")
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, 'r') as file:
+            return json.load(file)
+    print("Config file not found. Returning empty config.")
+    return {}
+
+# Save configuration
+def save_config(config):
+    print("Saving configuration...")
+    with open(CONFIG_FILE, 'w') as file:
+        json.dump(config, file, indent=4)
+    print("Configuration saved.")
+
+# Use less for scrolling output
+def pager(content):
+    try:
+        pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
+        pager_process.communicate(input=content.encode('utf-8'))
+    except Exception as e:
+        print(f"Error using pager: {e}")
+
 # Show current configuration
 def show_config():
     config = load_config()
@@ -60,18 +85,6 @@ def add_config_value():
             print("No value entered. Configuration not updated.")
     else:
         print("Invalid field choice.")
-
-# Save configuration
-def save_config(config):
-    print("Saving configuration...")
-    with open(CONFIG_FILE, 'w') as file:
-        json.dump(config, file, indent=4)
-    print("Configuration saved.")
-
-# Use less for scrolling output
-def pager(content):
-    pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
-    pager_process.communicate(input=content.encode('utf-8'))
 
 # Zscaler menu
 def zscaler_menu():
@@ -110,13 +123,8 @@ def zscaler_menu():
             break
         else:
             print("Invalid choice. Please try again.")
-
+        
         input("\nPress Enter to continue...")
-    try:
-        pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
-        pager_process.communicate(input=content.encode('utf-8'))
-    except Exception as e:
-        print(f"Error using pager: {e}")
 
 # Syslog menu
 def syslog_menu():
@@ -161,9 +169,8 @@ def syslog_menu():
             break
         else:
             print("Invalid choice. Please try again.")
-
+        
         input("\nPress Enter to continue...")
-
 
 # Install LogScale log collector
 def install_logscale_collector():
@@ -178,7 +185,7 @@ def install_logscale_collector():
             print("No humio-log-collector package found in the directory. Please ensure the package is available.")
             return
 
-        # Assuming you want the first match (you can adjust this logic if needed)
+        # Assuming you want the first match
         package_file = files[0]
         print(f"Found humio-log-collector package: {package_file}")
         
@@ -215,26 +222,64 @@ def edit_logscale_config():
     except Exception as e:
         print(f"Unexpected error: {e}")
 
-# Set LogScale configuration
-def set_logscale_config():
+# View LogScale Configuration
+def view_logscale_config():
     logscale_config_path = "/etc/humio-log-collector/config.yaml"
-    print(f"Setting LogScale configuration at {logscale_config_path}...")
-    confirmation = input("Proceed with setting the configuration? (yes/no): ").strip().lower()
-    if confirmation == "yes":
-        try:
-            temp_config_path = os.path.join(LOG_GENERATOR_DIR, "temp_config.yaml")
-            print(f"Creating temporary config file at {temp_config_path}...")
-            with open(temp_config_path, 'w') as temp_file:
-                temp_file.write(BASE_LOGSCALE_CONFIG)
-            subprocess.run(['sudo', 'cp', temp_config_path, logscale_config_path], check=True)
-            os.remove(temp_config_path)
-            print("LogScale configuration set successfully.")
-        except subprocess.CalledProcessError as e:
-            print(f"Failed to copy configuration: {e}")
-        except Exception as e:
-            print(f"Unexpected error: {e}")
-    else:
-        print("Operation canceled.")
+    print(f"Viewing LogScale configuration at {logscale_config_path}...")
+    try:
+        with open(logscale_config_path, 'r') as file:
+            config_content = file.read()
+        pager(config_content)
+    except FileNotFoundError:
+        print("LogScale configuration file not found.")
+    except Exception as e:
+        print(f"Error viewing LogScale configuration: {e}")
+
+# Edit token field value
+def edit_token_field_value():
+    logscale_config_path = "/etc/humio-log-collector/config.yaml"
+    print(f"Editing token field value in {logscale_config_path}...")
+    try:
+        with open(logscale_config_path, 'r') as file:
+            config_content = file.readlines()
+
+        token = input("Enter the new token value: ").strip()
+        config_content = [
+            re.sub(r'(token:\s*)(.*)', rf'\1{token}', line) if 'token:' in line else line 
+            for line in config_content
+        ]
+
+        with open(logscale_config_path, 'w') as file:
+            file.writelines(config_content)
+        
+        print("Token field value updated successfully.")
+    except FileNotFoundError:
+        print("LogScale configuration file not found.")
+    except Exception as e:
+        print(f"Error editing token field value: {e}")
+
+# Edit URL field value
+def edit_url_field_value():
+    logscale_config_path = "/etc/humio-log-collector/config.yaml"
+    print(f"Editing URL field value in {logscale_config_path}...")
+    try:
+        with open(logscale_config_path, 'r') as file:
+            config_content = file.readlines()
+
+        url = input("Enter the new URL value: ").strip()
+        config_content = [
+            re.sub(r'(url:\s*)(.*)', rf'\1{url}', line) if 'url:' in line else line 
+            for line in config_content
+        ]
+
+        with open(logscale_config_path, 'w') as file:
+            file.writelines(config_content)
+        
+        print("URL field value updated successfully.")
+    except FileNotFoundError:
+        print("LogScale configuration file not found.")
+    except Exception as e:
+        print(f"Error editing URL field value: {e}")
 
 # Set file access permissions
 def set_file_access_permissions():
@@ -293,14 +338,16 @@ def logscale_menu():
 ║═════════════════════════════════════════════════════════════║
 ║  Please select an option:                                   ║
 ║                                                             ║
-║  1. Install LogScale log collector                          ║
-║  2. Edit LogScale configuration file                        ║
-║  3. Set file access permissions                             ║
-║  4. Enable LogScale service                                 ║
-║  5. Start LogScale service                                  ║
-║  6. Stop LogScale service                                   ║
-║  7. Check LogScale service status                           ║
-║  8. Set LogScale configuration                              ║
+║  1. Install Falcon Log Collector                            ║
+║  2. Set file access permissions                             ║
+║  3. Set Falcon Log Collector default configuration          ║
+║  4. View Falcon Log Collector configuration                 ║
+║  5. Edit token field value                                  ║
+║  6. Edit URL field value                                    ║
+║  7. Enable Falcon Log Collector service                     ║
+║  8. Check Falcon Log Collector service status               ║
+║  9. Start Falcon Log Collector service                      ║
+║  10. Stop Falcon Log Collector service                      ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -309,19 +356,23 @@ def logscale_menu():
         if choice == '1':
             install_logscale_collector()
         elif choice == '2':
-            edit_logscale_config()
-        elif choice == '3':
             set_file_access_permissions()
-        elif choice == '4':
-            enable_logscale_service()
-        elif choice == '5':
-            start_logscale_service()
-        elif choice == '6':
-            stop_logscale_service()
-        elif choice == '7':
-            check_logscale_service_status()
-        elif choice == '8':
+        elif choice == '3':
             set_logscale_config()
+        elif choice == '4':
+            view_logscale_config()
+        elif choice == '5':
+            edit_token_field_value()
+        elif choice == '6':
+            edit_url_field_value()
+        elif choice == '7':
+            enable_logscale_service()
+        elif choice == '8':
+            check_logscale_service_status()
+        elif choice == '9':
+            start_logscale_service()
+        elif choice == '10':
+            stop_logscale_service()
         elif choice == '0':
             break
         else:
