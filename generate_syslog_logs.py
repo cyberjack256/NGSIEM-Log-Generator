@@ -14,6 +14,9 @@ CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/config.json')
 MESSAGE_CONFIG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/message.config')
 SYSLOG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/syslog.log')
 
+# Global variable to hold the process
+send_logs_process = None
+
 def load_config(file_path):
     if os.path.exists(file_path):
         with open(file_path, 'r') as file:
@@ -150,6 +153,7 @@ def stop_send_to_syslog_service():
     except Exception as e:
         print(f"Failed to stop syslog sending service: {e}")
 
+
 def send_to_syslog_service():
     """
     Continuously send logs to the syslog service at a rate of 200 logs per second.
@@ -172,6 +176,15 @@ def send_to_syslog_service():
         print("\nStopping syslog sending service.")
     finally:
         sock.close()
+
+def start_send_to_syslog_service():
+    global send_logs_process
+    if send_logs_process is None or not send_logs_process.is_alive():
+        send_logs_process = multiprocessing.Process(target=send_to_syslog_service)
+        send_logs_process.start()
+        print("Syslog sending service started.")
+    else:
+        print("Syslog sending service is already running.")
 
 def write_syslog_to_file(logs):
     log_dir = os.path.dirname(SYSLOG_FILE)
