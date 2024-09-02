@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import json
 import glob
@@ -279,6 +280,12 @@ def edit_url_field_value():
         config_content = result.stdout
 
         url = input("Enter the new URL value: ").strip()
+        
+        # Check if the URL ends with '/', '/services', or '/services/collector'
+        if url.endswith('/') or url.endswith('/services') or url.endswith('/services/collector'):
+            print("Error: URL should not end with '/', '/services', or '/services/collector'.")
+            return
+
         updated_content = re.sub(r'(url:\s*)(.*)', rf'\1{url}', config_content)
 
         # Use sudo to write the changes to the configuration file
