@@ -142,7 +142,7 @@ def syslog_menu():
 ║  3. Generate logs to file                                   ║
 ║  4. Start sending logs to syslog server                     ║
 ║  5. Stop sending logs to syslog server                      ║
-║  6. Check logging service status                            ║
+║  6. Check send to syslog service status                     ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -161,11 +161,11 @@ def syslog_menu():
             sample_logs = generate_sample_syslogs()
             write_syslog_to_file(sample_logs)
         elif choice == '4':
-            start_logging_service()
+            start_send_to_syslog_service()  # Start sending logs to syslog server
         elif choice == '5':
-            stop_logging_service()
+            stop_send_to_syslog_service()  # Stop sending logs to syslog server
         elif choice == '6':
-            check_logging_service_status()
+            check_send_to_syslog_service_status()  # Check the status of the syslog sending service
         elif choice == '0':
             break
         else:
