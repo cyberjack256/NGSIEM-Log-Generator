@@ -36,209 +36,129 @@ sinks:
 
 # Load configuration
 def load_config():
+    print("Loading configuration...")
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, 'r') as file:
             return json.load(file)
+    print("Config file not found. Returning empty config.")
     return {}
-
-# Show current configuration
-def show_config():
-    config = load_config()
-    filtered_config = {k: config[k] for k in ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias'] if k in config}
-    config_str = json.dumps(filtered_config, indent=4)
-    pager(config_str + "\n\nPress 'q' to exit.")
-
-# Add configuration value
-def add_config_value():
-    config = load_config()
-    editable_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
-    print("Select a field to add or update values for:")
-    for i, field in enumerate(editable_fields, 1):
-        print(f"{i}. {field}")
-    choice = input("Select a field: ").strip()
-    if choice.isdigit() and 1 <= int(choice) <= len(editable_fields):
-        field = editable_fields[int(choice) - 1]
-        value = input(f"Enter a value for {field}: ").strip()
-        if value:
-            config[field] = value
-            save_config(config)
-            print(f"Configuration updated: {field} set to {config[field]}")
-        else:
-            print("No value entered. Configuration not updated.")
-    else:
-        print("Invalid field choice.")
 
 # Save configuration
 def save_config(config):
+    print("Saving configuration...")
     with open(CONFIG_FILE, 'w') as file:
         json.dump(config, file, indent=4)
+    print("Configuration saved.")
 
 # Use less for scrolling output
 def pager(content):
-    pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
-    pager_process.communicate(input=content.encode('utf-8'))
+    try:
+        pager_process = subprocess.Popen(['less'], stdin=subprocess.PIPE)
+        pager_process.communicate(input=content.encode('utf-8'))
+    except Exception as e:
+        print(f"Error using pager: {e}")
 
-# Zscaler menu
-def zscaler_menu():
-    while True:
-        os.system('clear')
-        print(f"""
-╔═════════════════════════════════════════════════════════════╗
-║                     Zscaler Log Actions                     ║
-║═════════════════════════════════════════════════════════════║
-║  Please select an option:                                   ║
-║                                                             ║
-║  1. Show current configuration                              ║
-║  2. Add a configuration value                               ║
-║  3. Generate sample Zscaler logs                            ║
-║  4. Start generating logs as a service                      ║
-║  5. Stop log generation service                             ║
-║  6. Check log generation service status                     ║
-║  0. Back to main menu                                       ║
-╚═════════════════════════════════════════════════════════════╝
-        """)
-        choice = input("Enter your choice: ").strip()
-
-        if choice == '1':
-            show_config()
-        elif choice == '2':
-            add_config_value()
-        elif choice == '3':
-            display_sample_log_and_curl()
-        elif choice == '4':
-            start_logging_service()  # Start generating logs as a service
-        elif choice == '5':
-            stop_logging_service()    # Stop the log generation service
-        elif choice == '6':
-            check_logging_service_status()  # Check status of the log generation service
-        elif choice == '0':
-            break
-        else:
-            print("Invalid choice. Please try again.")
-        
-        input("\nPress Enter to continue...")
-
-# Syslog menu
-def syslog_menu():
-    while True:
-        os.system('clear')
-        print(f"""
-╔═════════════════════════════════════════════════════════════╗
-║                     Syslog Log Actions                      ║
-║═════════════════════════════════════════════════════════════║
-║  Please select an option:                                   ║
-║                                                             ║
-║  1. Show current configuration                              ║
-║  2. Generate sample Syslog logs                             ║
-║  3. Generate logs to file                                   ║
-║  4. Start sending logs to syslog server                     ║
-║  5. Stop sending logs to syslog server                      ║
-║  6. Check logging service status                            ║
-║  0. Back to main menu                                       ║
-╚═════════════════════════════════════════════════════════════╝
-        """)
-        choice = input("Enter your choice: ").strip()
-
-        if choice == '1':
-            show_config()
-        elif choice == '2':
-            sample_logs = generate_sample_syslogs()
-            if sample_logs:
-                sample_log_str = json.dumps(sample_logs[0], indent=4)
-                pager(f"Sample log:\n{sample_log_str}")
-            else:
-                print("No sample logs generated.")
-        elif choice == '3':
-            sample_logs = generate_sample_syslogs()
-            write_syslog_to_file(sample_logs)
-        elif choice == '4':
-            start_logging_service()
-        elif choice == '5':
-            stop_logging_service()
-        elif choice == '6':
-            check_logging_service_status()
-        elif choice == '0':
-            break
-        else:
-            print("Invalid choice. Please try again.")
-        
-        input("\nPress Enter to continue...")
-
-# LogScale menu
 # Install LogScale log collector
 def install_logscale_collector():
     print("Installing LogScale log collector...")
-    os.chdir(LOG_COLLECTOR_DIR)  # Change to the directory containing the collector package
-    subprocess.run(["mv", "humio-log-collector*", "humio-log-collector.deb"])
-    subprocess.run(["sudo", "dpkg", "-i", "humio-log-collector.deb"])
-    subprocess.run(["sudo", "chown", "-R", "humio-log-collector:humio-log-collector", "/var/lib/humio-log-collector"])
-    print("LogScale log collector installed.")
+    try:
+        os.chdir(LOG_COLLECTOR_DIR)
+        print(f"Changed directory to {LOG_COLLECTOR_DIR}")
+        subprocess.run(["mv", "humio-log-collector*", "humio-log-collector.deb"], check=True)
+        print("Renamed humio-log-collector package.")
+        subprocess.run(["sudo", "dpkg", "-i", "humio-log-collector.deb"], check=True)
+        print("Installed humio-log-collector.deb.")
+        subprocess.run(["sudo", "chown", "-R", "humio-log-collector:humio-log-collector", "/var/lib/humio-log-collector"], check=True)
+        print("Changed ownership of /var/lib/humio-log-collector.")
+        print("LogScale log collector installed successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error during LogScale log collector installation: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
 
 # Edit LogScale Configuration
 def edit_logscale_config():
     logscale_config_path = "/etc/humio-log-collector/config.yaml"
-
-    # Use sudo to check if the file exists, since ubuntu user can't see the file
-    check_file_exists_command = f"sudo test -f {logscale_config_path}"
-    check_file_exists = subprocess.run(check_file_exists_command, shell=True)
-
-    if check_file_exists.returncode == 0:
-        try:
-            print("Opening LogScale configuration for editing...")
-            # Use sudo to run nano with elevated privileges
-            subprocess.run(['sudo', 'nano', logscale_config_path])
-        except subprocess.CalledProcessError as e:
-            print(f"Failed to open the configuration file: {e}")
-    else:
-        print("LogScale configuration file not found or you don't have the necessary permissions.")
+    print(f"Attempting to edit LogScale configuration at {logscale_config_path}...")
+    try:
+        check_file_exists_command = f"sudo test -f {logscale_config_path}"
+        check_file_exists = subprocess.run(check_file_exists_command, shell=True, check=True)
+        print("LogScale configuration file exists. Opening for editing...")
+        subprocess.run(['sudo', 'nano', logscale_config_path], check=True)
+        print("Configuration file edited successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to open or check configuration file: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
 
 # Set LogScale configuration
 def set_logscale_config():
     logscale_config_path = "/etc/humio-log-collector/config.yaml"
-    confirmation = input("If this is your first time setting the configuration, proceed. If not, note that this will overwrite the existing config. Proceed? (yes/no): ").strip().lower()
+    print(f"Setting LogScale configuration at {logscale_config_path}...")
+    confirmation = input("Proceed with setting the configuration? (yes/no): ").strip().lower()
     if confirmation == "yes":
         try:
             temp_config_path = os.path.join(LOG_GENERATOR_DIR, "temp_config.yaml")
+            print(f"Creating temporary config file at {temp_config_path}...")
             with open(temp_config_path, 'w') as temp_file:
                 temp_file.write(BASE_LOGSCALE_CONFIG)
-            subprocess.run(['sudo', 'cp', temp_config_path, logscale_config_path])
-            os.remove(temp_config_path)  # Clean up temp file
-            print("LogScale configuration has been set.")
+            subprocess.run(['sudo', 'cp', temp_config_path, logscale_config_path], check=True)
+            os.remove(temp_config_path)
+            print("LogScale configuration set successfully.")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to copy configuration: {e}")
         except Exception as e:
-            print(f"Failed to set configuration: {e}")
+            print(f"Unexpected error: {e}")
     else:
         print("Operation canceled.")
 
 # Set file access permissions
 def set_file_access_permissions():
     print("Setting file access permissions...")
-    subprocess.run(['sudo', 'setcap', 'cap_dac_read_search,cap_net_bind_service+ep', '/usr/bin/humio-log-collector'])
-    subprocess.run(['sudo', 'systemctl', 'restart', 'humio-log-collector'])
-    print("File access permissions set.")
+    try:
+        subprocess.run(['sudo', 'setcap', 'cap_dac_read_search,cap_net_bind_service+ep', '/usr/bin/humio-log-collector'], check=True)
+        subprocess.run(['sudo', 'systemctl', 'restart', 'humio-log-collector'], check=True)
+        print("File access permissions set and service restarted.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error setting file access permissions or restarting service: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
 
 # Enable LogScale service
 def enable_logscale_service():
     print("Enabling LogScale service...")
-    subprocess.run(['sudo', 'systemctl', 'enable', '--now', 'humio-log-collector.service'])
-    print("LogScale service enabled.")
+    try:
+        subprocess.run(['sudo', 'systemctl', 'enable', '--now', 'humio-log-collector.service'], check=True)
+        print("LogScale service enabled.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error enabling LogScale service: {e}")
 
 # Start LogScale service
 def start_logscale_service():
     print("Starting LogScale service...")
-    subprocess.run(['sudo', 'systemctl', 'start', 'humio-log-collector.service'])
-    print("LogScale service started.")
+    try:
+        subprocess.run(['sudo', 'systemctl', 'start', 'humio-log-collector.service'], check=True)
+        print("LogScale service started.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error starting LogScale service: {e}")
 
 # Stop LogScale service
 def stop_logscale_service():
     print("Stopping LogScale service...")
-    subprocess.run(['sudo', 'systemctl', 'stop', 'humio-log-collector.service'])
-    print("LogScale service stopped.")
+    try:
+        subprocess.run(['sudo', 'systemctl', 'stop', 'humio-log-collector.service'], check=True)
+        print("LogScale service stopped.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error stopping LogScale service: {e}")
 
 # Check LogScale service status
 def check_logscale_service_status():
     print("Checking LogScale service status...")
-    result = subprocess.run(['sudo', 'systemctl', 'status', 'humio-log-collector.service'], capture_output=True, text=True)
-    pager(result.stdout)
+    try:
+        result = subprocess.run(['sudo', 'systemctl', 'status', 'humio-log-collector.service'], capture_output=True, text=True, check=True)
+        pager(result.stdout)
+    except subprocess.CalledProcessError as e:
+        print(f"Error checking LogScale service status: {e}")
 
 def logscale_menu():
     while True:
@@ -298,27 +218,4 @@ def main_menu():
 ║                                                             ║
 ║  1. Zscaler log actions                                     ║
 ║  2. Syslog log actions                                      ║
-║  3. LogScale Configuration and Controls                     ║
-║  4. Set log level                                           ║
-║  0. Exit                                                    ║
-╚═════════════════════════════════════════════════════════════╝
-        """)
-        choice = input("Enter your choice: ").strip()
-
-        if choice == '1':
-            zscaler_menu()
-        elif choice == '2':
-            syslog_menu()
-        elif choice == '3':
-            logscale_menu()
-        elif choice == '4':
-            set_log_level()
-        elif choice == '0':
-            break
-        else:
-            print("Invalid choice. Please try again.")
-        
-        input("\nPress Enter to continue...")
-
-if __name__ == "__main__":
-    main_menu()
+║  3. LogScale Configuration and Controls                    
