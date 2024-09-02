@@ -207,20 +207,26 @@ def install_logscale_collector():
     except Exception as e:
         print(f"Unexpected error: {e}")
 
-# Edit LogScale Configuration
-def edit_logscale_config():
+# Set LogScale configuration
+def set_logscale_config():
     logscale_config_path = "/etc/humio-log-collector/config.yaml"
-    print(f"Attempting to edit LogScale configuration at {logscale_config_path}...")
-    try:
-        check_file_exists_command = f"sudo test -f {logscale_config_path}"
-        check_file_exists = subprocess.run(check_file_exists_command, shell=True, check=True)
-        print("LogScale configuration file exists. Opening for editing...")
-        subprocess.run(['sudo', 'nano', logscale_config_path], check=True)
-        print("Configuration file edited successfully.")
-    except subprocess.CalledProcessError as e:
-        print(f"Failed to open or check configuration file: {e}")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
+    print(f"Setting LogScale configuration at {logscale_config_path}...")
+    confirmation = input("Proceed with setting the configuration? (yes/no): ").strip().lower()
+    if confirmation == "yes":
+        try:
+            temp_config_path = os.path.join(LOG_GENERATOR_DIR, "temp_config.yaml")
+            print(f"Creating temporary config file at {temp_config_path}...")
+            with open(temp_config_path, 'w') as temp_file:
+                temp_file.write(BASE_LOGSCALE_CONFIG)
+            subprocess.run(['sudo', 'cp', temp_config_path, logscale_config_path], check=True)
+            os.remove(temp_config_path)
+            print("LogScale configuration set successfully.")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to copy configuration: {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+    else:
+        print("Operation canceled.")
 
 # View LogScale Configuration
 def view_logscale_config():
