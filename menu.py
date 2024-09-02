@@ -1,6 +1,7 @@
 import os
 import subprocess
 import json
+import glob
 from generate_syslog_logs import generate_sample_syslogs, generate_syslog_message, write_syslog_to_file
 from generate_logs import (
     display_sample_log_and_curl, 
@@ -64,12 +65,29 @@ def install_logscale_collector():
     try:
         os.chdir(LOG_COLLECTOR_DIR)
         print(f"Changed directory to {LOG_COLLECTOR_DIR}")
-        subprocess.run(["mv", "humio-log-collector*", "humio-log-collector.deb"], check=True)
+
+        # Use glob to find the file with a dynamic version in its name
+        files = glob.glob("humio-log-collector*")
+        if not files:
+            print("No humio-log-collector package found in the directory. Please ensure the package is available.")
+            return
+
+        # Assuming you want the first match (you can adjust this logic if needed)
+        package_file = files[0]
+        print(f"Found humio-log-collector package: {package_file}")
+        
+        # Rename the file to a consistent name
+        subprocess.run(["mv", package_file, "humio-log-collector.deb"], check=True)
         print("Renamed humio-log-collector package.")
+        
+        # Install the renamed package
         subprocess.run(["sudo", "dpkg", "-i", "humio-log-collector.deb"], check=True)
         print("Installed humio-log-collector.deb.")
+        
+        # Change ownership of the directory
         subprocess.run(["sudo", "chown", "-R", "humio-log-collector:humio-log-collector", "/var/lib/humio-log-collector"], check=True)
         print("Changed ownership of /var/lib/humio-log-collector.")
+        
         print("LogScale log collector installed successfully.")
     except subprocess.CalledProcessError as e:
         print(f"Error during LogScale log collector installation: {e}")
