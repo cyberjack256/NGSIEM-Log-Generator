@@ -233,11 +233,12 @@ def view_logscale_config():
     logscale_config_path = "/etc/humio-log-collector/config.yaml"
     print(f"Viewing LogScale configuration at {logscale_config_path}...")
     try:
-        with open(logscale_config_path, 'r') as file:
-            config_content = file.read()
-        pager(config_content)
-    except FileNotFoundError:
-        print("LogScale configuration file not found.")
+        # Use sudo to read the file with elevated privileges
+        result = subprocess.run(['sudo', 'cat', logscale_config_path], capture_output=True, text=True)
+        if result.returncode == 0:
+            pager(result.stdout)
+        else:
+            print(f"Error viewing LogScale configuration: {result.stderr}")
     except Exception as e:
         print(f"Error viewing LogScale configuration: {e}")
 
@@ -246,21 +247,21 @@ def edit_token_field_value():
     logscale_config_path = "/etc/humio-log-collector/config.yaml"
     print(f"Editing token field value in {logscale_config_path}...")
     try:
-        with open(logscale_config_path, 'r') as file:
-            config_content = file.readlines()
+        # Use sudo to read the file with elevated privileges
+        result = subprocess.run(['sudo', 'cat', logscale_config_path], capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"Error reading LogScale configuration: {result.stderr}")
+            return
+
+        config_content = result.stdout
 
         token = input("Enter the new token value: ").strip()
-        config_content = [
-            re.sub(r'(token:\s*)(.*)', rf'\1{token}', line) if 'token:' in line else line 
-            for line in config_content
-        ]
+        updated_content = re.sub(r'(token:\s*)(.*)', rf'\1{token}', config_content)
 
-        with open(logscale_config_path, 'w') as file:
-            file.writelines(config_content)
+        # Use sudo to write the changes to the configuration file
+        subprocess.run(['sudo', 'tee', logscale_config_path], input=updated_content.encode('utf-8'))
         
         print("Token field value updated successfully.")
-    except FileNotFoundError:
-        print("LogScale configuration file not found.")
     except Exception as e:
         print(f"Error editing token field value: {e}")
 
@@ -269,21 +270,21 @@ def edit_url_field_value():
     logscale_config_path = "/etc/humio-log-collector/config.yaml"
     print(f"Editing URL field value in {logscale_config_path}...")
     try:
-        with open(logscale_config_path, 'r') as file:
-            config_content = file.readlines()
+        # Use sudo to read the file with elevated privileges
+        result = subprocess.run(['sudo', 'cat', logscale_config_path], capture_output=True, text=True)
+        if result.returncode != 0:
+            print(f"Error reading LogScale configuration: {result.stderr}")
+            return
+
+        config_content = result.stdout
 
         url = input("Enter the new URL value: ").strip()
-        config_content = [
-            re.sub(r'(url:\s*)(.*)', rf'\1{url}', line) if 'url:' in line else line 
-            for line in config_content
-        ]
+        updated_content = re.sub(r'(url:\s*)(.*)', rf'\1{url}', config_content)
 
-        with open(logscale_config_path, 'w') as file:
-            file.writelines(config_content)
+        # Use sudo to write the changes to the configuration file
+        subprocess.run(['sudo', 'tee', logscale_config_path], input=updated_content.encode('utf-8'))
         
         print("URL field value updated successfully.")
-    except FileNotFoundError:
-        print("LogScale configuration file not found.")
     except Exception as e:
         print(f"Error editing URL field value: {e}")
 
