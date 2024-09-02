@@ -17,6 +17,7 @@ SYSLOG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/syslog.log')
 
 # Global variable to hold the process
 send_logs_process = None
+logs_sent_count = 0
 
 def load_config(file_path):
     if os.path.exists(file_path):
@@ -129,55 +130,52 @@ def generate_sample_syslogs():
 
 def check_send_to_syslog_service_status():
     """
-    Check if the syslog sending service is running.
+    Check if the syslog sending service is running and display log count.
     """
-    try:
-        result = subprocess.run(['pgrep', '-fl', 'send_syslog.py'], capture_output=True, text=True)
-        if result.stdout:
-            print("Syslog sending service is running.")
-        else:
-            print("Syslog sending service is not running.")
-    except Exception as e:
-        print(f"Failed to check syslog sending service status: {e}")
+    global send_logs_process, logs_sent_count
+    if send_logs_process is not None and send_logs_process.is_alive():
+        print(f"Syslog sending service is running. Logs sent: {logs_sent_count}")
+    else:
+        print("Syslog sending service is not running.")
+
 
 def stop_send_to_syslog_service():
-    """
-    Stop the syslog sending service.
-    """
-    try:
-        print("Stopping the syslog sending service...")
-        result = subprocess.run(['pkill', '-f', 'send_syslog.py'])
-        if result.returncode == 0:
-            print("Syslog sending service stopped successfully.")
-        else:
-            print("Syslog sending service was not running or failed to stop.")
-    except Exception as e:
-        print(f"Failed to stop syslog sending service: {e}")
+    global send_logs_process
+    if send_logs_process is not None and send_logs_process.is_alive():
+        send_logs_process.terminate()
+        send_logs_process.join()  # Ensure the process has completely stopped
+        send_logs_process = None
+        print("Syslog sending service stopped successfully.")
+    else:
+        print("Syslog sending service is not running.")
 
 
 def send_to_syslog_service():
     """
     Continuously send logs to the syslog service at a rate of 200 logs per second.
     """
+    global logs_sent_count
     config = load_config(CONFIG_FILE)
     syslog_server = config.get('syslog_server', 'localhost')
     syslog_port = config.get('syslog_port', 514)
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    logs_sent_count = 0  # Initialize log counter
 
     try:
         while True:
             sample_logs = generate_sample_syslogs()
             for log in sample_logs:
                 sock.sendto(log.encode('utf-8'), (syslog_server, syslog_port))
+                logs_sent_count += 1  # Increment log counter
             
             # To maintain a rate of 200 logs per second
-            time.sleep(1 / 200.0)  # 200 logs per second
+            time.sleep(1 / 200.0)
     except KeyboardInterrupt:
         print("\nStopping syslog sending service.")
     finally:
         sock.close()
-
+        
 def start_send_to_syslog_service():
     global send_logs_process
     if send_logs_process is None or not send_logs_process.is_alive():
