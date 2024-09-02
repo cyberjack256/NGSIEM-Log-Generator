@@ -218,4 +218,27 @@ def main_menu():
 ║                                                             ║
 ║  1. Zscaler log actions                                     ║
 ║  2. Syslog log actions                                      ║
-║  3. LogScale Configuration and Controls                    
+║  3. LogScale Configuration and Controls                     ║
+║  4. Set log level                                           ║
+║  0. Exit                                                    ║
+╚═════════════════════════════════════════════════════════════╝
+        """)
+        choice = input("Enter your choice: ").strip()
+
+        if choice == '1':
+            zscaler_menu()
+        elif choice == '2':
+            syslog_menu()
+        elif choice == '3':
+            logscale_menu()
+        elif choice == '4':
+            set_log_level()
+        elif choice == '0':
+            break
+        else:
+            print("Invalid choice. Please try again.")
+        
+        input("\nPress Enter to continue...")
+
+if __name__ == "__main__":
+    main_menu()
