@@ -165,6 +165,81 @@ def syslog_menu():
         input("\nPress Enter to continue...")
 
 # LogScale menu
+# Install LogScale log collector
+def install_logscale_collector():
+    print("Installing LogScale log collector...")
+    os.chdir(LOG_COLLECTOR_DIR)  # Change to the directory containing the collector package
+    subprocess.run(["mv", "humio-log-collector*", "humio-log-collector.deb"])
+    subprocess.run(["sudo", "dpkg", "-i", "humio-log-collector.deb"])
+    subprocess.run(["sudo", "chown", "-R", "humio-log-collector:humio-log-collector", "/var/lib/humio-log-collector"])
+    print("LogScale log collector installed.")
+
+# Edit LogScale Configuration
+def edit_logscale_config():
+    logscale_config_path = "/etc/humio-log-collector/config.yaml"
+
+    # Use sudo to check if the file exists, since ubuntu user can't see the file
+    check_file_exists_command = f"sudo test -f {logscale_config_path}"
+    check_file_exists = subprocess.run(check_file_exists_command, shell=True)
+
+    if check_file_exists.returncode == 0:
+        try:
+            print("Opening LogScale configuration for editing...")
+            # Use sudo to run nano with elevated privileges
+            subprocess.run(['sudo', 'nano', logscale_config_path])
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to open the configuration file: {e}")
+    else:
+        print("LogScale configuration file not found or you don't have the necessary permissions.")
+
+# Set LogScale configuration
+def set_logscale_config():
+    logscale_config_path = "/etc/humio-log-collector/config.yaml"
+    confirmation = input("If this is your first time setting the configuration, proceed. If not, note that this will overwrite the existing config. Proceed? (yes/no): ").strip().lower()
+    if confirmation == "yes":
+        try:
+            temp_config_path = os.path.join(LOG_GENERATOR_DIR, "temp_config.yaml")
+            with open(temp_config_path, 'w') as temp_file:
+                temp_file.write(BASE_LOGSCALE_CONFIG)
+            subprocess.run(['sudo', 'cp', temp_config_path, logscale_config_path])
+            os.remove(temp_config_path)  # Clean up temp file
+            print("LogScale configuration has been set.")
+        except Exception as e:
+            print(f"Failed to set configuration: {e}")
+    else:
+        print("Operation canceled.")
+
+# Set file access permissions
+def set_file_access_permissions():
+    print("Setting file access permissions...")
+    subprocess.run(['sudo', 'setcap', 'cap_dac_read_search,cap_net_bind_service+ep', '/usr/bin/humio-log-collector'])
+    subprocess.run(['sudo', 'systemctl', 'restart', 'humio-log-collector'])
+    print("File access permissions set.")
+
+# Enable LogScale service
+def enable_logscale_service():
+    print("Enabling LogScale service...")
+    subprocess.run(['sudo', 'systemctl', 'enable', '--now', 'humio-log-collector.service'])
+    print("LogScale service enabled.")
+
+# Start LogScale service
+def start_logscale_service():
+    print("Starting LogScale service...")
+    subprocess.run(['sudo', 'systemctl', 'start', 'humio-log-collector.service'])
+    print("LogScale service started.")
+
+# Stop LogScale service
+def stop_logscale_service():
+    print("Stopping LogScale service...")
+    subprocess.run(['sudo', 'systemctl', 'stop', 'humio-log-collector.service'])
+    print("LogScale service stopped.")
+
+# Check LogScale service status
+def check_logscale_service_status():
+    print("Checking LogScale service status...")
+    result = subprocess.run(['sudo', 'systemctl', 'status', 'humio-log-collector.service'], capture_output=True, text=True)
+    pager(result.stdout)
+
 def logscale_menu():
     while True:
         os.system('clear')
