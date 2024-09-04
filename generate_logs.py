@@ -35,8 +35,12 @@ COUNTRY_IP_BLOCKS = {
 }
 
 def get_random_ip(cidr_block):
-    network = ipaddress.IPv4Network(cidr_block)
-    return str(ipaddress.IPv4Address(network.network_address + random.randint(0, network.num_addresses - 1)))
+    network = ipaddress.IPv4Network(cidr_block, strict=False)  # Ensure it's a valid network address
+    random_ip = str(ipaddress.IPv4Address(network.network_address + random.randint(0, network.num_addresses - 1)))
+    # Check if IP address has host bits set; regenerate if necessary
+    while ipaddress.IPv4Network(random_ip + '/' + str(network.prefixlen), strict=False) != network:
+        random_ip = str(ipaddress.IPv4Address(network.network_address + random.randint(0, network.num_addresses - 1)))
+    return random_ip
 
 def get_random_ip_and_country():
     country = random.choice(list(COUNTRY_IP_BLOCKS.keys()))
@@ -183,7 +187,7 @@ def generate_suspicious_allowed_log(config):
     )
     return log
 
-# Display sample log and curl command
+# Display sample log and curl command with less
 def display_sample_log_and_curl():
     try:
         config = load_config()
@@ -198,16 +202,22 @@ def display_sample_log_and_curl():
             "Bad Traffic Log": bad_log,
         }
 
-        for log_type, log in sample_logs.items():
-            log_str = json.dumps(log, indent=4)
-            print(f"\n--- {log_type} ---")
-            print(log_str)
-            api_url = config.get('zscaler_api_url')
-            api_key = config.get('zscaler_api_key')
-            curl_command = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{log_str}'"
-            print(f"\nCurl command to send the {log_type.lower()} to NGSIEM:\n\n{curl_command}\n")
+        # Create temporary file to display logs with less
+        with open('/tmp/sample_logs.txt', 'w') as temp_file:
+            for log_type, log in sample_logs.items():
+                log_str = json.dumps(log, indent=4)
+                temp_file.write(f"\n--- {log_type} ---\n")
+                temp_file.write(log_str + '\n')
+                api_url = config.get('zscaler_api_url')
+                api_key = config.get('zscaler_api_key')
+                curl_command = f"curl -X POST {api_url} -H 'Content-Type: application/json' -H 'Authorization: Bearer {api_key}' -d '{log_str}'"
+                temp_file.write(f"\nCurl command to send the {log_type.lower()} to NGSIEM:\n\n{curl_command}\n")
 
-        print("\nNote: The logs above are samples and have not been sent to NGSIEM. The curl commands provided can be used to send these logs to NGSIEM.\n")
+            temp_file.write("\nNote: The logs above are samples and have not been sent to NGSIEM. The curl commands provided can be used to send these logs to NGSIEM.\n")
+        
+        # Display file with less
+        subprocess.run(['less', '/tmp/sample_logs.txt'])
+
     except ValueError as e:
         print(f"Error: {e}")
 
@@ -232,11 +242,18 @@ def run_as_service(config):
                 log_str = json.dumps(log)
                 api_url = config.get('zscaler_api_url')
                 api_key = config.get('zscaler_api_key')
-                requests.post(api_url, headers={
-                    'Content-Type': 'application/json',
-                    'Authorization': f'Bearer {api_key}'
-                }, data=log_str)
-                print(f"Log sent: {log_str}")
+                try:
+                    response = requests.post(api_url, headers={
+                        'Content-Type': 'application/json',
+                        'Authorization': f'Bearer {api_key}'
+                    }, data=log_str)
+                    if response.status_code != 200:
+                        logging.error(f"Failed to send log: {response.text}")
+                    else:
+                        logging.info(f"Log sent successfully: {log_str}")
+
+                except requests.exceptions.RequestException as e:
+                    logging.error(f"Error sending log: {e}")
 
             time.sleep(1)  # Pause for a second
 
@@ -245,8 +262,9 @@ def run_as_service(config):
 
 # Start logging service
 def start_logging_service():
-    subprocess.Popen(["python3", os.path.abspath(__file__), "--service"])
-    print("Logging service started.")
+    subprocess.Popen(["python3", os.path.abspath(__file__), "--service"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    print("Logging service started in the background.")
+
 
 # Stop logging service
 def stop_logging_service():
