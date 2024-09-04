@@ -57,6 +57,7 @@ def save_config(config):
     with open(CONFIG_FILE, 'w') as file:
         json.dump(config, file, indent=4)
 
+# Update the Zscaler log generation function to include the observer.id
 def generate_zscaler_log(config, user, hostname, url, referer, action, reason, url_category="General Browsing", event_kind="event", tactic=None, technique=None):
     now = datetime.now(timezone.utc)
     server_ip, server_country = get_random_ip_and_country()
@@ -64,6 +65,7 @@ def generate_zscaler_log(config, user, hostname, url, referer, action, reason, u
 
     log_entry = {
         "sourcetype": "zscalernss-web",
+        "observer.id": config.get("observer.id", "unknown_observer"),  # Added observer.id field
         "event": {
             "datetime": (now - timedelta(minutes=random.randint(1, 5))).strftime("%Y-%m-%d %H:%M:%S"),
             "kind": event_kind,
@@ -139,19 +141,23 @@ def generate_regular_log(config):
     )
     return log
 
-# Generate bad traffic log (alerts)
+# Update generate_bad_traffic_log function to ensure specific IPs are blocked
 def generate_bad_traffic_log(config):
     user_info = next((u for u in config.get("users", []) if u['username'] == "eagle"), None)
     if not user_info:
         raise ValueError("User 'eagle' not found in the configuration.")
+    
+    # Ensure any traffic to specific IPs is marked as blocked
+    destination_ip = random.choice(["66.85.185.117", "199.80.55.21"])
+    
     log = generate_zscaler_log(
         config=config,
         user=user_info,
         hostname=user_info['hostname'],
-        url="https://adminbird.com/login",
+        url=f"https://adminbird.com/login?ip={destination_ip}",  # Simulate traffic to blocked IP
         referer="https://birdsite.com/home",
         action="blocked",
-        reason="Unauthorized access attempt",
+        reason="Access to blocked IP",
         event_kind="alert",  # Bad traffic triggers an "alert"
         tactic="Credential Access",  # Example tactic
         technique="Brute Force"  # Example technique
