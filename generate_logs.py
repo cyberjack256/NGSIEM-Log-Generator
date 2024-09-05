@@ -141,22 +141,24 @@ def generate_regular_log(config):
     )
     return log
 
-# Update generate_bad_traffic_log function to ensure specific IPs are blocked
 def generate_bad_traffic_log(config):
     user_info = next((u for u in config.get("users", []) if u['username'] == "eagle"), None)
     if not user_info:
         raise ValueError("User 'eagle' not found in the configuration.")
     
-    # Ensure any traffic to specific IPs is marked as blocked
-    destination_ip = random.choice(["66.85.185.117", "199.80.55.21"])
+    # Define the specific IPs that should be marked as blocked
+    blocked_ips = ["66.85.185.117", "199.80.55.21"]
+    
+    # Select a random blocked IP for the log entry
+    destination_ip = random.choice(blocked_ips)
     
     log = generate_zscaler_log(
         config=config,
         user=user_info,
         hostname=user_info['hostname'],
-        url=f"https://adminbird.com/login?ip={destination_ip}",  # Simulate traffic to blocked IP
+        url=f"https://blockedsite.com/resource?ip={destination_ip}",  # Use blocked IP in the URL
         referer="https://birdsite.com/home",
-        action="blocked",
+        action="blocked",  # Mark as blocked since it's a bad IP
         reason="Access to blocked IP",
         event_kind="alert",  # Bad traffic triggers an "alert"
         tactic="Credential Access",  # Example tactic
