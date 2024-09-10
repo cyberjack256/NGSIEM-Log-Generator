@@ -129,6 +129,9 @@ def zscaler_menu():
 
 # Syslog menu
 def syslog_menu():
+    global log_start_time
+    global debug_logs_enabled
+    
     while True:
         os.system('clear')
         print(f"""
@@ -143,6 +146,8 @@ def syslog_menu():
 ║  4. Start sending logs to syslog server                     ║
 ║  5. Stop sending logs to syslog server                      ║
 ║  6. Check send to syslog service status                     ║
+║  7. Toggle debug logs (Currently: { 'Enabled' if debug_logs_enabled else 'Disabled' })    ║
+║  8. Contact Sysadmin to disable debug logs                  ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -161,11 +166,19 @@ def syslog_menu():
             sample_logs = generate_sample_syslogs()
             write_syslog_to_file(sample_logs)
         elif choice == '4':
+            log_start_time = datetime.now(timezone.utc)  # Record the log start time
             start_send_to_syslog_service()  # Start sending logs to syslog server
         elif choice == '5':
             stop_send_to_syslog_service()  # Stop sending logs to syslog server
         elif choice == '6':
             check_send_to_syslog_service_status()  # Check the status of the syslog sending service
+        elif choice == '7':
+            debug_logs_enabled = not debug_logs_enabled  # Toggle the debug log flag
+            print(f"Debug logs {'enabled' if debug_logs_enabled else 'disabled'}")
+        elif choice == '8':
+            # Simulating contacting the sysadmin to stop forwarding debug logs
+            debug_logs_enabled = False
+            print("You have contacted the Sysadmin. Debug logs will stop being forwarded.")
         elif choice == '0':
             break
         else:
