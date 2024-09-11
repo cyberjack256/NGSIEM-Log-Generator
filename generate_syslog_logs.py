@@ -35,7 +35,10 @@ def load_config(file_path):
 # Generate syslog message, including observer_id and ensuring UTC timestamp
 def generate_syslog_message(template, **log_data):
     config = load_config(CONFIG_FILE)  # Load the main config
-    log_data['observer_id'] = config.get('observer', {}).get('id', 'unknown')  # Add observer ID
+    observer_id = config.get('observer', {}).get('id', 'unknown')
+    log_data['observer_id'] = observer_id
+
+    print(f"Observer ID: {observer_id}")  # Debugging output to verify observer.id is loaded
 
     # Default values for missing keys
     default_values = {
