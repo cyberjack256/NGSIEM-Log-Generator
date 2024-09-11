@@ -174,7 +174,7 @@ def syslog_menu():
 ║  5. Start sending logs to syslog server                     ║
 ║  6. Stop sending logs to syslog server                      ║
 ║  7. Check send to syslog service status                     ║
-║  8. Toggle debug logs (Currently: { 'Enabled' if debug_logs_enabled else 'Disabled' })    ║
+║  8. Toggle debug logs (Currently: { 'Enabled' if debug_logs_enabled else 'Disabled' })           ║
 ║  9. Contact Sysadmin to disable debug logs                  ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
@@ -392,20 +392,20 @@ def logscale_menu():
         os.system('clear')
         print(f"""
 ╔═════════════════════════════════════════════════════════════╗
-║              LogScale Configuration and Controls            ║
+║      LogScale Log Collector Configuration and Controls      ║
 ║═════════════════════════════════════════════════════════════║
 ║  Please select an option:                                   ║
 ║                                                             ║
-║  1. Install Falcon Log Collector                            ║
+║  1. Install Falcon LogScale LogCollector                            ║
 ║  2. Set file access permissions                             ║
-║  3. Set Falcon Log Collector default configuration          ║
+║  3. Set  LogCollector default configuration                 ║
 ║  4. View Falcon Log Collector configuration                 ║
 ║  5. Edit token field value                                  ║
 ║  6. Edit URL field value                                    ║
-║  7. Enable Falcon Log Collector service                     ║
-║  8. Check Falcon Log Collector service status               ║
-║  9. Start Falcon Log Collector service                      ║
-║  10. Stop Falcon Log Collector service                      ║
+║  7. Enable  LogCollector service                            ║
+║  8. Check  LogCollector service status                      ║
+║  9. Start  LogCollector service                             ║
+║  10. Stop  LogCollector service                             ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -444,15 +444,14 @@ def main_menu():
         os.system('clear')
         print("""
 ╔═════════════════════════════════════════════════════════════╗
-║                     NGSIEM Log Generator                    ║
+║                Next-Gen SIEM Log Generator                  ║
 ║═════════════════════════════════════════════════════════════║
-║  Welcome to the NGSIEM Log Generator Menu                   ║
+║  Welcome to the Next-Gen SIEM Log Generator Menu            ║
 ║  Please select an option:                                   ║
 ║                                                             ║
 ║  1. Zscaler log actions                                     ║
 ║  2. Syslog log actions                                      ║
-║  3. LogScale Configuration and Controls                     ║
-║  4. Set log level                                           ║
+║  3. Falcon LogScale LogCollector Configuration and Controls ║
 ║  0. Exit                                                    ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -464,8 +463,6 @@ def main_menu():
             syslog_menu()
         elif choice == '3':
             logscale_menu()
-        elif choice == '4':
-            set_log_level()
         elif choice == '0':
             break
         else:
