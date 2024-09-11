@@ -79,6 +79,9 @@ def generate_sample_syslogs():
     message_config = load_config(MESSAGE_CONFIG_FILE)
     now = datetime.now(timezone.utc)
 
+    # Fetch observer.id from config
+    observer_id = config.get('observer', {}).get('id', 'unknown-observer')
+
     hostnames = [
         "birdcentral.nest.local",
         "nestaccess.adminbird.net",
@@ -123,7 +126,8 @@ def generate_sample_syslogs():
             'srcPort': srcPort,
             'username': user["username"],
             'mac_address': user["mac_address"],
-            'user_agent': user["user_agent"]
+            'user_agent': user["user_agent"],
+            'observer_id': observer_id  # Add observer.id here
         }
 
         message = generate_syslog_message(
