@@ -213,8 +213,11 @@ def send_to_syslog_service():
     finally:
         sock.close()
 
-# Generate sample debug logs (30% increase in logging volume)
+# Generate sample debug logs (only if debug_logs_enabled is True)
 def generate_sample_debug_logs():
+    if not debug_logs_enabled:
+        return []  # Return an empty list if debug logs are disabled
+    
     message_config = load_config(MESSAGE_CONFIG_FILE)
     
     # Use the debug log template from the config
