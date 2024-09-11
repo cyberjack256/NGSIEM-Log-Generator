@@ -144,6 +144,18 @@ def show_observer_id():
     # Use pager to display and exit using 'q'
     pager(config_str + "\n\nPress 'q' to exit.")
 
+# Add or update observer.id configuration value
+def add_observer_id_value():
+    config = load_config()
+    value = input("Enter a value for observer.id: ").strip()
+    if value:
+        config['observer.id'] = value
+        save_config(config)
+        print(f"Configuration updated: observer.id set to {config['observer.id']}")
+    else:
+        print("No value entered. Configuration not updated.")
+
+# Syslog menu with observer.id options and existing functionality
 def syslog_menu():
     global debug_logs_enabled
     
@@ -156,13 +168,14 @@ def syslog_menu():
 ║  Please select an option:                                   ║
 ║                                                             ║
 ║  1. Show observer ID                                        ║
-║  2. Generate sample Syslog logs                             ║
-║  3. Generate logs to file                                   ║
-║  4. Start sending logs to syslog server                     ║
-║  5. Stop sending logs to syslog server                      ║
-║  6. Check send to syslog service status                     ║
-║  7. Toggle debug logs (Currently: { 'Enabled' if debug_logs_enabled else 'Disabled' })    ║
-║  8. Contact Sysadmin to disable debug logs                  ║
+║  2. Add or update observer ID                               ║
+║  3. Generate sample Syslog logs                             ║
+║  4. Generate logs to file                                   ║
+║  5. Start sending logs to syslog server                     ║
+║  6. Stop sending logs to syslog server                      ║
+║  7. Check send to syslog service status                     ║
+║  8. Toggle debug logs (Currently: { 'Enabled' if debug_logs_enabled else 'Disabled' })    ║
+║  9. Contact Sysadmin to disable debug logs                  ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
@@ -171,25 +184,27 @@ def syslog_menu():
         if choice == '1':
             show_observer_id()  # Show only the observer.id
         elif choice == '2':
+            add_observer_id_value()  # Add or update observer.id
+        elif choice == '3':
             sample_logs = generate_sample_syslogs()
             if sample_logs:
                 sample_log_str = json.dumps(sample_logs[0], indent=4)
                 pager(f"Sample log:\n{sample_log_str}")
             else:
                 print("No sample logs generated.")
-        elif choice == '3':
+        elif choice == '4':
             sample_logs = generate_sample_syslogs()
             write_syslog_to_file(sample_logs)
-        elif choice == '4':
-            start_send_to_syslog_service()  # Start sending logs to syslog server
         elif choice == '5':
-            stop_send_to_syslog_service()  # Stop sending logs to syslog server
+            start_send_to_syslog_service()  # Start sending logs to syslog server
         elif choice == '6':
-            check_send_to_syslog_service_status()  # Check the status of the syslog sending service
+            stop_send_to_syslog_service()  # Stop sending logs to syslog server
         elif choice == '7':
+            check_send_to_syslog_service_status()  # Check the status of the syslog sending service
+        elif choice == '8':
             debug_logs_enabled = not debug_logs_enabled  # Toggle the debug log flag
             print(f"Debug logs {'enabled' if debug_logs_enabled else 'disabled'}")
-        elif choice == '8':
+        elif choice == '9':
             # Simulating contacting the sysadmin to stop forwarding debug logs
             debug_logs_enabled = False
             print("You have contacted the Sysadmin. Debug logs will stop being forwarded.")
