@@ -174,7 +174,7 @@ def syslog_menu():
 ║  5. Start sending logs to syslog server                     ║
 ║  6. Stop sending logs to syslog server                      ║
 ║  7. Check send to syslog service status                     ║
-║  8. Toggle debug logs (Currently: { 'Enabled' if debug_logs_enabled else 'Disabled' })           ║
+║  8. Toggle debug logs (Currently: { 'Enabled' if debug_logs_enabled else 'Disabled' })          <--
 ║  9. Contact Sysadmin to disable debug logs                  ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
