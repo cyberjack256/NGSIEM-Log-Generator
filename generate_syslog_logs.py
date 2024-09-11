@@ -185,15 +185,66 @@ def send_to_syslog_service():
     finally:
         sock.close()
         
-def start_send_to_syslog_service():
-    global send_logs_process
-    if send_logs_process is None or not send_logs_process.is_alive():
-        send_logs_process = multiprocessing.Process(target=send_to_syslog_service)
-        send_logs_process.start()
-        print("Syslog sending service started.")
-    else:
-        print("Syslog sending service is already running.")
+def send_to_syslog_service():
+    """
+    Continuously send logs to the syslog service at a rate of 200 logs per second.
+    """
+    global logs_sent_count
+    global log_start_time
+    global debug_logs_enabled
 
+    config = load_config(CONFIG_FILE)
+    syslog_server = config.get('syslog_server', 'localhost')
+    syslog_port = config.get('syslog_port', 514)
+    
+    # Record the time when log sending starts
+    log_start_time = datetime.now(timezone.utc)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    try:
+        while True:
+            sample_logs = generate_sample_syslogs()
+            
+            # After 15 minutes, enable debug logs if they are still enabled
+            time_since_start = datetime.now(timezone.utc) - log_start_time
+            if time_since_start >= timedelta(minutes=15) and debug_logs_enabled:
+                # Add debug logs to the mix, increasing log volume by 30%
+                debug_logs = generate_sample_debug_logs()
+                sample_logs.extend(debug_logs)  # Add debug logs on top of existing logs
+
+            for log in sample_logs:
+                sock.sendto(log.encode('utf-8'), (syslog_server, syslog_port))
+                
+                # Update the shared counter
+                with logs_sent_count.get_lock():
+                    logs_sent_count.value += 1
+            
+            # To maintain a rate of 200 logs per second
+            time.sleep(1 / 200.0)
+    except KeyboardInterrupt:
+        print("\nStopping syslog sending service.")
+    finally:
+        sock.close()
+
+def generate_sample_debug_logs():
+    """
+    Generate a set of debug logs to simulate after 15 minutes.
+    """
+    message_config = load_config(MESSAGE_CONFIG_FILE)
+    
+    # Use the debug log template from the config
+    debug_logs = []
+    for _ in range(24):  # Generate 24 debug logs (30% of the usual 80 logs)
+        log_data = {
+            'timestamp': datetime.now().strftime('%b %d %H:%M:%S'),
+            'hostname': 'debug-host',
+            'level': 'debug',
+            'message': 'This is a simulated debug log message.'
+        }
+        debug_logs.append(json.dumps(log_data))
+    
+    return debug_logs
 def write_syslog_to_file(logs):
     log_dir = os.path.dirname(SYSLOG_FILE)
     os.makedirs(log_dir, exist_ok=True)
