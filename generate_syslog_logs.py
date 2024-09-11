@@ -32,14 +32,14 @@ def load_config(file_path):
             return json.load(file)
     return {}
 
-# Generate syslog message, including observer_id
+# Generate syslog message, including observer_id and ensuring UTC timestamp
 def generate_syslog_message(template, **log_data):
     config = load_config(CONFIG_FILE)  # Load the main config
-    log_data['observer_id'] = config.get('observer.id', 'unknown')  # Add observer ID
+    log_data['observer_id'] = config.get('observer', {}).get('id', 'unknown')  # Add observer ID
 
     # Default values for missing keys
     default_values = {
-        'timestamp': datetime.now().strftime('%b %d %H:%M:%S'),
+        'timestamp': datetime.now(timezone.utc).strftime('%b %d %H:%M:%S'),  # Use UTC timestamp
         'hostname': 'default-host',
         'drone_id': 'DRONE-' + str(random.randint(1000, 9999)),
         'station_id': 'STATION-' + str(random.randint(1, 10)),
@@ -82,7 +82,7 @@ def generate_syslog_message(template, **log_data):
 def generate_sample_syslogs():
     config = load_config(CONFIG_FILE)  # Load the main config
     message_config = load_config(MESSAGE_CONFIG_FILE)  # Load the message config
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)  # Current UTC time
 
     # Fetch observer.id from config
     observer_id = config.get('observer', {}).get('id', 'unknown-observer')
@@ -116,6 +116,7 @@ def generate_sample_syslogs():
             "BirdCentral"
         ])
         procid = str(random.randint(1000, 9999))
+        # Ensure that the log's timestamp is always before the current UTC time
         timestamp = (now - timedelta(minutes=random.randint(1, 30))).strftime('%b %d %H:%M:%S')
         message_template = random.choice(messages)
         srcPort = str(random.randint(1024, 65535))
@@ -224,7 +225,7 @@ def generate_sample_debug_logs():
     debug_logs = []
     for _ in range(24):  # Generate 24 debug logs (30% of the usual 80 logs)
         log_data = {
-            'timestamp': datetime.now().strftime('%b %d %H:%M:%S'),
+            'timestamp': datetime.now(timezone.utc).strftime('%b %d %H:%M:%S'),  # Ensure UTC timestamp
             'hostname': 'debug-host',
             'level': 'debug',
             'message': 'This is a simulated debug log message.'
