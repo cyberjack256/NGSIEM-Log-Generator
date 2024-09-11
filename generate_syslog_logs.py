@@ -20,6 +20,11 @@ SYSLOG_FILE = os.path.expanduser('~/NGSIEM-Log-Generator/syslog.log')
 send_logs_process = None
 # Global shared variable for log count
 logs_sent_count = Value('i', 0)  # 'i' is for integer
+# Global variables to track log start time and debug logs
+log_start_time = None
+debug_logs_enabled = True  # Enable debug logs by default after 15 minutes
+
+
 
 def load_config(file_path):
     if os.path.exists(file_path):
