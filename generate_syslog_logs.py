@@ -26,7 +26,7 @@ debug_logs_enabled = True  # Enable debug logs by default after 15 minutes
 
 
 
-def load_config(file_path):
+def load_config(CONFIG_FILE):
     if os.path.exists(file_path):
         with open(file_path, 'r') as file:
             return json.load(file)
