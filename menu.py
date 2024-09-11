@@ -309,7 +309,7 @@ def edit_token_field_value():
     except Exception as e:
         print(f"Error editing token field value: {e}")
 
-# Edit URL field value
+# Edit URL field value without escaping special characters
 def edit_url_field_value():
     logscale_config_path = "/etc/humio-log-collector/config.yaml"
     print(f"Editing URL field value in {logscale_config_path}...")
@@ -324,13 +324,13 @@ def edit_url_field_value():
 
         url = input("Enter the new URL value: ").strip()
 
-         # Ensure the URL does not end with '/', '/services', or '/services/collector'
+        # Ensure the URL does not end with '/', '/services', or '/services/collector'
         if url.endswith('/') or url.endswith('/services') or url.endswith('/services/collector'):
             print("Invalid URL format. The URL should not end with '/', '/services', or '/services/collector'.")
             return
 
-        # Use re.escape to escape any special characters in the URL
-        updated_content = re.sub(r'(url:\s*).*', rf'url: {re.escape(url)}', config_content)
+        # Update the URL without using re.escape to avoid adding backslashes
+        updated_content = re.sub(r'(url:\s*).*', f'url: {url}', config_content)
 
         # Use sudo to write the changes to the configuration file
         subprocess.run(['sudo', 'tee', logscale_config_path], input=updated_content.encode('utf-8'))
@@ -396,16 +396,16 @@ def logscale_menu():
 ║═════════════════════════════════════════════════════════════║
 ║  Please select an option:                                   ║
 ║                                                             ║
-║  1. Install Falcon LogScale LogCollector                            ║
+║  1. Install Falcon LogScale LogCollector                    ║
 ║  2. Set file access permissions                             ║
-║  3. Set  LogCollector default configuration                 ║
-║  4. View Falcon Log Collector configuration                 ║
+║  3. Set LogCollector default configuration                  ║
+║  4. View LogCollector configuration                         ║
 ║  5. Edit token field value                                  ║
 ║  6. Edit URL field value                                    ║
-║  7. Enable  LogCollector service                            ║
-║  8. Check  LogCollector service status                      ║
-║  9. Start  LogCollector service                             ║
-║  10. Stop  LogCollector service                             ║
+║  7. Enable LogCollector service                             ║
+║  8. Check LogCollector service status                       ║
+║  9. Start LogCollector service                              ║
+║  10. Stop LogCollector service                              ║
 ║  0. Back to main menu                                       ║
 ╚═════════════════════════════════════════════════════════════╝
         """)
