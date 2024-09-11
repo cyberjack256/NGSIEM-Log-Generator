@@ -19,8 +19,7 @@ from generate_logs import (
     generate_bad_traffic_log,
     start_logging_service,  # New function for starting the log service
     stop_logging_service,   # New function to stop the log service
-    check_logging_service_status,  # New function to check the log service status
-    debug_logs_enabled #New function to flag debug logs on or not
+    check_logging_service_status # New function to check the log service status
 )
 
 # Paths to config files and directories
