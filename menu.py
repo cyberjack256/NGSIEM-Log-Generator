@@ -135,6 +135,11 @@ def zscaler_menu():
         
         input("\nPress Enter to continue...")
 
+def show_observer_id():
+    config = load_config(CONFIG_FILE)
+    observer_id = config.get('observer', {}).get('id', 'unknown-observer')
+    print(f"Observer ID: {observer_id}")
+
 def syslog_menu():
     global debug_logs_enabled
     
@@ -146,7 +151,7 @@ def syslog_menu():
 ║═════════════════════════════════════════════════════════════║
 ║  Please select an option:                                   ║
 ║                                                             ║
-║  1. Show current configuration                              ║
+║  1. Show observer ID                                        ║
 ║  2. Generate sample Syslog logs                             ║
 ║  3. Generate logs to file                                   ║
 ║  4. Start sending logs to syslog server                     ║
@@ -160,7 +165,7 @@ def syslog_menu():
         choice = input("Enter your choice: ").strip()
 
         if choice == '1':
-            show_config()
+            show_observer_id()  # Show only the observer.id
         elif choice == '2':
             sample_logs = generate_sample_syslogs()
             if sample_logs:
