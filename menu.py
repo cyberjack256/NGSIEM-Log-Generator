@@ -3,7 +3,15 @@ import re
 import subprocess
 import json
 import glob
-from generate_syslog_logs import generate_sample_syslogs, generate_syslog_message, write_syslog_to_file, start_send_to_syslog_service, stop_send_to_syslog_service, check_send_to_syslog_service_status
+from generate_syslog_logs import (
+    generate_sample_syslogs, 
+    generate_syslog_message, 
+    write_syslog_to_file, 
+    start_send_to_syslog_service, 
+    stop_send_to_syslog_service, 
+    check_send_to_syslog_service_status,
+    debug_logs_enabled #New function to flag debug logs on or not
+)
 from generate_logs import (
     display_sample_log_and_curl, 
     generate_regular_log, 
