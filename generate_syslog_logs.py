@@ -217,9 +217,13 @@ def send_to_syslog_service():
 def generate_sample_debug_logs():
     if not debug_logs_enabled:
         return []  # Return an empty list if debug logs are disabled
-    
+
+    config = load_config(CONFIG_FILE)
     message_config = load_config(MESSAGE_CONFIG_FILE)
-    
+
+    # Fetch observer.id from config
+    observer_id = config.get('observer.id', 'unknown')
+
     # Use the debug log template from the config
     debug_logs = []
     for _ in range(24):  # Generate 24 debug logs (30% of the usual 80 logs)
@@ -227,6 +231,7 @@ def generate_sample_debug_logs():
             'timestamp': datetime.now(timezone.utc).strftime('%b %d %H:%M:%S'),  # Ensure UTC timestamp
             'hostname': 'debug-host',
             'level': 'debug',
+            'observer_id': observer_id,  # Add observer.id to debug logs
             'message': 'This is a simulated debug log message.'
         }
         debug_logs.append(json.dumps(log_data))
