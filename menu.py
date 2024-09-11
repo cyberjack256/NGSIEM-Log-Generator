@@ -71,7 +71,7 @@ def pager(content):
 # Show current configuration
 def show_config():
     config = load_config()
-    filtered_config = {k: config[k] for k in ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias'] if k in config}
+    filtered_config = {k: config[k] for k in ['zscaler_api_url', 'zscaler_api_key', 'observer.id'] if k in config}
     config_str = json.dumps(filtered_config, indent=4)
     pager(config_str + "\n\nPress 'q' to exit.")
 
