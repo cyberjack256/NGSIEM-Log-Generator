@@ -68,8 +68,7 @@ def generate_syslog_message(template, **log_data):
         'bytes': random.randint(100, 10000),  # Data transferred
         'port': str(random.choice([80, 443, 22, 8080, 53])),
         'syslog_ip': '192.168.' + str(random.randint(0, 255)) + '.' + str(random.randint(0, 255)),
-        'rack_id': str(random.randint(1, 10)),
-        'eventID': 'EVT-' + str(random.randint(1000, 9999))
+        'rack_id': str(random.randint(1, 10))
     }
 
     # Update log_data with default values where keys are missing
@@ -85,7 +84,7 @@ def generate_sample_syslogs():
     now = datetime.now(timezone.utc)  # Current UTC time
 
     # Fetch observer.id from config
-    observer_id = config.get('observer', {}).get('id', 'unknown-observer')
+    observer_id = config.get('observer.id', 'unknown')
 
     hostnames = [
         "birdcentral.nest.local",
@@ -195,7 +194,7 @@ def send_to_syslog_service():
             
             # After 15 minutes, enable debug logs if they are still enabled
             time_since_start = datetime.now(timezone.utc) - log_start_time
-            if time_since_start >= timedelta(minutes=15) and debug_logs_enabled:
+            if time_since_start >= timedelta(minutes(15)) and debug_logs_enabled:
                 # Add debug logs to the mix, increasing log volume by 30%
                 debug_logs = generate_sample_debug_logs()
                 sample_logs.extend(debug_logs)  # Add debug logs on top of existing logs
