@@ -35,14 +35,11 @@ def load_config(file_path):
 # Generate syslog message, including observer_id and ensuring UTC timestamp
 def generate_syslog_message(template, **log_data):
     config = load_config(CONFIG_FILE)  # Load the main config
-    observer_id = config.get('observer', {}).get('id', 'unknown')
-    log_data['observer_id'] = observer_id
-
-    print(f"Observer ID: {observer_id}")  # Debugging output to verify observer.id is loaded
+    log_data['observer_id'] = config.get('observer.id', 'unknown')  # Fetch observer.id from root
 
     # Default values for missing keys
     default_values = {
-        'timestamp': datetime.now(timezone.utc).strftime('%b %d %H:%M:%S'),  # Use UTC timestamp
+        'timestamp': datetime.now(timezone.utc).strftime('%b %d %H:%M:%S'),
         'hostname': 'default-host',
         'drone_id': 'DRONE-' + str(random.randint(1000, 9999)),
         'station_id': 'STATION-' + str(random.randint(1, 10)),
