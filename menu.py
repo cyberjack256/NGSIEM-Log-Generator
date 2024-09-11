@@ -137,8 +137,12 @@ def zscaler_menu():
 
 def show_observer_id():
     config = load_config(CONFIG_FILE)
-    observer_id = config.get('observer', {}).get('id', 'unknown-observer')
-    print(f"Observer ID: {observer_id}")
+    # Filter for the 'observer.id' field
+    filtered_config = {k: config[k] for k in ['observer.id'] if k in config}
+    # Format the config as a JSON string
+    config_str = json.dumps(filtered_config, indent=4)
+    # Use pager to display and exit using 'q'
+    pager(config_str + "\n\nPress 'q' to exit.")
 
 def syslog_menu():
     global debug_logs_enabled
