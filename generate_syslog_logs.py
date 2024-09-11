@@ -33,6 +33,8 @@ def load_config(file_path):
     return {}
 
 def generate_syslog_message(template, **log_data):
+    config = load_config()
+    log_data['observer_id'] = config.get('observer.id', 'unknown')
     # Default values for missing keys
     default_values = {
         'timestamp': datetime.now().strftime('%b %d %H:%M:%S'),
