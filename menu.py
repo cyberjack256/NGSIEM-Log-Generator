@@ -127,9 +127,7 @@ def zscaler_menu():
         
         input("\nPress Enter to continue...")
 
-# Syslog menu
 def syslog_menu():
-    global log_start_time
     global debug_logs_enabled
     
     while True:
@@ -166,7 +164,6 @@ def syslog_menu():
             sample_logs = generate_sample_syslogs()
             write_syslog_to_file(sample_logs)
         elif choice == '4':
-            log_start_time = datetime.now(timezone.utc)  # Record the log start time
             start_send_to_syslog_service()  # Start sending logs to syslog server
         elif choice == '5':
             stop_send_to_syslog_service()  # Stop sending logs to syslog server
