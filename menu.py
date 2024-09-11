@@ -136,7 +136,7 @@ def zscaler_menu():
         input("\nPress Enter to continue...")
 
 def show_observer_id():
-    config = load_config(CONFIG_FILE)
+    config = load_config()
     # Filter for the 'observer.id' field
     filtered_config = {k: config[k] for k in ['observer.id'] if k in config}
     # Format the config as a JSON string
