@@ -25,16 +25,18 @@ log_start_time = None
 debug_logs_enabled = True  # Enable debug logs by default after 15 minutes
 
 
-
-def load_config():
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, 'r') as file:
+# Load configuration from a given file path
+def load_config(file_path):
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as file:
             return json.load(file)
     return {}
 
+# Generate syslog message, including observer_id
 def generate_syslog_message(template, **log_data):
-    config = load_config()
-    log_data['observer_id'] = config.get('observer.id', 'unknown')
+    config = load_config(CONFIG_FILE)  # Load the main config
+    log_data['observer_id'] = config.get('observer.id', 'unknown')  # Add observer ID
+
     # Default values for missing keys
     default_values = {
         'timestamp': datetime.now().strftime('%b %d %H:%M:%S'),
@@ -76,9 +78,10 @@ def generate_syslog_message(template, **log_data):
 
     return template.format(**log_data)
 
+# Generate sample syslog messages
 def generate_sample_syslogs():
-    config = load_config(CONFIG_FILE)
-    message_config = load_config(MESSAGE_CONFIG_FILE)
+    config = load_config(CONFIG_FILE)  # Load the main config
+    message_config = load_config(MESSAGE_CONFIG_FILE)  # Load the message config
     now = datetime.now(timezone.utc)
 
     # Fetch observer.id from config
@@ -141,17 +144,15 @@ def generate_sample_syslogs():
     
     return sample_logs
 
+# Check if the syslog sending service is running
 def check_send_to_syslog_service_status():
-    """
-    Check if the syslog sending service is running and display log count.
-    """
     global send_logs_process, logs_sent_count
     if send_logs_process is not None and send_logs_process.is_alive():
         print(f"Syslog sending service is running. Logs sent: {logs_sent_count.value}")
     else:
         print("Syslog sending service is not running.")
 
-
+# Stop the syslog sending service
 def stop_send_to_syslog_service():
     global send_logs_process
     if send_logs_process is not None and send_logs_process.is_alive():
@@ -162,6 +163,7 @@ def stop_send_to_syslog_service():
     else:
         print("Syslog sending service is not running.")
 
+# Start the syslog sending service
 def start_send_to_syslog_service():
     global send_logs_process
     if send_logs_process is None or not send_logs_process.is_alive():
@@ -170,11 +172,9 @@ def start_send_to_syslog_service():
         print("Syslog sending service started.")
     else:
         print("Syslog sending service is already running.")
-        
+
+# Continuously send logs to the syslog service at a rate of 200 logs per second
 def send_to_syslog_service():
-    """
-    Continuously send logs to the syslog service at a rate of 200 logs per second.
-    """
     global logs_sent_count
     global log_start_time
     global debug_logs_enabled
@@ -213,10 +213,8 @@ def send_to_syslog_service():
     finally:
         sock.close()
 
+# Generate sample debug logs (30% increase in logging volume)
 def generate_sample_debug_logs():
-    """
-    Generate a set of debug logs to simulate after 15 minutes.
-    """
     message_config = load_config(MESSAGE_CONFIG_FILE)
     
     # Use the debug log template from the config
@@ -231,6 +229,8 @@ def generate_sample_debug_logs():
         debug_logs.append(json.dumps(log_data))
     
     return debug_logs
+
+# Write syslog logs to a file
 def write_syslog_to_file(logs):
     log_dir = os.path.dirname(SYSLOG_FILE)
     os.makedirs(log_dir, exist_ok=True)
@@ -239,7 +239,7 @@ def write_syslog_to_file(logs):
         for log_entry in logs:
             log_file.write(log_entry + "\n")
 
-# Add code to generate and save logs to a file
+# Generate and save logs to a file
 def generate_and_save_logs():
     try:
         sample_logs = generate_sample_syslogs()
