@@ -194,7 +194,7 @@ def send_to_syslog_service():
             
             # After 15 minutes, enable debug logs if they are still enabled
             time_since_start = datetime.now(timezone.utc) - log_start_time
-            if time_since_start >= timedelta(minutes(15)) and debug_logs_enabled:
+            if time_since_start >= timedelta(minutes=15) and debug_logs_enabled:
                 # Add debug logs to the mix, increasing log volume by 30%
                 debug_logs = generate_sample_debug_logs()
                 sample_logs.extend(debug_logs)  # Add debug logs on top of existing logs
