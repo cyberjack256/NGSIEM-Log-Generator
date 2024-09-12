@@ -82,11 +82,17 @@ def add_config_value():
     print("Select a field to add or update values for:")
     for i, field in enumerate(editable_fields, 1):
         print(f"{i}. {field}")
+    
     choice = input("Select a field: ").strip()
+    
     if choice.isdigit() and 1 <= int(choice) <= len(editable_fields):
         field = editable_fields[int(choice) - 1]
         # Allow slashes, alphanumeric, dots, underscores, and hyphens in the input
-        value = re.sub(r'[^a-zA-Z0-9._/-]', '', input(f"Enter a value for {field}: ").strip())
+        value = input(f"Enter a value for {field}: ").strip()
+        
+        # Allow slashes and the necessary characters
+        value = re.sub(r'[^a-zA-Z0-9._/-]', '', value)
+        
         if value:
             config[field] = value
             save_config(config)
@@ -95,7 +101,7 @@ def add_config_value():
             print("No value entered. Configuration not updated.")
     else:
         print("Invalid field choice.")
-
+        
 def zscaler_menu():
     while True:
         os.system('clear')
