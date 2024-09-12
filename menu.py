@@ -83,7 +83,7 @@ def add_config_value():
     print("Select a field to add or update values for:")
     for i, field in enumerate(editable_fields, 1):
         print(f"{i}. {field}")
-    
+
     choice = input("Select a field: ").strip()
 
     if choice.isdigit() and 1 <= int(choice) <= len(editable_fields):
@@ -91,10 +91,10 @@ def add_config_value():
         
         # Directly take input and don't process or strip anything from it
         value = input(f"Enter a value for {field}: ").strip()
-        
+
         if value:
             config[field] = value  # Set the entered value without modifications
-            save_config(config)    # Save the updated config back to file
+            save_config(config)  # Save the updated config back to file
             print(f"Configuration updated: {field} set to {config[field]}")
         else:
             print("No value entered. Configuration not updated.")
