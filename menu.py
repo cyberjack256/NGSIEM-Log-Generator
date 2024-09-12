@@ -134,7 +134,49 @@ def zscaler_menu():
             print("Invalid choice. Please try again.")
         
         input("\nPress Enter to continue...")
-        
+
+# Show observer.id with proper function
+def show_observer_id():
+    config = load_config()
+    # Filter for the 'observer.id' field
+    filtered_config = {k: config[k] for k in ['observer.id'] if k in config}
+    # Format the config as a JSON string
+    config_str = json.dumps(filtered_config, indent=4)
+    # Use pager to display and exit using 'q'
+    pager(config_str + "\n\nPress 'q' to exit.")
+
+# Add or update observer.id value with special character prevention and lowercase conversion
+def add_observer_id_value():
+    config = load_config()
+    value = re.sub(r'[^a-zA-Z0-9._-]', '', input("Enter a value for observer.id: ").strip()).lower()
+    if value:
+        config['observer.id'] = value
+        save_config(config)
+        print(f"Configuration updated: observer.id set to {config['observer.id']}")
+    else:
+        print("No value entered. Configuration not updated.")
+
+# Update the main configuration function to use dynamic field names with lowercase conversion
+def add_config_value():
+    config = load_config()
+    editable_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id']
+    print("Select a field to add or update values for:")
+    for i, field in enumerate(editable_fields, 1):
+        print(f"{i}. {field}")
+    choice = input("Select a field: ").strip()
+    if choice.isdigit() and 1 <= int(choice) <= len(editable_fields):
+        field = editable_fields[int(choice) - 1]
+        # Remove special characters from user input and convert to lowercase
+        value = re.sub(r'[^a-zA-Z0-9._-]', '', input(f"Enter a value for {field}: ").strip()).lower()
+        if value:
+            config[field] = value
+            save_config(config)
+            print(f"Configuration updated: {field} set to {config[field]}")
+        else:
+            print("No value entered. Configuration not updated.")
+    else:
+        print("Invalid field choice.")
+
 # Syslog menu with observer.id options and existing functionality
 def syslog_menu():
     global debug_logs_enabled
