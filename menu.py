@@ -75,7 +75,7 @@ def show_config():
     config_str = json.dumps(filtered_config, indent=4)
     pager(config_str + "\n\nPress 'q' to exit.")
 
-# Add configuration value without modifying the entered value
+# Add or update config value, handling observer.id separately for lowercase and special character stripping
 def add_config_value():
     config = load_config()  # Load current config from file
     editable_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id']
@@ -89,11 +89,20 @@ def add_config_value():
     if choice.isdigit() and 1 <= int(choice) <= len(editable_fields):
         field = editable_fields[int(choice) - 1]
         
-        # Directly take input and don't process or strip anything from it
-        value = input(f"Enter a value for {field}: ").strip()
+        # Different handling for observer.id and URLs
+        if field == 'observer.id':
+            value = re.sub(r'[^a-zA-Z0-9._-]', '', input(f"Enter a value for {field}: ").strip()).lower()
+        elif field == 'zscaler_api_url':
+            value = input(f"Enter a value for {field}: ").strip()
+            # Check that the URL does not contain '/services' or '/services/collector'
+            if value.endswith('/') or '/services' in value or '/services/collector' in value:
+                print("Invalid URL. The URL cannot contain '/services', '/services/collector', or end with a '/'.")
+                return
+        else:
+            value = input(f"Enter a value for {field}: ").strip()
 
         if value:
-            config[field] = value  # Set the entered value without modifications
+            config[field] = value
             save_config(config)  # Save the updated config back to file
             print(f"Configuration updated: {field} set to {config[field]}")
         else:
@@ -161,26 +170,6 @@ def add_observer_id_value():
     else:
         print("No value entered. Configuration not updated.")
 
-# Update the main configuration function to use dynamic field names with lowercase conversion
-def add_config_value():
-    config = load_config()
-    editable_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id']
-    print("Select a field to add or update values for:")
-    for i, field in enumerate(editable_fields, 1):
-        print(f"{i}. {field}")
-    choice = input("Select a field: ").strip()
-    if choice.isdigit() and 1 <= int(choice) <= len(editable_fields):
-        field = editable_fields[int(choice) - 1]
-        # Remove special characters from user input and convert to lowercase
-        value = re.sub(r'[^a-zA-Z0-9._-]', '', input(f"Enter a value for {field}: ").strip()).lower()
-        if value:
-            config[field] = value
-            save_config(config)
-            print(f"Configuration updated: {field} set to {config[field]}")
-        else:
-            print("No value entered. Configuration not updated.")
-    else:
-        print("Invalid field choice.")
 
 # Syslog menu with observer.id options and existing functionality
 def syslog_menu():
