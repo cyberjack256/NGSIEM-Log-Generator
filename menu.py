@@ -75,9 +75,7 @@ def show_config():
     config_str = json.dumps(filtered_config, indent=4)
     pager(config_str + "\n\nPress 'q' to exit.")
 
-import re
-
-# Add configuration value with special character prevention
+# Add configuration value without stripping any part of the URL
 def add_config_value():
     config = load_config()
     editable_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id']
@@ -91,12 +89,11 @@ def add_config_value():
     if choice.isdigit() and 1 <= int(choice) <= len(editable_fields):
         field = editable_fields[int(choice) - 1]
         
-        # Allow slashes and the necessary characters (this regex allows '/', ':', '.', '-', etc.)
+        # Do not strip any characters from user input to allow for valid URLs
         value = input(f"Enter a value for {field}: ").strip()
-        value = re.sub(r'[^a-zA-Z0-9._/:/-]', '', value)  # Allows slashes in URL, colons for protocol, etc.
         
         if value:
-            config[field] = value
+            config[field] = value  # Directly update the field with the input
             save_config(config)
             print(f"Configuration updated: {field} set to {config[field]}")
         else:
