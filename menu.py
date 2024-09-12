@@ -277,17 +277,27 @@ def edit_token_field_value():
 
         config_content = result.stdout
 
-        token = input("Enter the new token value: ").strip()
-        # Use re.escape to escape any special characters in the token
-        updated_content = re.sub(r'(token:\s*).*', rf'token: {re.escape(token)}', config_content)
+        # Prompt for a new token value
+        token = input("Enter the new token value (leave empty to clear the token): ").strip()
+
+        # Validate the token input
+        if not re.match(r'^[A-Za-z0-9_-]+$', token) and token != "":
+            print("Invalid token format. Only alphanumeric characters, dashes, and underscores are allowed.")
+            return
+
+        if token == "":
+            print("Warning: You are clearing the token. No token will be present in the configuration.")
+
+        # Update the configuration, allowing for the token to be empty (i.e., cleared)
+        updated_content = re.sub(r'(token:\s*).*', rf'token: {token}', config_content)
 
         # Use sudo to write the changes to the configuration file
         subprocess.run(['sudo', 'tee', logscale_config_path], input=updated_content.encode('utf-8'))
-        
+
         print("Token field value updated successfully.")
     except Exception as e:
         print(f"Error editing token field value: {e}")
-
+        
 # Edit URL field value without escaping special characters
 def edit_url_field_value():
     logscale_config_path = "/etc/humio-log-collector/config.yaml"
