@@ -85,8 +85,8 @@ def add_config_value():
     choice = input("Select a field: ").strip()
     if choice.isdigit() and 1 <= int(choice) <= len(editable_fields):
         field = editable_fields[int(choice) - 1]
-        # Remove special characters from user input
-        value = re.sub(r'[^a-zA-Z0-9._-]', '', input(f"Enter a value for {field}: ").strip()) 
+        # Allow slashes, alphanumeric, dots, underscores, and hyphens in the input
+        value = re.sub(r'[^a-zA-Z0-9._/-]', '', input(f"Enter a value for {field}: ").strip())
         if value:
             config[field] = value
             save_config(config)
