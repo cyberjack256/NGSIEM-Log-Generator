@@ -75,9 +75,9 @@ def show_config():
     config_str = json.dumps(filtered_config, indent=4)
     pager(config_str + "\n\nPress 'q' to exit.")
 
-# Add configuration value allowing all URL characters
+# Add configuration value without modifying the entered value
 def add_config_value():
-    config = load_config()
+    config = load_config()  # Load current config from file
     editable_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id']
 
     print("Select a field to add or update values for:")
@@ -89,16 +89,15 @@ def add_config_value():
     if choice.isdigit() and 1 <= int(choice) <= len(editable_fields):
         field = editable_fields[int(choice) - 1]
         
-        # Accept valid URL characters such as ':', '/', '?', '&', '=', '-', '_', '.' in the input
+        # Directly take input and don't process or strip anything from it
         value = input(f"Enter a value for {field}: ").strip()
-        valid_value = re.match(r'^[a-zA-Z0-9:/?&=_\-\.]+$', value)
-
-        if valid_value:
-            config[field] = value  # Update the configuration with the validated input
-            save_config(config)
+        
+        if value:
+            config[field] = value  # Set the entered value without modifications
+            save_config(config)    # Save the updated config back to file
             print(f"Configuration updated: {field} set to {config[field]}")
         else:
-            print("Invalid input. Ensure that the value only contains valid URL characters.")
+            print("No value entered. Configuration not updated.")
     else:
         print("Invalid field choice.")
         
