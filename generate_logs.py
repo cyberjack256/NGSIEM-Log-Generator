@@ -146,24 +146,39 @@ def generate_bad_traffic_log(config):
     if not user_info:
         raise ValueError("User 'eagle' not found in the configuration.")
     
-    # Define the specific IPs that should be marked as blocked
-    blocked_ips = ["66.85.185.117", "199.80.55.21"]
+    # Get a random malicious URL and referer from the config
+    malicious_url = random.choice(config.get('malicious_urls', []))
+    malicious_referer = random.choice(config.get('malicious_urls', []))  # Use another malicious URL as referer
+
+    # Optionally, use a hardcoded malicious IP for referer
+    malicious_referer_ip = random.choice(["66.85.185.117", "199.80.55.21", "203.0.113.25"])  # Example malicious IPs
     
-    # Select a random blocked IP for the log entry
-    destination_ip = random.choice(blocked_ips)
+    # Simulate that eagle's IP is the client and the malicious URL is the destination
+    client_ip, client_country = get_random_ip_and_country()
+    server_ip, server_country = get_random_ip_and_country()  # Fake IP for the malicious domain
     
     log = generate_zscaler_log(
         config=config,
         user=user_info,
         hostname=user_info['hostname'],
-        url=f"https://blockedsite.com/resource?ip={destination_ip}",  # Use blocked IP in the URL
-        referer="https://birdsite.com/home",
-        action="blocked",  # Mark as blocked since it's a bad IP
-        reason="Access to blocked IP",
+        url=f"https://{malicious_url}/resource",  # Use malicious URL as destination
+        referer=f"https://{malicious_referer}/",  # Use another malicious URL as referer
+        action="allowed",  # Eagle is visiting the URL
+        reason="Eagle visited a malicious site with a malicious referer",
         event_kind="alert",  # Bad traffic triggers an "alert"
         tactic="Credential Access",  # Example tactic
-        technique="Brute Force"  # Example technique
+        technique="Brute Force",  # Example technique
+        url_category="Malicious Content"  # Customize category if needed
     )
+    
+    # Customize the log entry for outbound traffic
+    log['event']['ClientIP'] = client_ip  # Eagle's IP as the source
+    log['event']['serverip'] = server_ip  # Fake server IP as the destination
+    log['event']['location'] = server_country  # Location of the malicious server
+    
+    # If you want to use a malicious IP instead of a referer URL:
+    log['event']['refererURL'] = f"http://{malicious_referer_ip}/"  # Use malicious IP as referer
+    
     return log
 
 # Generate suspicious allowed traffic log (alerts)
