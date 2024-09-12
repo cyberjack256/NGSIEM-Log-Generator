@@ -94,10 +94,6 @@ def add_config_value():
             value = re.sub(r'[^a-zA-Z0-9._-]', '', input(f"Enter a value for {field}: ").strip()).lower()
         elif field == 'zscaler_api_url':
             value = input(f"Enter a value for {field}: ").strip()
-            # Check that the URL does not contain '/services' or '/services/collector'
-            if value.endswith('/') or '/services' in value or '/services/collector' in value:
-                print("Invalid URL. The URL cannot contain '/services', '/services/collector', or end with a '/'.")
-                return
         else:
             value = input(f"Enter a value for {field}: ").strip()
 
