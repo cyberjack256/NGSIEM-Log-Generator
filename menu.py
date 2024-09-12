@@ -78,7 +78,7 @@ def show_config():
 # Add configuration value with special character prevention
 def add_config_value():
     config = load_config()
-    editable_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id', 'encounter.alias']
+    editable_fields = ['zscaler_api_url', 'zscaler_api_key', 'observer.id']
     print("Select a field to add or update values for:")
     for i, field in enumerate(editable_fields, 1):
         print(f"{i}. {field}")
@@ -96,6 +96,45 @@ def add_config_value():
     else:
         print("Invalid field choice.")
 
+def zscaler_menu():
+    while True:
+        os.system('clear')
+        print(f"""
+╔═════════════════════════════════════════════════════════════╗
+║                     Zscaler Log Actions                     ║
+║═════════════════════════════════════════════════════════════║
+║  Please select an option:                                   ║
+║                                                             ║
+║  1. Show current configuration                              ║
+║  2. Add a configuration value                               ║
+║  3. Generate sample Zscaler logs                            ║
+║  4. Start generating logs as a service                      ║
+║  5. Stop log generation service                             ║
+║  6. Check log generation service status                     ║
+║  0. Back to main menu                                       ║
+╚═════════════════════════════════════════════════════════════╝
+        """)
+        choice = input("Enter your choice: ").strip()
+
+        if choice == '1':
+            show_config()  # Show Zscaler-related configuration
+        elif choice == '2':
+            add_config_value()  # Add or update Zscaler configuration values
+        elif choice == '3':
+            display_sample_log_and_curl()  # Generate Zscaler sample logs
+        elif choice == '4':
+            start_logging_service()  # Start generating logs as a service
+        elif choice == '5':
+            stop_logging_service()  # Stop log generation service
+        elif choice == '6':
+            check_logging_service_status()  # Check the status of the log generation service
+        elif choice == '0':
+            break  # Return to the main menu
+        else:
+            print("Invalid choice. Please try again.")
+        
+        input("\nPress Enter to continue...")
+        
 # Syslog menu with observer.id options and existing functionality
 def syslog_menu():
     global debug_logs_enabled
