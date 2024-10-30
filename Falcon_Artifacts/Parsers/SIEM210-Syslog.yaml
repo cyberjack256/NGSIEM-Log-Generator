@@ -1,0 +1,152 @@
+name: SIEM210-Syslog
+fieldsToBeRemovedBeforeParsing: []
+testCases:
+- event:
+    rawString: <174>1 Sep 11 22:57:29Z birdwatch.cams.net FirewallController 107 FW-INFO
+      - - [sd-id@12345 iut="3" eventSource="FirewallNetwork" eventID="0006" observer.id="jt00-0000"]
+      VPN tunnel established between 192.168.16.124 and 192.168.1.230.
+- event:
+    rawString: '{"timestamp": "Sep 12 03:10:01", "hostname": "debug-host", "level":
+      "debug", "observer_id": "jt0-050", "message": "This is a simulated debug log
+      message."}'
+$schema: https://schemas.humio.com/parser/v0.3.0
+script: |-
+  // #region PREPARSE
+  /************************************************************
+  ****** Pre-parse
+  ****** Parse timestamp and log headers
+  ****** Extract message field for parsing
+  ************************************************************/
+  case{
+  //Case for non-debug messages ingested
+  @rawstring = /<(?<priority>\S+)>(?<version>\S+)\s(?<timestamp>\w+\s\d{1,2}\s\S+)\s(?<hostname>\S+)\s(?<device>\S+)\s(?<event>\d{1,4}\s\S+)\s\-\s\-\s\[(?<structured_data>sd-id@\w+\s\S+\seventSource=\"(?<event_source>\S+)\"\seventID=\"(?<event_id>\S+)\"\sobserver\.id=\"(?<observer_id>.+)\")\]\s(?<message>.+)\./;
+  //Case for debug messages ingested
+  @rawstring = /^{\"timestamp\":(?<timestamp>\s\"\w+\s\d{1,2}\s\S+)\",\s\"hostname\":\s\"(?<hostname>\S+)\", \"level\":\s\"(?<level>\S+)\",\s\"observer_id\":\s\"(?<observer_id>\S+)\",\s\"message\":\s\"(?<message>.+)\.\"}/
+  }
+  // Parse @timestamp
+  | findTimestamp(field=timestamp, timezone="UTC")
+
+  // Rename fields after extraction
+  | Vendor.priority := priority
+  | Vendor.hostname := hostname
+  | Vendor.service := device
+  | Vendor.eventID := event
+  | Vendor.structuredData := structuredData
+  | Vendor.message := message
+  | observer.id := rename(observer_id)
+  // #endregion
+
+  // #region METADATA
+  /************************************************************
+  ****** Static Metadata Definitions
+  ************************************************************/
+  | Parser.version := "1.0.0"
+  | Vendor := "unknown"
+  | event.module := "birdnet"
+  | event.dataset := "birdnet.general"
+  | ecs.version := "8.11.0"
+  | Cps.version := "1.0.0"
+  // #endregion
+
+  // #region NORMALIZATION
+  /************************************************************
+  ****** Parse unstructured data (i.e., message field)
+  ****** Normalize fields to data model
+  ************************************************************/
+  | event.kind := "event"
+  | Vendor.severity := priority % 8
+  | Vendor.facility := (priority - Vendor.severity) / 8
+  // Normalization for different log types based on observed patterns:
+  | case {
+    // Drone connection logs
+    Vendor.service = "DroneController*"
+      | Vendor.message = /Drone (?<droneId>DRONE-\d+) connected to base station (?<stationId>STATION-\d+)\. Battery level: (?<batteryLevel>\d+)%\. GPS: Lon (?<product_gps_longitude>-?\d+\.\d+), Lat (?<product_gps_latitude>-?\d+\.\d+)\. Flying state: (?<flying_state>\w+), speed: \((?<speed_vx>\d+), (?<speed_vy>\d+), (?<speed_vz>\d+)\), altitude: (?<altitude>\d+)\. Angles: phi (?<angle_phi>\d+), theta (?<angle_theta>\d+), psi (?<angle_psi>\d+)\. WiFi signal: (?<wifi_signal>\w+)\./
+      | event.category[0] := "device"
+      | event.type[0] := "info"
+      | drone.id := droneId
+      | drone.battery.level := batteryLevel
+      | geo.location.lat := product_gps_latitude
+      | geo.location.lon := product_gps_longitude
+      | drone.flying_state := flying_state
+      | drone.speed.x := speed_vx
+      | drone.speed.y := speed_vy
+      | drone.speed.z := speed_vz
+      | drone.altitude := altitude
+      | Vendor := "ati"
+      ;
+
+    // Drone secure connection logs
+    Vendor.service = "DroneController*"
+      | Vendor.message = /Drone (?<droneId>DRONE-\d+) established secure connection to base station (?<stationId>STATION-\d+)\./
+      | event.category[0] := "network"
+      | event.type[0] := "connection"
+      | drone.id := droneId
+      | drone.base_station := stationId
+      | network.type := "secure"
+      | Vendor := "ati"
+      ;
+
+    // Firewall rule update logs
+    Vendor.service = "FirewallController*"
+      | Vendor.message = /Firewall rule updated: Allow incoming traffic on port (?<port>\d+) for (?<ip_address>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\./
+      | event.category[0] := "network"
+      | event.type[0] := "change"
+      | destination.port := port
+      | destination.ip := ip_address
+      | Vendor := "osprey-net"
+      ;
+
+    // Firewall rule application logs
+    Vendor.service = "FirewallController*"
+      | Vendor.message = /Firewall rule applied: Block traffic from (?<source_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) on port (?<port>\d+)\./
+      | event.category[0] := "network"
+      | event.type[0] := "denied"
+      | source.ip := source_ip
+      | destination.port := port
+      | network.action := "deny"
+      | Vendor := "osprey-net"
+      ;
+
+    // Firewall VPN tunnel logs
+    Vendor.service = "FirewallController*"
+      | Vendor.message = /VPN tunnel established between (?<source_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) and (?<destination_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\./
+      | event.category[0] := "network"
+      | event.type[0] := "connection"
+      | source.ip := source_ip
+      | destination.ip := destination_ip
+      | network.type := "vpn"
+      | Vendor := "osprey-net"
+      ;
+
+    // General network activity logs
+    Vendor.service = "FirewallController*"
+      | Vendor.message = /Connection established: (?<protocol>\S+) from (?<source_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}) to (?<destination_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\./
+      | event.category[0] := "network"
+      | event.type[0] := "connection"
+      | source.ip := source_ip
+      | destination.ip := destination_ip
+      | network.protocol := protocol
+      ;
+
+    // Unusual traffic or error logs
+    Vendor.service = "FirewallController*"
+      | Vendor.message = /Unusual traffic detected from IP (?<source_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\. Potential (?<threat_type>\S+) activity\./
+      | event.kind := "alert"
+      | event.category[0] := "threat"
+      | event.type[0] := "indicator"
+      | source.ip := source_ip
+      | threat.indicator := threat_type
+      | Vendor := "osprey-net"
+      ;
+    *
+  }
+  // #endregion
+tagFields:
+- Cps.version
+- Vendor
+- ecs.version
+- event.dataset
+- event.kind
+- event.module
+- event.outcome
+- observer.type

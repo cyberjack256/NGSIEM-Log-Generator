@@ -1,0 +1,190 @@
+name: aws-cloudtrail
+timeSelector: {}
+sharedTimeInterval:
+  enabled: false
+  isLive: false
+  start: 1d
+widgets:
+  3470fbdc-85d1-4465-9445-a18217333567:
+    x: 0
+    y: 6
+    height: 4
+    queryString: '*|groupBy([Vendor.eventName])'
+    end: now
+    start: 7d
+    width: 4
+    options:
+      innerRadius: 45
+      series: {}
+    visualization: pie-chart
+    title: EventTypes
+    isLive: false
+    type: query
+  96f157bb-7d33-491f-ad80-b3b9a5593b0b:
+    x: 0
+    y: 10
+    height: 5
+    queryString: |-
+      Vendor.userIdentity.type=*
+      |User:=rename(Vendor.userIdentity.type)|groupby(User)
+    end: now
+    start: 24h
+    width: 6
+    options:
+      legend: false
+      series: {}
+      seriesPadding: 0
+      valuesOnBars: true
+    visualization: bar-chart
+    title: Users - Bar chart
+    isLive: false
+    type: query
+  427cb51f-0b1c-4cbe-922a-f6e6329d05a8:
+    x: 6
+    y: 10
+    height: 5
+    queryString: '*|User:=rename(userIdentity.userName)|timechart(span=5m,User)'
+    end: now
+    start: 24h
+    width: 6
+    options:
+      series: {}
+      gradient: false
+      interpolation: basis
+      connect-points: false
+      stacking: normal
+      yAxisScale: linear
+      plotType: area
+      imputation: none
+    visualization: time-chart
+    title: Users - Timechart
+    isLive: false
+    type: query
+  703ba8a9-130c-40ba-9313-4cb551762336:
+    x: 8
+    y: 6
+    height: 4
+    queryString: Vendor.eventSource=*|Source:=rename(Vendor.eventSource)|groupby(Source)
+    visualization: pie-chart
+    end: now
+    start: 24h
+    width: 4
+    title: Source
+    isLive: false
+    type: query
+  a300493f-c256-4522-974b-d7a7ef2bd3dd:
+    x: 4
+    y: 6
+    height: 4
+    queryString: '*|groupBy([Vendor.awsRegion])'
+    end: now
+    start: 7d
+    width: 4
+    options:
+      innerRadius: 0
+      series:
+        awsRegion:
+          title: awsRegion
+    visualization: pie-chart
+    title: AWS Regions
+    isLive: false
+    type: query
+  2252d578-d661-41d8-b95b-0bc4c3d9497b:
+    x: 0
+    y: 2
+    height: 4
+    queryString: '*|timechart(Vendor.eventName)'
+    end: now
+    start: 24h
+    width: 12
+    options:
+      legendPosition: bottom
+      series: {}
+      gradient: false
+      interpolation: cardinal
+      tension: 0.5
+      legend: true
+      connect-points: true
+      stacking: normal
+      yAxisScale: linear
+      plotType: area
+      show-utc: false
+      imputation: mean
+    visualization: time-chart
+    title: EventTypes over time
+    isLive: false
+    type: query
+  9f869316-7d7b-41e0-96e1-fa22e208865e:
+    x: 0
+    y: 15
+    height: 5
+    queryString: |
+      #Vendor = aws
+      |User:=rename(Vendor.userIdentity.type)
+      |User:=rename(Vendor.userIdentity.sessionContext.sessionIssuer.userName)
+      |User:=rename(user.email)
+      // Set default values to keep the results consistent.
+      | default(field=[User,Vendor.sourceIPAddress,#event.kind,event.category[0],event.type[0],event.action,#event.outcome], value="-")
+      |groupby([User,Vendor.sourceIPAddress,#event.kind,event.category[0],event.type[0],event.action,#event.outcome])
+    end: now
+    start: 2d
+    width: 12
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Users + EventTypes
+    isLive: false
+    type: query
+  9d5ca9d1-d1e8-4413-8511-1091cde3eefd:
+    x: 0
+    y: 20
+    height: 5
+    queryString: '*|worldMap(ip="Vendor.sourceIPAddress")'
+    end: now
+    start: 2d
+    width: 12
+    options:
+      magnitudeMode: none
+      maxOpacity: 72
+      zLevel: 0
+      projection: mercator
+      opacity: 72
+      maxSize: 9
+    visualization: world-map
+    title: SourceIP Locations
+    isLive: false
+    type: query
+  f1dd307c-0a50-4c91-9104-0f2b7220f256:
+    x: 0
+    y: 0
+    height: 2
+    queryString: '*|count()'
+    end: now
+    start: 24h
+    width: 12
+    options:
+      ct:
+      - bg: inherit
+        txt: var(--single-value-trend-negative-text-color)
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+      - bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+      - bg: inherit
+        txt: var(--single-value-warning-text-color)
+      decimal-places: 0
+      color-method: static
+      suffix: ''
+      yAxisTitle: Total Events
+      use-colorised-thresholds: false
+      value-format: metric
+      default:
+        bg: inherit
+        txt: var(--single-value-trend-positive-text-color)
+    visualization: single-value
+    title: Events
+    isLive: false
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.17.0

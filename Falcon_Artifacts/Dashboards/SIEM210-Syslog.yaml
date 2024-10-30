@@ -1,0 +1,75 @@
+name: SIEM210-Syslog
+updateFrequency: never
+timeSelector: {}
+sharedTimeInterval:
+  enabled: false
+  isLive: false
+  start: 1d
+widgets:
+  89d24e57-55be-47ec-8e88-19a109bdc260:
+    x: 5
+    y: 0
+    height: 5
+    queryString: |-
+      observer.id = ?observer.id
+      | #type = "syslog-siem-210"
+      | match(file="SIEM-210-severity.csv", field=Vendor.severity, column=severity_code)
+      | match(file="SIEM-210-facility.csv", field=Vendor.facility, column=facility_code)
+
+      | sankey(source="facility_name", target="severity_name")
+    visualization: sankey
+    end: now
+    start: 15m
+    width: 7
+    title: Facility and Severity Mapping
+    isLive: false
+    type: query
+  d783f7a2-9c0e-4c9d-8e7f-68cce9d5e66f:
+    x: 0
+    y: 5
+    height: 8
+    queryString: |-
+      observer.id = ?observer.id
+      | #type = "syslog-siem-210"
+      | match(file="SIEM-210-severity.csv", field=Vendor.severity, column=severity_code)
+      | match(file="SIEM-210-facility.csv", field=Vendor.facility, column=facility_code)
+      | timeChart(span=1s, function=count(), series=severity_name)
+    end: now
+    start: 5m
+    width: 12
+    options:
+      connect-points: false
+      imputation: none
+    visualization: time-chart
+    title: Facility over Time
+    isLive: false
+    type: query
+  ed53ffe1-4d9c-40a5-b2a5-daf4b1a5fa68:
+    x: 0
+    y: 0
+    height: 5
+    queryString: |-
+      observer.id = ?observer.id
+      | #type = "syslog-siem-210"
+      | match(file="SIEM-210-severity.csv", field=Vendor.severity, column=severity_code)
+      | match(file="SIEM-210-facility.csv", field=Vendor.facility, column=facility_code)
+
+      |groupBy([severity_name])
+    visualization: pie-chart
+    end: now
+    start: 15m
+    width: 5
+    title: Logs by Severity
+    isLive: false
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.17.0
+parameters:
+  observer:
+    label: observer.id
+    query: top(observer.id)
+    timeInterval: 15m
+    useDashboardTimeIfSet: true
+    type: query
+    width: 1
+    order: 1
+    valueField: observer.id

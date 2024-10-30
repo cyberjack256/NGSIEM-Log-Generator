@@ -1,0 +1,9 @@
+severity_code,severity_name,severity_description
+0,Emergency,System is unusable
+1,Alert,Immediate action required
+2,Critical,Critical conditions
+3,Error,Error conditions
+4,Warning,Warning conditions
+5,Notice,Normal but significant conditions
+6,Informational,Informational messages
+7,Debug,Debug-level messages

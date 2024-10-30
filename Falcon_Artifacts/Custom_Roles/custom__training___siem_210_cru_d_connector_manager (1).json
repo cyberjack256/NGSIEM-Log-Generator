@@ -1,0 +1,712 @@
+{
+  "last_modified_time": "2024-08-28T15:18:51.625581Z",
+  "id": "612b3a4dbea84341ab0152ada8fbcac3",
+  "cid": "0fc6728a949344e09b027e56ef0e8321",
+  "display_name": "CUSTOM: Training - SIEM 210 CRU-D Connector Manager",
+  "description": "Copy of Connection Manager without Market Place permissions and removal of Delete operations on connectors.",
+  "is_global": false,
+  "is_external": true,
+  "type": "custom",
+  "created_time": "2024-08-28T15:00:47.901383Z",
+  "users": 488,
+  "groups": 0,
+  "permissions": 17,
+  "permission-groups": [
+    {
+      "id": "api_client_mgmt",
+      "display_name": "API Client Management",
+      "description": "Manage API Clients",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "risks",
+      "display_name": "Asset Graph Risk Overlay",
+      "description": "Manage asset risks and vulnerabilities in the Asset Graph view",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "discover_api",
+      "display_name": "Assets",
+      "description": "Manage asset data",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "attack_paths",
+      "display_name": "Attack Paths",
+      "description": "Attack path analysis",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "audit_logs",
+      "display_name": "Audit Logs",
+      "description": "Manage read access to pages that contain audit log information",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "automated_remediations",
+      "display_name": "Automated Remediations",
+      "description": "Manage or view automatic remediations that have been performed by the Falcon sensor",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "binary_downloads",
+      "display_name": "Binary Downloads",
+      "description": "Access binaries available to download, such as installers for the Falcon sensor and other utilities",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "channel_file_service",
+      "display_name": "ChannelFileService API",
+      "description": "Manage customer bandwidth settings",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "charlotte_ai",
+      "display_name": "Charlotte AI",
+      "description": "Access Charlotte AI features, including conversations",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "cspg_api",
+      "display_name": "Cloud Security",
+      "description": "Discover, manage, and respond to indicators of attack and misconfiguration across all your cloud assets",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "cspm_api",
+      "display_name": "Cloud Security Posture Management (CSPM)",
+      "description": "Register and manage cloud accounts and policies for Cloud Security Posture Management (CSPM)",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "cloud_registration",
+      "display_name": "Cloud Security Registration",
+      "description": "Register and manage cloud accounts",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "image_assessment",
+      "display_name": "Cloud Workload Protection (CWP)",
+      "description": "Access Cloud Workload Protection features and dashboards in Kubernetes & Containers, including Image Assessment, assets, policies, and registry connections.",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "discover_for_cloud",
+      "display_name": "Cloud Workloads Discovery",
+      "description": "Register and manage cloud accounts for Cloud Workloads Discovery",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "configvantage",
+      "display_name": "Configuration Assessment",
+      "description": "View and manage Configuration Assessment findings",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "configvantage_policies",
+      "display_name": "Configuration Assessment Policies",
+      "description": "View and manage Configuration Assessment policy settings",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "container_runtime",
+      "display_name": "Container Runtime",
+      "description": "Access Kubernetes and Containers dashboards and download the Kubernetes and Falcon container sensors",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "crowdscore_incidents",
+      "display_name": "CrowdScore Incidents",
+      "description": "View and manage CrowdScore incidents",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "all_customers",
+      "display_name": "Customer Management",
+      "description": "Manage your customer settings in the Falcon console",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "cao_customer_profile",
+      "display_name": "Customer Organization Profile",
+      "description": "View and manage Organization Profile entities",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "custom_storage",
+      "display_name": "Custom Storage",
+      "description": "Manage custom storage collections, schemas and objects",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "dashboard_mgmt",
+      "display_name": "Dashboard Management",
+      "description": "Allow management of Falcon UI Dashboards",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "data_protection",
+      "display_name": "Data Protection",
+      "description": "Manage data protection policy settings and events",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "data_protection_detections",
+      "display_name": "Data Protection Detections",
+      "description": "Manage data protection detections",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "data_protection_forensics",
+      "display_name": "Data Protection Forensics",
+      "description": "Manage data protection forensics",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "detection_emails",
+      "display_name": "Detection Emails",
+      "description": "Manage detection emails",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "device_control",
+      "display_name": "Device Control",
+      "description": "Manage device control policy settings and events",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "epp_detections",
+      "display_name": "Endpoint Detections",
+      "description": "Manage endpoint detections",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "faas",
+      "display_name": "FaaS",
+      "description": "Allows for the management of the Functions as a Service (FaaS) product",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "falcon_x",
+      "display_name": "Falcon Intelligence",
+      "description": "Access Falcon Intelligence features, including reports and uploading samples for analysis",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "filevantage",
+      "display_name": "FileVantage",
+      "description": "View and manage FileVantage changes",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "filevantage_policies",
+      "display_name": "FileVantage Policies",
+      "description": "View and manage FileVantage policy settings",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "firewall",
+      "display_name": "Firewall",
+      "description": "View and manage firewall activity and rules",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "foundry",
+      "display_name": "Foundry",
+      "description": "Allows for management of Foundry related functionality",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "host_endpoint_mgmt",
+      "display_name": "Host Endpoint Management",
+      "description": "Manage hosts, including containing and uncontaining devices, and viewing and managing suppressed detections",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "host_group_mgmt",
+      "display_name": "Host Group Management",
+      "description": "Search, view, and manage host groups",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "host_mgmt",
+      "display_name": "Host Management",
+      "description": "Search, read, and tag hosts",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "host_migration",
+      "display_name": "Host Migration Management",
+      "description": "Manage host migrations",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "idp_permissions",
+      "display_name": "Identity Protection",
+      "description": "Manage Identity Protection for visibility, detection and enforcement. Paired with OverWatch Dashboards, provides access to OverWatch Identity Threat Hunting.",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "identity_protection_policies",
+      "display_name": "Identity Protection Policies",
+      "description": "View and manage Identity Protection policy settings",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "cspg_iac_api",
+      "display_name": "Infrastructure as Code (IaC)",
+      "description": "Read and write policies for IaC",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "install_tokens",
+      "display_name": "Installation Tokens",
+      "description": "View, generate, modify, and revoke tokens used for sensor installation",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "intel_api",
+      "display_name": "Intel",
+      "description": "Access Intel features, such as profiles, news, subscriptions, and indicators data",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "ckb_av",
+      "display_name": "Intel Graph Views",
+      "description": "Provides search and analytics capabilities over the Intel Graph data",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "investigate_splunk_views",
+      "display_name": "Investigate Views",
+      "description": "Manage Investigate Views",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "ioa_rules",
+      "display_name": "IOA Rules",
+      "description": "View and manage Indicators of Attack (IOA) rules",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "iocs",
+      "display_name": "IOCs",
+      "description": "View and manage Indicators of Compromise (IOCs)",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "falcon_for_it",
+      "display_name": "IT Automation",
+      "description": "Interact with hosts using queries and RTR",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "kube_protection",
+      "display_name": "Kubernetes Protection",
+      "description": "Register and manage cloud accounts for Kubernetes Protection",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "logscale_views",
+      "display_name": "LogScale Views",
+      "description": "Access LogScale data",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "malquery_api",
+      "display_name": "MalQuery",
+      "description": "Access MalQuery for standalone yara hunting, searches and monitors. Enhance Falcon Intelligence reports with data from MalQuery",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "users_all",
+      "display_name": "Manage All Users",
+      "description": "Manage all users in Falcon",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "billing",
+      "display_name": "Manage Billing",
+      "description": "View billing dashboards, manage subscriptions, and show/hide the admin trial bar",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "cs_delivery_settings_api",
+      "display_name": "Manage Channel File Update Controls",
+      "description": "View and manage distribution settings for Rapid Response and Sensor Operation channel files within the General Settings page",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "customers_self",
+      "display_name": "Manage Current Customer",
+      "description": "Read current customer configuration",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "marketplace_api",
+      "display_name": "Marketplace Service",
+      "description": "Manage CrowdStrike Store apps, including activation and configuration",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "metering_api",
+      "display_name": "Metering API",
+      "description": "Read raw and aggregated metrics in OpenSearch indices",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "eam_mitre_attack",
+      "display_name": "MITRE ATT&CK Event Descriptions",
+      "description": "Manage configuration to show additional event descriptions for MITRE ATT&CK Tactic and Technique",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "mobile_app_mgmt",
+      "display_name": "Mobile App Management",
+      "description": "Access, update, and delete app lists or specific versions of individual apps. Upload new apps or new versions of existing apps.",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "mobile_detections",
+      "display_name": "Mobile Detections",
+      "description": "Manage mobile detections",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "mobile_device_mgmt",
+      "display_name": "Mobile Device Management",
+      "description": "Manage enrollment of mobile devices. View existing enrollments, enroll new devices, and delete pending or expired enrollments.",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "mobile_policies",
+      "display_name": "Mobile Policies",
+      "description": "View and modify mobile policies. Access, create, update, and delete MDM settings.",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "network_containment",
+      "display_name": "Network Containment",
+      "description": "View and manage network or host containment settings",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "ods",
+      "display_name": "On-demand scan (ODS)",
+      "description": "View and manage on-demand scans (ODS)",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "plugins",
+      "display_name": "Plugins",
+      "description": "Allows for the management of the Plugins service",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "prevention_policies",
+      "display_name": "Prevention Policies",
+      "description": "View and manage prevention policy settings",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "quarantine_files",
+      "display_name": "Quarantine Files",
+      "description": "View and manage files that have been quarantined on host machines",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "rtr_api",
+      "display_name": "Real Time Response",
+      "description": "Access Real Time Response (RTR) actions, logs, and respective APIs. Connect directly to managed hosts and carry out a broad range of commands, including deploying and running PowerShell scripts. These actions can potentially be disruptive and access should only be permitted to users who understand and accept the associated responsibilities.",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "remote_response_policies",
+      "display_name": "Response Policies and Settings",
+      "description": "View or manage Response policies and Real Time Response (RTR) settings located in General Settings",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "role_grants_revokes",
+      "display_name": "Role Grants and Revokes",
+      "description": "Assign roles to users and remove roles from users",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "role_management",
+      "display_name": "Role Management",
+      "description": "Manage user roles",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "sample_store",
+      "display_name": "SampleStore",
+      "description": "Manage SampleStore",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "scheduled_reports",
+      "display_name": "Scheduled Reports",
+      "description": "Create scheduled reports to get automatic, recurring updates of specific data. Download and share scheduled reports, and receive a notification each time a new report is available.",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "scim",
+      "display_name": "SCIM permissions",
+      "description": "Access to CrowdStrike SCIM (System for Cross Identity Management) resources",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "scope_management",
+      "display_name": "Scope Management",
+      "description": "Assign scopes to API clients",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "sensor_version_mgmt",
+      "display_name": "Sensor Version Management",
+      "description": "View and manage sensor version policy settings",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "cspg_snapshot_api",
+      "display_name": "Snapshot Scanning",
+      "description": "Read and write policies for Snapshot Scanning",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "system_tray_icon_policies",
+      "display_name": "System Tray Icon Policies",
+      "description": "Displays a system tray icon in the windows tool bar that allows the user to monitor the status of the sensor",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "table_mgmt",
+      "display_name": "Table Management",
+      "description": "Allow management of Falcon UI custom tables",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "third_party_ingest",
+      "display_name": "Third Party Ingest",
+      "description": "Manage ingestion of 3rd party data",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "threatgraph",
+      "display_name": "ThreatGraph",
+      "description": "Access ThreatGraph store to list vertices and edges, filter them on types, and crawl the graph from a starting point",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "ui_alert_customization",
+      "display_name": "UI Alert Customization",
+      "description": "Customize the appearance of alerts, detections, and incidents in the UI using personalized templates.",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "virus_total_access",
+      "display_name": "VirusTotal Access",
+      "description": "View VirusTotal information related to a specific hash",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "spotlight_api",
+      "display_name": "Vulnerability Management",
+      "description": "Access dashboards, vulnerabilities, reports, installed patches, and more",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "workflows",
+      "display_name": "Workflows",
+      "description": "Manage workflows (Fusion)",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "xdr",
+      "display_name": "XDR (Extended Detection and Response)",
+      "description": "Access XDR functionality",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    },
+    {
+      "id": "ztl_module_policies",
+      "display_name": "Zero Touch Linux Module Policies",
+      "description": "View and manage Zero Touch Linux (ZTL) Module policy settings",
+      "is_external": true,
+      "type": "default",
+      "permissions": []
+    }
+  ]
+}

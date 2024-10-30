@@ -1,0 +1,366 @@
+name: zscaler-ecs
+fieldsToBeRemovedBeforeParsing: []
+$schema: https://schemas.humio.com/parser/v0.3.0
+script: |-
+  // #region PREPARSE
+  /************************************************************
+  ****** Parse timestamp and log headers
+  ****** Extract message field for parsing
+  ****** Parse structured data
+  ************************************************************/
+  replace(field=@rawstring, regex="~", with="%7E")
+  | case {
+      replace(regex="\\}\\W\\{", with="\\}\\~\\{")|
+          splitstring(as="@rawstring", by="~", field=@rawstring) |
+          split(field="@rawstring") |
+          regex(regex="(?P<rawstring>{.*})", strict=false) |
+          @rawstring := rename("rawstring");
+      *;
+  }
+  | @rawstring match {
+      "]" => dropEvent();
+      "" => dropEvent();
+      * => *;
+  }
+  | case {
+      /^\s?\"sourcetype\"/i
+          | parseJson(prefix=Vendor, removePrefixes=[event], excludeEmpty=true, handleNull=discard);
+      *
+          | parseJson(prefix=Vendor., removePrefixes=[event.], excludeEmpty=true, handleNull=discard);
+  }
+  | case {
+      regex("^[a-zA-Z]{3}", field=Vendor.datetime)
+          | @timestamp := parseTimestamp("E MMM [ ]d HH:mm:ss yyyy", field=Vendor.datetime, timezone="UTC");
+      regex("^[a-zA-Z]{3}", field=Vendor.time)
+          | @timestamp := parseTimestamp("E MMM [ ]d HH:mm:ss yyyy", field=Vendor.time, timezone="UTC");
+      regex("^\\d{4}\\-.*", field=Vendor.datetime)
+          | @timestamp := parseTimestamp("yyyy-MM-dd HH:mm:ss", field="Vendor.datetime", timezone="UTC");
+  }
+
+  | urlDecode(Vendor.department, as=Vendor.department)
+  | urlDecode(Vendor.useragent, as=Vendor.useragent)
+  | urlDecode(Vendor.filename, as=Vendor.filename)
+  | urlDecode(Vendor.host, as=Vendor.host)
+  | urlDecode(Vendor.url, as=Vendor.url)
+  | urlDecode(Vendor.eurl, as=Vendor.eurl)
+  | urlDecode(Vendor.user, as=Vendor.user)
+  | urlDecode(Vendor.location, as=Vendor.location)
+  | urlDecode(Vendor.rulelabel, as=Vendor.rulelabel)
+
+  // #endregion
+
+  // #region METADATA
+  /************************************************************
+  ****** Static Metadata Definitions
+  ************************************************************/
+
+  | Parser.version := "2.0.1"
+  | Vendor := "zscaler"
+  | event.module := "zia"
+  | ecs.version := "8.11.0"
+  | Cps.version := "1.0.0"
+
+  // #endregion
+
+  // #region NORMALIZATION
+  /************************************************************
+  ****** Parse unstructured data (i.e. message field)
+  ****** Normalize fields to data model
+  ************************************************************/
+
+  | event.category[0] := "network"
+  | event.kind := "event"
+  | event.type[0] := "info"
+  | event.id := rename(Vendor.recordid)
+  | Vendor.sourcetype := rename(Vendorsourcetype)
+  | case {
+      Vendor.sourcetype = "zscalernss-tunnel"
+          | event.dataset := "zia.tunnel"
+
+          // destination
+          | destination.ip := rename(Vendor.destinationip)
+
+          // source
+          | source.ip := rename(Vendor.sourceip)
+          | source.port := rename(Vendor.sourceport)
+          | source.geo.name := rename(Vendor.location)
+
+          // network
+          | network.type := lower(Vendor.tunneltype)
+          | drop(Vendor.tunneltype)
+          | case {
+              Vendor.policydirection ="Inbound*"
+                  | network.direction := "inbound";
+              Vendor.policydirection ="Outbound*"
+                  | network.direction := "outbound";
+              *
+                  | network.direction := "unknown"
+          };
+      Vendor.sourcetype = "zscalernss-dns"
+          | event.dataset := "zia.dns"
+          // ************ NORMALIZATION ************
+          // dns
+          | dns.answers.name := rename(Vendor.dns_resp)
+          | dns.question.name := rename(Vendor.dns_req)
+          | dns.question.type := rename(Vendor.dns_reqtype)
+
+          // destination
+          | destination.ip := rename(Vendor.srv_dip)
+          | destination.port := rename(Vendor.srv_dport)
+
+          // network
+          | network.protocol := "DNS"
+
+          // source
+          | source.ip := rename(Vendor.clt_sip)
+
+          //url
+          | url.original := rename(Vendor.url)
+          | url.domain := rename(Vendor.hostname)
+
+          // user
+          | case {
+              Vendor.user = "*@*" | urlDecode("Vendor.user", as="user.email");
+              user.name := Vendor.user;
+              *
+          };
+
+      Vendor.sourcetype = "zscalernss-fw"
+          | event.dataset := "zia.fw"
+          // ************ NORMALIZATION ************
+          // destination
+          | destination.port := rename(Vendor.sdport)
+          | destination.bytes := rename(Vendor.inbytes)
+          | destination.geo.country_name := rename(Vendor.destcountry)
+          | destination.ip := rename(Vendor.sdip)
+
+          // event
+          | event.action := rename(Vendor.action) | lower(event.action, as="event.action")
+
+          // host
+          | host.hostname := rename(Vendor.devicehostname)
+          | lower(host.hostname, as="host.hostname")
+
+          // network
+          | network.application := rename(Vendor.nwapp)
+          | network.protocol := rename(Vendor.nwsvc) | lower(network.protocol, as="network.protocol")
+          | network.transport := rename(Vendor.proto) | lower(network.transport, as="network.transport")
+
+          // source
+          | source.bytes := rename(Vendor.outbytes)
+          | source.port := rename(Vendor.csport)
+          | source.ip := rename(Vendor.csip)
+
+          //url
+          | url.original := rename(Vendor.url)
+          | url.domain := rename(Vendor.hostname)
+
+          // user
+          | case {
+              Vendor.elogin = "*@*" | user.email := Vendor.elogin;
+              user.name := Vendor.elogin;
+              *
+          };
+
+      Vendor.sourcetype = "zscalernss-web"
+          // ************ CATEGORIZATION ************
+          | event.dataset := "zia.web"
+          | event.category[0] := "web"
+          | event.kind := "event"
+          | event.type[0] := "info"
+
+
+          // ************ NORMALIZATION ************
+          // source
+          | source.ip := Vendor.ClientIP
+          | case {
+              test(Vendor.ClientIP != Vendor.clientpublicIP) | source.nat.ip := Vendor.ClientIP;
+              *
+          }
+
+          // destination
+          | destination.ip := rename(Vendor.serverip)
+          | destination.domain := rename(Vendor.ehost)
+          | lower(destination.domain, as="destination.domain")
+
+          // http
+          | http.request.bytes := rename(Vendor.requestsize)
+          | http.request.method := rename(Vendor.requestmethod)
+          | http.request.mime_type := rename(Vendor.contenttype)
+          | http.request.referrer := rename(Vendor.refererURL)
+          | http.response.bytes := rename(Vendor.responsesize)
+          | http.response.status_code := rename(Vendor.status)
+
+          //url
+          | url.original := rename(Vendor.url)
+          | url.domain := rename(Vendor.hostname)
+
+          // rule
+          | rule.name := rename(Vendor.rulelabel)
+          | rule.ruleset := rename(Vendor.ruletype)
+
+          // network
+          | network.protocol := rename(Vendor.protocol) | lower(network.protocol, as="network.protocol")
+
+          // user_agent
+          | user_agent.original := urlDecode("Vendor.useragent")
+
+          // user
+          | user.email := rename(Vendor.user)
+          | case {
+              user.email = /^(?<userName>[^@]*)@(?<userDomain>.*)$/
+                  | user.name := rename(userName) | user.domain := rename(userDomain) | lower(user.domain, as="user.domain");
+              *
+          }
+
+          // event
+          | event.action := rename(Vendor.action) | lower(event.action, as="event.action")
+          | event.risk_score := rename(Vendor.riskscore)
+          | event.reason := rename(Vendor.reason)
+
+          // host
+          | host.name := rename(Vendor.devicehostname)
+          | lower(host.name, as="host.name")
+
+          // file
+          | file.hash.md5 := rename(Vendor.bamd5)
+          | lower(file.hash.md5, as="file.hash.md5")
+          | file.name := rename(Vendor.filename)
+          | file.extension := rename(Vendor.filesubtype)
+          | file.type := rename(json.filetype)
+
+          // client
+          | client.port := rename(Vendor.clt_sport);
+
+      Vendor.sourcetype = "zscalernss-casb"
+          // ************ CATEGORIZATION ************
+          | event.dataset := "zia.casb"
+          | event.category[0] := "authentication"
+          | event.kind := "event"
+          | event.type[0] := "info"
+
+          // user
+          | user.email := rename(Vendor.login)
+          | case {
+              user.email = /^(?<userName>[^@]*)@(?<userDomain>.*)$/
+                  | user.name := rename(userName) | user.domain := rename(userDomain) | lower(user.domain, as="user.domain");
+              *
+          }
+          | group.name := rename(Vendor.company)
+
+          // rule
+          | rule.name := rename(Vendor.policy)
+          // file, email events
+          | case {
+              Vendor.filename=*
+                  | event.category[0] := "file"
+                  | file.name := rename(Vendor.filename)
+                  | file.hash.md5 := lower(Vendor.filemd5)
+                  | drop(Vendor.filemd5)
+                  | file.directory := rename(Vendor.filesource)
+                  | file.mtime := parseTimestamp("E MMM [ ]d HH:mm:ss yyyy", field=Vendor.lastmodtime, timezone="UTC")
+                  | file.owner := rename(Vendor.owner)
+                  | url.full := rename(Vendor.fullurl);
+              Vendor.message=*
+                  | event.category[0] := "email";
+              *;
+          };
+      Vendor.sourcetype = "zscalernss-edlp"
+          | event.dataset := "zia.edlp"
+          | event.category[0] := "file"
+          | event.category[1] := "network"
+          | event.type[0] := "info"
+          | event.action := rename(Vendor.actiontaken)
+          | case {
+              regex("(?i:allow)", field=event.action)
+                  | event.type[1] := "allowed";
+              regex("(?i:denied|block|deny)", field=event.action)
+                  | event.type[1] := "denied";
+              *;
+          }
+          // user
+          | user.email := rename(Vendor.login)
+          | case {
+              user.email = /^(?<userName>[^@]*)@(?<userDomain>.*)$/
+                  | user.name := rename(userName) | user.domain := rename(userDomain) | lower(user.domain, as="user.domain");
+              *
+          }
+          // file
+          | file.hash.md5 := rename(Vendor.filemd5)
+          | file.extension := rename(Vendor.filetypename)
+
+          // severity mapping
+          | rule.name := rename(Vendor.rulename)
+          | Vendor.severity := lower(Vendor.severity)
+          | case {
+              Vendor.severity = "critical*" |
+                  event.severity := "90";
+              Vendor.severity = "high*" |
+                  event.severity := "70";
+              Vendor.severity = "medium*" |
+                  event.severity := "50";
+              Vendor.severity = "low*" |
+                  event.severity := "30";
+              in(Vendor.severity, values=["info*"]) |
+                  event.severity := "10";
+              *;
+          };
+      Vendor.sourcetype = "zscalernss-audit"
+          | event.dataset := "zia.audit"
+          | event.category[0] := "configuration"
+          | case {
+              in(Vendor.action, values=["Activate", "Create"])
+                  | event.type[0] := "creation";
+              in(Vendor.action, values=["Delete"])
+                  | event.type[0] := "deletion";
+              *
+                  | event.type[0] := "info"
+          }
+          | Vendor.result match {
+              *FAILURE* => event.outcome := "failure";
+              *SUCCESS* => event.outcome := "success";
+              * => *;
+          }
+          | event.action := rename(Vendor.action)
+          | user.email := rename(Vendor.adminid)
+          | case {
+              user.email = /^(?<userName>[^@]*)@(?<userDomain>.*)$/
+                  | user.name := rename(userName) | user.domain := rename(userDomain) | lower(user.domain, as="user.domain");
+              *
+          }
+          | source.ip := rename(Vendor.clientip);
+
+      *
+  }
+  | base64Decode(as="url.original", field="url.original")
+  | base64Decode(as="http.request.referrer", field="http.request.referrer")
+  | base64Decode(as="Vendor.refererURL", field="Vendor.refererURL")
+
+  // Alerting
+  | case {
+      Vendor.threatname = * AND Vendor.threatname != "None"
+          | rule.name := rename(Vendor.threatname)
+          | event.kind := "alert"
+          | array:append(array="event.type[]", values=["threat"])
+          | array:append(array="event.category[]", values=["indicator"]);
+      *
+  }
+  // #endregion
+
+  // #region POST-NORMALIZATION
+  /************************************************************
+  ****** Post Normalization
+  ****** Custom parser logic needed after normalization
+  ************************************************************/
+
+
+  // #endregion
+tagFields:
+- Cps.version
+- Vendor
+- ecs.version
+- event.dataset
+- event.kind
+- event.module
+- event.outcome
+- observer.type

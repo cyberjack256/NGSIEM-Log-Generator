@@ -1,0 +1,260 @@
+name: SIEM210-Zscaler
+updateFrequency: never
+timeSelector: {}
+sharedTimeInterval:
+  enabled: false
+  isLive: false
+  start: 1d
+widgets:
+  e90d31be-81cd-4df9-8885-349410f6839a:
+    x: 6
+    y: 7
+    height: 5
+    queryString: |
+      #Vendor=zscaler event.action=blocked
+      | top([Vendor.urlcategory,Vendor.observer.id],limit=20)
+      | sankey(source="Vendor.observer.id", target="Vendor.urlcategory")
+    visualization: sankey
+    end: now
+    start: 30d
+    width: 6
+    title: Sankey Blocked URL Categories by User
+    isLive: false
+    type: query
+  ee465ea4-1ebc-44b7-9269-5ee2bad8633b:
+    x: 8
+    y: 26
+    height: 4
+    queryString: |-
+      #Vendor=zscaler Vendor.deviceowner=?User event.action=?Action
+      | top(Vendor.urlsupercategory)
+    end: now
+    start: 30d
+    width: 4
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Connections by Category
+    isLive: false
+    type: query
+  1c4a88fa-0ab6-4189-810a-702c1013b757:
+    x: 0
+    y: 19
+    height: 7
+    queryString: |-
+      #Vendor = zscaler
+      | ioc:lookup(field=destination.ip, type=ip_address, confidenceThreshold=Unverified, strict=true)
+      // Search for IOCs.
+
+      // Look for anything with an IOC label, then extract fields.
+      | ioc[0].labels=*
+      | regex("(^|,)((?<ioc.actorName>Actor\/.*?),|(?<ioc.malwareName>Malware\/.*?),)", field=ioc[0].labels, strict=false)
+      | regex("(^|,)(Vulnerability\/(?<ioc.CVE>.*?)(,|$))", field=ioc[0].labels, strict=false)
+
+      | case {
+          ioc.actorName=*
+            | regex("^Actor\/(?<ioc.actorName.firstName>.*?)(?<ioc.actorName.lastName>(BEAR|BUFFALO|CHOLLIMA|CRANE|HAWK|JACKAL|KITTEN|LEOPARD|LYNX|OCELOT|PANDA|SPHINX|SPIDER|TIGER|WOLF))$", field=ioc.actorName, strict=false)
+            | ioc.actorName.firstName:=lower(ioc.actorName.firstName)
+            | ioc.actorName.lastName:=lower(ioc.actorName.lastName)
+            | ioc.actorName:=format("[%s](/intelligence-v2/actors/%s-%s)", field=[ioc.actorName, ioc.actorName.firstName, ioc.actorName.lastName]) ;
+          * ;
+      }
+      // Set default values to keep the results consistent.
+      | default(field=[#Vendor, source.ip, source.ip.country, destination.ip, destination.port, destination.ip.country, ioc.malwareName, ioc.CVE], value="-")
+
+      // Format the URLs.
+      | ioc[0].indicator:=format("[%s](/intelligence/graph?indicators=ip:'%s'&selectedIndicator=%s)", field=[ioc[0].indicator, ioc[0].indicator, ioc[0].indicator])
+
+
+      // Group the results together.
+      | groupby([#Vendor, source.ip, destination.ip, destination.port, destination.ip.country, ioc[0].indicator, ioc.actorName, ioc.malwareName, ioc[0].malicious_confidence, ioc.CVE], function=[selectlast(@timestamp), count()], limit=max)
+
+      // Format the timestamp.
+      | @timestamp:=formatTime(format="%F %T %Z", field="@timestamp")
+
+      // Rename fields for readability.
+      | rename(field=[[ioc[0].indicator, ioc.ip], [ioc[0].malicious_confidence, ioc.confidence], [destination.ip.country, country], [_count, count], [@timestamp, lastSeen]])
+
+      // Sort the results.
+      | sort(count, limit=20000)
+    end: now
+    start: 1d
+    width: 12
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: CrowdStrike IOC Correlation
+    isLive: false
+    type: query
+  71e67c06-02fa-4168-a908-2e217ec6f8b0:
+    x: 4
+    y: 26
+    height: 4
+    queryString: |-
+      #Vendor=zscaler Vendor.deviceowner=?User event.action=?Action
+      | top(Vendor.appclass)
+    end: now
+    start: 30d
+    width: 4
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Connectons by Appclass
+    isLive: false
+    type: query
+  3015070d-0e50-4ddc-889b-9bc7f2d08684:
+    x: 0
+    y: 3
+    height: 4
+    queryString: |-
+      #Vendor=zscaler
+      | timechart(Vendor.observer.id, function=sum(Vendor.transactionsize), limit=10)
+    end: now
+    start: 30d
+    width: 12
+    options:
+      connect-points: false
+      imputation: none
+    visualization: time-chart
+    title: Timechart User by Transaction Size
+    isLive: false
+    type: query
+  8a34a490-0e46-4da8-8346-09d3f640d675:
+    x: 0
+    y: 0
+    height: 3
+    queryString: |-
+      #Vendor=zscaler
+      | count()
+    end: now
+    start: 15m
+    width: 12
+    options:
+      default: {}
+      yAxisTitle: Number of Events
+    visualization: single-value
+    title: Number of Events
+    isLive: false
+    type: query
+  d441a784-54fa-4df7-bdad-351a66c9fc9e:
+    x: 0
+    y: 12
+    height: 7
+    queryString: |-
+      event.reason = "Eagle visited a malicious site with a malicious referer"
+      |parseUrl(url.original, as=domain)
+
+      // Search for IOCs.
+      | ioc:lookup(domain.host, type="domain", confidenceThreshold=unverified, strict=true)
+
+      // Extract fields from the IOCs.
+      | ioc[0].labels=*
+      | regex("(^|,)((?<ioc.actorName>Actor\/.*?),|(?<ioc.malwareName>Malware\/.*?),)", field=ioc[0].labels, strict=false)
+      | regex("(^|,)(Vulnerability\/(?<ioc.CVE>.*?)(,|$))", field=ioc[0].labels, strict=false)
+
+      | case {
+          ioc.actorName=*
+            | regex("^Actor\/(?<ioc.actorName.firstName>.*?)(?<ioc.actorName.lastName>(BEAR|BUFFALO|CHOLLIMA|CRANE|HAWK|JACKAL|KITTEN|LEOPARD|LYNX|OCELOT|PANDA|SPHINX|SPIDER|TIGER|WOLF))$", field=ioc.actorName, strict=false)
+            | ioc.actorName.firstName:=lower(ioc.actorName.firstName)
+            | ioc.actorName.lastName:=lower(ioc.actorName.lastName)
+            | ioc.actorName:=format("[%s](/intelligence-v2/actors/%s-%s)", field=[ioc.actorName, ioc.actorName.firstName, ioc.actorName.lastName]) ;
+          * ;
+      }
+
+      // Set default values to keep the results consistent.
+      | default(field=[#Vendor, source.ip, domain.host, ioc.malwareName, ioc.CVE], value="-")
+
+      // Format for URL linking.
+      | domain.host:=format("[%s](/intelligence/graph?indicators=domain:%s&selectedIndicator=%s)", field=[domain.host, domain.host, domain.host])
+
+      // Group the results together.
+      | groupby([#Vendor, source.ip, domain.host, ioc.actorName, ioc.malwareName, ioc[0].malicious_confidence, ioc.CVE], function=[selectlast(@timestamp), count()], limit=max)
+
+      // Format the timestamp.
+      | @timestamp:=formatTime(format="%F %T %Z", field="@timestamp")
+
+      // Rename fields for readability.
+      | rename(field=[[ioc[0].malicious_confidence, ioc.confidence], [destination.ip.country, country], [_count, count], [@timestamp, lastSeen]])
+
+      // Sort the results.
+      | sort(count, limit=20000)
+    end: now
+    start: 30m
+    width: 12
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: IOC Matches - DNS
+    isLive: false
+    type: query
+  a1bdebbe-74a7-4b7c-a8ea-765c16db96ca:
+    x: 0
+    y: 26
+    height: 4
+    queryString: |-
+      #Vendor=zscaler Vendor.deviceowner=?User event.action=?Action
+      | top(Vendor.appname)
+    end: now
+    start: 30d
+    width: 4
+    options:
+      cell-overflow: wrap-text
+      configured-columns: {}
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Conenctions by App
+    isLive: false
+    type: query
+  21721cd8-3be7-4f9c-855a-cc262a452445:
+    x: 0
+    y: 30
+    height: 8
+    queryString: |-
+      #Vendor=zscaler Vendor.deviceowner=?User event.action=?Action
+      | table([@timestamp, event.action, Vendor.deviceowner, Vendor.appname,  Vendor.urlcategory, source.ip,destination.ip, http.request.method, network.protocol, url.original], limit=250)
+      | rename(field="@timestamp", as="Time")
+      | rename(field="event.action", as="Action")
+      | rename(field="Vendor.deviceowner", as="Username")
+      | rename(field="Vendor.appname", as="Application")
+      | rename(field="Vendor.urlcategory,", as="Category")
+      | rename(field="source.ip", as="SourceIP")
+      | rename(field="destination.ip", as="DestinationIP")
+      | rename(field="http.request.method", as="Method")
+      | rename(field="network.protocol", as="Protocol")
+      | rename(field="url.original", as="URL")
+    end: now
+    start: 30d
+    width: 12
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Time:
+          data-type: datetime
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Zscaler Connection Details
+    isLive: false
+    type: query
+  7f8bcb61-876f-4631-90e8-75de7284071e:
+    x: 0
+    y: 7
+    height: 5
+    queryString: |-
+      #Vendor=zscaler Vendor.deviceowner=?User event.action=?Action
+      | worldMap(ip="destination.ip")
+    visualization: world-map
+    end: now
+    start: 30d
+    width: 6
+    title: Worldmap Destination IP
+    isLive: false
+    type: query
+$schema: https://schemas.humio.com/dashboard/v0.17.0

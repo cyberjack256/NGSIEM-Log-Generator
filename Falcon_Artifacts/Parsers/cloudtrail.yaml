@@ -1,0 +1,292 @@
+name: cloudtrail
+fieldsToBeRemovedBeforeParsing: []
+testCases:
+- event:
+    rawString: '{"eventVersion":"1.05","userIdentity":{"type":"IAMUser","principalId":"AIDACKCEVSQ6C2EXAMPLE","accountId":"111122223333","accessKeyId":"","userName":"anaya"},"eventTime":"2022-11-10T16:24:34Z","eventSource":"signin.amazonaws.com","eventName":"ConsoleLogin","awsRegion":"us-east-1","sourceIPAddress":"192.0.2.0","userAgent":"Mozilla/5.0
+      (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99
+      Safari/537.36","errorMessage":"Failed authentication","requestParameters":null,"responseElements":{"ConsoleLogin":"Failure"},"additionalEventData":{"LoginTo":"https://console.aws.amazon.com/console/home?state=hashArgs%23&isauthcode=true","MobileVersion":"No","MFAUsed":"Yes"},"eventID":"d38ce1b3-4575-4cb8-a632-611b8243bfc3","eventType":"AwsConsoleSignIn","recipientAccountId":"111122223333"}'
+- event:
+    rawString: '{"eventVersion":"1.05","userIdentity":{"type":"IAMUser","principalId":"AIDACKCEVSQ6C2EXAMPLE","arn":"arn:aws:iam::111122223333:user/anaya","accountId":"111122223333","userName":"anaya"},"eventTime":"2022-11-10T16:24:34Z","eventSource":"signin.amazonaws.com","eventName":"ConsoleLogin","awsRegion":"us-east-2","sourceIPAddress":"192.0.2.0","userAgent":"Mozilla/5.0
+      (Macintosh; Intel Mac OS X 10.12; rv:62.0) Gecko/20100101 Firefox/62.0","requestParameters":null,"responseElements":{"ConsoleLogin":"Success"},"additionalEventData":{"MobileVersion":"No","LoginTo":"https://console.aws.amazon.com/sns","MFAUsed":"No"},"eventID":"3fcfb182-98f8-4744-bd45-10a395ab61cb","eventType":"AwsConsoleSignIn"}'
+- event:
+    rawString: '{"eventVersion":"1.0","userIdentity":{"type":"IAMUser","principalId":"EX_PRINCIPAL_ID","arn":"arn:aws:iam::123456789012:user/Alice","accountId":"123456789012","accessKeyId":"EXAMPLE_KEY_ID","userName":"Alice","sessionContext":{"attributes":{"mfaAuthenticated":"false","creationDate":"2014-03-06T15:15:06Z"}}},"eventTime":"2014-03-06T17:10:34Z","eventSource":"ec2.amazonaws.com","eventName":"CreateKeyPair","awsRegion":"us-east-2","sourceIPAddress":"72.21.198.64","userAgent":"EC2ConsoleBackend,
+      aws-sdk-java/Linux/x.xx.fleetxen Java_HotSpot(TM)_64-Bit_Server_VM/xx","requestParameters":{"keyName":"mykeypair"},"responseElements":{"keyName":"mykeypair","keyFingerprint":"30:1d:46:d0:5b:ad:7e:1b:b6:70:62:8b:ff:38:b5:e9:ab:5d:b8:21","keyMaterial":"<sensitiveDataRemoved>"}}'
+- event:
+    rawString: '{"eventVersion": "1.08", "userIdentity": {"type": "AWSService", "invokedBy":
+      "trustedadvisor.amazonaws.com"}, "eventTime": "2023-03-23T18:02:59Z", "eventSource":
+      "sts.amazonaws.com", "eventName": "AssumeRole", "awsRegion": "us-west-2", "sourceIPAddress":
+      "trustedadvisor.amazonaws.com", "userAgent": "trustedadvisor.amazonaws.com",
+      "requestParameters": {"roleArn": "arn:aws:iam::517716713836:role/aws-service-role/trustedadvisor.amazonaws.com/AWSServiceRoleForTrustedAdvisor",
+      "roleSessionName": "TrustedAdvisor_517716713836_5a141c5b-1642-431c-9f96-a6a1e2108f61",
+      "durationSeconds": 900}, "responseElements": {"credentials": {"accessKeyId":
+      "ASIAXRCSSEFWJ77QQUU5", "sessionToken": "IQoJb3JpZ2luX2VjEPr//////////wEaCXVzLXdlc3QtMiJIMEYCIQDcDf6HQp1SS+zIB3bpGCZA0Ftz1ahEFLlBC14j7y2AjgIhAKYFI97L/PGNs6ELStuaH9lT4Z35oAHYZrEbO8ZBXitwKpwDCMP//////////wEQAhoMNTE3NzE2NzEzODM2IgxegainB0MXUhxt0EEq8AK3FQUoRZ7GCe7NTdtxMMM9+GJGbQqOLH9kESLYkZ84e5dqMbKQzRNpTynuT0IAwxjX3uWdUlqy0Xmd1rzMjPDJxHw5eu01ydASXvr485VHbOa86hI+K/6oIZOFlWs18xR9CnsOhmQPcGA7V7pHDjCP3NPTRQy+dct62AKVAGQ0tSOUQDkGZsxcREtxBOFAZCbJN1XNK8fI3yIpmeNyWA2/K+lAB+J/+7fAve9Zw/2cQhTdbeWdnQvYFreLFu14ZEXkQPNK+ctLMP5eiu40JIP1JnXH+2EpYtYLfnoLBlzqUqKB+Eg+DZVHcliS5rb3CX9dZucNXb3ben+IpWt1w/TLu6nQxl3hdoCXaRXFjO6gIAhcOmsd6uS7C9fHZ6NEAVXJpUIjqgvrPa3IBJfG97e1vCC9JxRpXaLob++OTXPwc3ups4j3iB5tByA2Kmuy6DLfnus/tBZrU2tGBZgMesxxbsmYr5DP3tNlWQq7+y7pKTDTqPKgBjq+AffSFsjaVxdWt42zAL0UvEJfLiMdTRIsI0AXtx2BFW79KD3oZJNafF3vh024Xc2QBbbK1LECLnaHM3Xzc+bpMTD39Y714JNT6EQbhLMVG9V12Z3ziyGkjOd+/K96yh602v7CDXexq9iFGNNDCBwWmANDoZ51twi+RdQfle1Sa3C0BXUwTaNR7rvSjLW2j8lUAv7G/08qrkgRP2WF+MLoObsUVHN4Xz28blVr7oN8eTOBhrHo4RkQS2CQQdoQ6Eg=",
+      "expiration": "Mar 23, 2023, 6:17:59 PM"}, "assumedRoleUser": {"assumedRoleId":
+      "AROAIL5KOFJKJPRVHHV3Y:TrustedAdvisor_517716713836_5a141c5b-1642-431c-9f96-a6a1e2108f61",
+      "arn": "arn:aws:sts::517716713836:assumed-role/AWSServiceRoleForTrustedAdvisor/TrustedAdvisor_517716713836_5a141c5b-1642-431c-9f96-a6a1e2108f61"}},
+      "requestID": "841c3c5a-fb7b-4e72-b5e4-a0b4d1192e2a", "eventID": "97e66b9b-9636-41c7-a8bc-8abe4c61cf5e",
+      "readOnly": true, "resources": [{"accountId": "517716713836", "type": "AWS::IAM::Role",
+      "ARN": "arn:aws:iam::517716713836:role/aws-service-role/trustedadvisor.amazonaws.com/AWSServiceRoleForTrustedAdvisor"}],
+      "eventType": "AwsApiCall", "managementEvent": true, "recipientAccountId": "517716713836",
+      "sharedEventID": "6a3ba4af-a893-47a1-bf21-b3dfa21c54a9", "eventCategory": "Management"}'
+- event:
+    rawString: '{"eventVersion": "1.08", "userIdentity": {"type": "AWSAccount", "principalId":
+      "AIDAIMAXIDWFD5T3Y5JVY", "accountId": "093619269037"}, "eventTime": "2023-03-23T18:01:30Z",
+      "eventSource": "sts.amazonaws.com", "eventName": "AssumeRole", "awsRegion":
+      "us-east-1", "sourceIPAddress": "208.42.231.60", "userAgent": "Boto3/1.10.23
+      Python/3.7.4 Linux/5.4.0-137-generic Botocore/1.13.50", "requestParameters":
+      {"roleArn": "arn:aws:iam::517716713836:role/CS-AR-CORPSEC-SEIM", "roleSessionName":
+      "splunk_ta_aws", "durationSeconds": 3600}, "responseElements": {"credentials":
+      {"accessKeyId": "ASIAXRCSSEFWLTDSAMMG", "sessionToken": "FwoGZXIvYXdzEAsaDDCg/kahN7C5NirdwSKxAXknJuoD7QkLqxvVlnKq3mccr+9+WOO5Z2I+/4dIltYAdvBMvwP3vNgLFNRJWvSRGbDkRqCTSExmFc0o8THP/vETjWDzsn3n2g7yD4HVBh6qd6DB03BesfyqBaYaBvBzFGySfKmLpjA93hIFSWhldyEHwmHnBLHcoP3EOZlBUr23L5edhFVhx+zxns8SlYqKFGwJHu4ZZz6OFYAE8Pbzda5qNcHdFk01rKSvibsmkgO67Cj6p/KgBjIt/dZdiuBMzmneXq732yZNHGVQDF+Lve7Mj86CspzoTiL7dhn462GVVsqODrpt",
+      "expiration": "Mar 23, 2023, 7:01:30 PM"}, "assumedRoleUser": {"assumedRoleId":
+      "AROAXRCSSEFWOMMH2PEY2:splunk_ta_aws", "arn": "arn:aws:sts::517716713836:assumed-role/CS-AR-CORPSEC-SEIM/splunk_ta_aws"}},
+      "requestID": "c04bd645-c8a4-4a60-b80a-ce3e840e2c85", "eventID": "a05fb1bf-78ee-43a2-86f9-d0608f260687",
+      "readOnly": true, "resources": [{"accountId": "517716713836", "type": "AWS::IAM::Role",
+      "ARN": "arn:aws:iam::517716713836:role/CS-AR-CORPSEC-SEIM"}], "eventType": "AwsApiCall",
+      "managementEvent": true, "recipientAccountId": "517716713836", "sharedEventID":
+      "82820856-99bd-4e06-bdde-d35283f9d7de", "eventCategory": "Management", "tlsDetails":
+      {"tlsVersion": "TLSv1.2", "cipherSuite": "ECDHE-RSA-AES128-GCM-SHA256", "clientProvidedHostHeader":
+      "sts.amazonaws.com"}}'
+- event:
+    rawString: '{"eventVersion": "1.08", "userIdentity": {"type": "SAMLUser", "principalId":
+      "ABc7OXZi9WuV3FVY5tB0UGo6sk8=:asteigleder@crowdstrike.sys", "userName": "asteigleder@crowdstrike.sys",
+      "identityProvider": "ABc7OXZi9WuV3FVY5tB0UGo6sk8="}, "eventTime": "2023-03-23T15:23:14Z",
+      "eventSource": "sts.amazonaws.com", "eventName": "AssumeRoleWithSAML", "awsRegion":
+      "us-east-1", "sourceIPAddress": "AWS Internal", "userAgent": "aws-internal/3
+      aws-sdk-java/1.12.430 Linux/5.4.231-145.341.amzn2int.x86_64 OpenJDK_64-Bit_Server_VM/25.362-b10
+      java/1.8.0_362 kotlin/1.3.72 vendor/Oracle_Corporation cfg/retry-mode/standard",
+      "requestParameters": {"sAMLAssertionID": "id18724469679795641113028510", "roleSessionName":
+      "asteigleder@crowdstrike.sys", "roleArn": "arn:aws:iam::517716713836:role/CS-Okta-Full-Admins-Write",
+      "principalArn": "arn:aws:iam::517716713836:saml-provider/CSIT-Okta", "durationSeconds":
+      3600}, "responseElements": {"credentials": {"accessKeyId": "ASIAXRCSSEFWJILLZEZ7",
+      "sessionToken": "IQoJb3JpZ2luX2VjEPj//////////wEaCXVzLWVhc3QtMSJHMEUCIQCyRxYvaLaw4vEYC9CBWQHKmb9cNf2ef+BP07MAtdDu/AIgBQxaifnoEjgDta5ckPItj1IxXd9/zjms6cs1KE+IySMq7AIIwf//////////ARACGgw1MTc3MTY3MTM4MzYiDEnZShgoz3c8Od2LsCrAAkX9JM1Umf7VS/6AuEbqEg6KcUYGJk+EVRBRS1DkO/hgmL+R1QEsvIGMJAeDzLZlDupruhPp5A7SlvjEtx3oX3kYkfmPp8x/i8pEeQZmwKrHNAO2/bAM7F7F+M4Wo81KhLT5K2kxMa6HnZGh1haQv9KQodf0lnQQEPCHdy9fJdNw76vQRB130mGOZDTrbiP2wwxOpw5Sdrb4AHVLOZXIuUjXvrIkiH8DSxwYXE1vp/J3ThAVZJlHBZ91YBZpLVzA9XI3GiwKBCYXMMuAAaZW7psNQ/aF9iVlIfpCZVb1lf0k+AucaCxkfiLpwg5J0U6YPTqMl2bZkb5wn1Xsc3oLhmeQaLxQVJb9sKRvI0MhGqGRNjigqJ8p409keudedjDrI7PnPtr9zvb3y2deaunXO0DbLvLavA1otMBcBE2e4cSrMOLd8aAGOpsBwHL+0BVUKEr6q8Ui8BkAav5rW/dClznI/V896Sw7CRGyakQH9y7HCpZdkyt08Wgvgbj3XLamOdfFsNMCsMRBd/OxDi3r96o159NZedNhH/R7bUI5RfH7x/pkGuBoXzVP4eVpV5K6cH5vIHPEU5CqN3Be+GOa4kx+BuLG6CWBkEmIcnLPQFX92TXcsNmf4LM38frHGrHJk9iTQGw=",
+      "expiration": "Mar 23, 2023, 4:23:14 PM"}, "assumedRoleUser": {"assumedRoleId":
+      "AROAXRCSSEFWGO3EVJKM5:asteigleder@crowdstrike.sys", "arn": "arn:aws:sts::517716713836:assumed-role/CS-Okta-Full-Admins-Write/asteigleder@crowdstrike.sys"},
+      "subject": "asteigleder@crowdstrike.sys", "subjectType": "unspecified", "issuer":
+      "http://www.okta.com/exkncv87fhU72BIR20x7", "audience": "https://signin.aws.amazon.com/saml",
+      "nameQualifier": "ABc7OXZi9WuV3FVY5tB0UGo6sk8="}, "requestID": "6d84493f-fb1e-4331-b868-ac2780f4e011",
+      "eventID": "28072cfd-60aa-4f8f-a7a4-633893c0bb1a", "readOnly": true, "resources":
+      [{"accountId": "517716713836", "type": "AWS::IAM::Role", "ARN": "arn:aws:iam::517716713836:role/CS-Okta-Full-Admins-Write"},
+      {"accountId": "517716713836", "type": "AWS::IAM::SAMLProvider", "ARN": "arn:aws:iam::517716713836:saml-provider/CSIT-Okta"}],
+      "eventType": "AwsApiCall", "managementEvent": true, "recipientAccountId": "517716713836",
+      "eventCategory": "Management", "tlsDetails": {"tlsVersion": "TLSv1.2", "cipherSuite":
+      "ECDHE-RSA-AES128-GCM-SHA256", "clientProvidedHostHeader": "sts.us-east-1.amazonaws.com"}}'
+- event:
+    rawString: '{"eventVersion": "1.08", "userIdentity": {"type": "AssumedRole", "principalId":
+      "AROAXRCSSEFWP4BHNTPJI:i-082c72d107771f52b", "arn": "arn:aws:sts::517716713836:assumed-role/talon1-openshift4dot6-lzkbp-master-role/i-082c72d107771f52b",
+      "accountId": "517716713836", "accessKeyId": "ASIAXRCSSEFWAUOTFAEI", "sessionContext":
+      {"sessionIssuer": {"type": "Role", "principalId": "AROAXRCSSEFWP4BHNTPJI", "arn":
+      "arn:aws:iam::517716713836:role/talon1-openshift4dot6-lzkbp-master-role", "accountId":
+      "517716713836", "userName": "talon1-openshift4dot6-lzkbp-master-role"}, "webIdFederationData":
+      {}, "attributes": {"creationDate": "2023-03-23T16:08:04Z", "mfaAuthenticated":
+      "false"}, "ec2RoleDelivery": "2.0"}}, "eventTime": "2023-03-23T18:02:57Z", "eventSource":
+      "ec2.amazonaws.com", "eventName": "DescribeInstances", "awsRegion": "us-west-2",
+      "sourceIPAddress": "34.208.230.162", "userAgent": "kubernetes/v1.19.0+4c3480d
+      aws-sdk-go/1.28.2 (go1.15.14; linux; amd64)", "requestParameters": {"instancesSet":
+      {"items": [{"instanceId": "i-082c72d107771f52b"}]}, "filterSet": {}}, "responseElements":
+      null, "requestID": "4578e3f1-1dc1-44d9-b9bf-876548a6edfc", "eventID": "9d747a92-ebdf-4cc8-9abc-3ea84c36983b",
+      "readOnly": true, "eventType": "AwsApiCall", "managementEvent": true, "recipientAccountId":
+      "517716713836", "eventCategory": "Management", "tlsDetails": {"tlsVersion":
+      "TLSv1.2", "cipherSuite": "ECDHE-RSA-AES128-GCM-SHA256", "clientProvidedHostHeader":
+      "ec2.us-west-2.amazonaws.com"}}'
+- event:
+    rawString: '{"eventVersion":"1.04","userIdentity":{"type":"IAMUser","principalId":"EX_PRINCIPAL_ID","arn":"arn:aws:iam::123456789012:user/Alice","accountId":"123456789012","accessKeyId":"EXAMPLE_KEY_ID","userName":"Alice"},"eventTime":"2016-07-14T19:15:45Z","eventSource":"cloudtrail.amazonaws.com","eventName":"UpdateTrail","awsRegion":"us-east-2","sourceIPAddress":"205.251.233.182","userAgent":"aws-cli/1.10.32
+      Python/2.7.9 Windows/7 botocore/1.4.22","errorCode":"TrailNotFoundException","errorMessage":"Unknown
+      trail: myTrail2 for the user: 123456789012","requestParameters":{"name":"myTrail2"},"responseElements":null,"requestID":"5d40662a-49f7-11e6-97e4-d9cb6ff7d6a3","eventID":"b7d4398e-b2f0-4faa-9c76-e2d316a8d67f","eventType":"AwsApiCall","recipientAccountId":"123456789012"}'
+- event:
+    rawString: '{"eventVersion":"1.0","userIdentity":{"type":"IAMUser","principalId":"EX_PRINCIPAL_ID","arn":"arn:aws:iam::123456789012:user/Alice","accessKeyId":"EXAMPLE_KEY_ID","accountId":"123456789012","userName":"Alice"},"eventTime":"2014-03-06T21:22:54Z","eventSource":"ec2.amazonaws.com","eventName":"StartInstances","awsRegion":"us-east-2","sourceIPAddress":"205.251.233.176","userAgent":"ec2-api-tools
+      1.6.12.2","requestParameters":{"instancesSet":{"items":[{"instanceId":"i-ebeaf9e2"}]}},"responseElements":{"instancesSet":{"items":[{"instanceId":"i-ebeaf9e2","currentState":{"code":0,"name":"pending"},"previousState":{"code":80,"name":"stopped"}}]}}}'
+- event:
+    rawString: '{"eventVersion": "1.08", "userIdentity": {"type": "SAMLUser", "principalId":
+      "ABc7OXZi9WuV3FVY5tB0UGo6sk8=:asteigleder@crowdstrike.sys", "userName": "asteigleder@crowdstrike.sys",
+      "identityProvider": "ABc7OXZi9WuV3FVY5tB0UGo6sk8="}, "eventTime": "2023-03-23T15:23:14Z",
+      "eventSource": "sts.amazonaws.com", "eventName": "AssumeRoleWithSAML", "awsRegion":
+      "us-east-1", "sourceIPAddress": "AWS Internal", "userAgent": "aws-internal/3
+      aws-sdk-java/1.12.430 Linux/5.4.231-145.341.amzn2int.x86_64 OpenJDK_64-Bit_Server_VM/25.362-b10
+      java/1.8.0_362 kotlin/1.3.72 vendor/Oracle_Corporation cfg/retry-mode/standard",
+      "requestParameters": {"sAMLAssertionID": "id18724469679795641113028510", "roleSessionName":
+      "asteigleder@crowdstrike.sys", "roleArn": "arn:aws:iam::517716713836:role/CS-Okta-Full-Admins-Write",
+      "principalArn": "arn:aws:iam::517716713836:saml-provider/CSIT-Okta", "durationSeconds":
+      3600}, "responseElements": {"credentials": {"accessKeyId": "ASIAXRCSSEFWJILLZEZ7",
+      "sessionToken": "IQoJb3JpZ2luX2VjEPj//////////wEaCXVzLWVhc3QtMSJHMEUCIQCyRxYvaLaw4vEYC9CBWQHKmb9cNf2ef+BP07MAtdDu/AIgBQxaifnoEjgDta5ckPItj1IxXd9/zjms6cs1KE+IySMq7AIIwf//////////ARACGgw1MTc3MTY3MTM4MzYiDEnZShgoz3c8Od2LsCrAAkX9JM1Umf7VS/6AuEbqEg6KcUYGJk+EVRBRS1DkO/hgmL+R1QEsvIGMJAeDzLZlDupruhPp5A7SlvjEtx3oX3kYkfmPp8x/i8pEeQZmwKrHNAO2/bAM7F7F+M4Wo81KhLT5K2kxMa6HnZGh1haQv9KQodf0lnQQEPCHdy9fJdNw76vQRB130mGOZDTrbiP2wwxOpw5Sdrb4AHVLOZXIuUjXvrIkiH8DSxwYXE1vp/J3ThAVZJlHBZ91YBZpLVzA9XI3GiwKBCYXMMuAAaZW7psNQ/aF9iVlIfpCZVb1lf0k+AucaCxkfiLpwg5J0U6YPTqMl2bZkb5wn1Xsc3oLhmeQaLxQVJb9sKRvI0MhGqGRNjigqJ8p409keudedjDrI7PnPtr9zvb3y2deaunXO0DbLvLavA1otMBcBE2e4cSrMOLd8aAGOpsBwHL+0BVUKEr6q8Ui8BkAav5rW/dClznI/V896Sw7CRGyakQH9y7HCpZdkyt08Wgvgbj3XLamOdfFsNMCsMRBd/OxDi3r96o159NZedNhH/R7bUI5RfH7x/pkGuBoXzVP4eVpV5K6cH5vIHPEU5CqN3Be+GOa4kx+BuLG6CWBkEmIcnLPQFX92TXcsNmf4LM38frHGrHJk9iTQGw=",
+      "expiration": "Mar 23, 2023, 4:23:14 PM"}, "assumedRoleUser": {"assumedRoleId":
+      "AROAXRCSSEFWGO3EVJKM5:asteigleder@crowdstrike.sys", "arn": "arn:aws:sts::517716713836:assumed-role/CS-Okta-Full-Admins-Write/asteigleder@crowdstrike.sys"},
+      "subject": "asteigleder@crowdstrike.sys", "subjectType": "unspecified", "issuer":
+      "http://www.okta.com/exkncv87fhU72BIR20x7", "audience": "https://signin.aws.amazon.com/saml",
+      "nameQualifier": "ABc7OXZi9WuV3FVY5tB0UGo6sk8="}, "requestID": "6d84493f-fb1e-4331-b868-ac2780f4e011",
+      "eventID": "28072cfd-60aa-4f8f-a7a4-633893c0bb1a", "readOnly": true, "resources":
+      [{"accountId": "517716713836", "type": "AWS::IAM::Role", "ARN": "arn:aws:iam::517716713836:role/CS-Okta-Full-Admins-Write"},
+      {"accountId": "517716713836", "type": "AWS::IAM::SAMLProvider", "ARN": "arn:aws:iam::517716713836:saml-provider/CSIT-Okta"}],
+      "eventType": "AwsApiCall", "managementEvent": true, "recipientAccountId": "517716713836",
+      "eventCategory": "Management", "tlsDetails": {"tlsVersion": "TLSv1.2", "cipherSuite":
+      "ECDHE-RSA-AES128-GCM-SHA256", "clientProvidedHostHeader": "sts.us-east-1.amazonaws.com"}}'
+- event:
+    rawString: '{"eventVersion": "1.08", "userIdentity": {"type": "IAMUser", "principalId":
+      "AAABBBDSADASDASDASDASD", "arn": "arn:aws:iam::1312312312312312:user/jasdaqweq",
+      "accountId": "1312312312312312", "accessKeyId": "KKKKKKSDASDASDASD", "userName":
+      "jasdaqweq"}, "eventTime": "2021-09-15T03:31:39Z", "eventSource": "ec2.amazonaws.com",
+      "eventName": "RunInstances", "awsRegion": "us-west-2", "sourceIPAddress": "70.193.98.109",
+      "userAgent": "APN/1.0 HashiCorp/1.0 Terraform/1.0.6 (+https://www.terraform.io)
+      terraform-provider-aws/3.50.0 (+https://registry.terraform.io/providers/hashicorp/aws)
+      aws-sdk-go/1.39.5 (go1.16; linux; amd64)", "requestParameters": {"instancesSet":
+      {"items": [{"imageId": "ami-cf8d9cfj8d2322a458fc", "minCount": 1, "maxCount":
+      1, "keyName": "Stage2_Provisioning"}]}, "instanceType": "t2.medium", "blockDeviceMapping":
+      {}, "availabilityZone": "us-west-2a", "monitoring": {"enabled": false}, "disableApiTermination":
+      false, "disableApiStop": false, "clientToken": "981AVD-7A99-467E-9F60-C4CDC040FFFF",
+      "networkInterfaceSet": {"items": [{"deviceIndex": 0, "subnetId": "subnet-0k881231ddasd1231",
+      "privateIpAddress": "10.1.1.39", "groupSet": {"items": [{"groupId": "sg-09131jj23d0asda123"}]}}]},
+      "iamInstanceProfile": {}, "ebsOptimized": false, "tagSpecificationSet": {"items":
+      [{"resourceType": "instance", "tags": [{"key": "operations", "value": "dev"},
+      {"key": "Name", "value": "CS-MRC-AVD-EMU-CENTOS-DASDASD-BACKUP"}, {"key": "department",
+      "value": "Account"}, {"key": "owner", "value": "asdasdasdasd"}, {"key": "business",
+      "value": "Operation"}, {"key": "team", "value": "KLK"}]}]}, "hibernationOptions":
+      {"configured": false}}, "responseElements": {"requestId": "8973da134-a8f8-4437-a53a-1b41eecf180d",
+      "reservationId": "r-0f797d98ae69a012dasd", "ownerId": "1312312312312312", "groupSet":
+      {}, "instancesSet": {"items": [{"instanceId": "i-0889c4d2ef466e98", "imageId":
+      "ami-03cf312312f22a458fc", "instanceState": {"code": 0, "name": "pending"},
+      "privateDnsName": "ip-10-1-1-39.us-west-2.compute.internal", "keyName": "Stage2_Provisioning",
+      "amiLaunchIndex": 0, "productCodes": {}, "instanceType": "t2.medium", "launchTime":
+      1631676699000, "placement": {"availabilityZone": "us-west-2a", "tenancy": "default"},
+      "monitoring": {"state": "disabled"}, "subnetId": "subnet-0a848a85cbcdb27a4",
+      "vpcId": "vpc-0fad1123dasd", "privateIpAddress": "10.1.1.39", "stateReason":
+      {"code": "pending", "message": "pending"}, "architecture": "x86_64", "rootDeviceType":
+      "ebs", "rootDeviceName": "/dev/sda1", "blockDeviceMapping": {}, "virtualizationType":
+      "hvm", "hypervisor": "xen", "tagSet": {"items": [{"key": "Name", "value": "DASDADDDS"},
+      {"key": "account", "value": "dev"}, {"key": "department", "value": "Engineer
+      - 310000"}, {"key": "business", "value": "Operations"}, {"key": "team", "value":
+      "Dev"}, {"key": "owner", "value": "abc.adasd"}]}, "clientToken": "98ADSAD67-4A69-467E-9F60-C4CDC040FFFF",
+      "groupSet": {"items": [{"groupId": "sg-0126a987asd123asdaeb210", "groupName":
+      "Group1"}]}, "sourceDestCheck": true, "networkInterfaceSet": {"items": [{"networkInterfaceId":
+      "eni-01beb6c9f0ad81791", "subnetId": "subnet-0a12312a123123cbdasdds27a4", "vpcId":
+      "vpc-0e92ceasdasd123123asdasb5ce6b", "ownerId": "1312312312312312", "status":
+      "in-use", "macAddress": "09:39:ae:66:fd:sg", "privateIpAddress": "10.1.1.39",
+      "sourceDestCheck": true, "interfaceType": "interface", "groupSet": {"items":
+      [{"groupId": "sg-0126a9879ederererb543", "groupName": "Group1"}]}, "attachment":
+      {"attachmentId": "eni-attach-086b4db5d59764207", "deviceIndex": 0, "networkCardIndex":
+      0, "status": "attaching", "attachTime": 1631676699000, "deleteOnTermination":
+      true}, "privateIpAddressesSet": {"item": [{"privateIpAddress": "10.1.1.39",
+      "primary": true}]}, "ipv6AddressesSet": {}, "tagSet": {}}]}, "ebsOptimized":
+      false, "enaSupport": true, "cpuOptions": {"coreCount": 2, "threadsPerCore":
+      1}, "capacityReservationSpecification": {"capacityReservationPreference": "open"},
+      "hibernationOptions": {"configured": false}, "enclaveOptions": {"enabled": false},
+      "metadataOptions": {"state": "pending", "httpTokens": "optional", "httpPutResponseHopLimit":
+      1, "httpEndpoint": "enabled", "httpProtocolIpv4": "enabled", "httpProtocolIpv6":
+      "disabled"}}]}}, "requestID": "257d5926-a8f8-4437-a53a-1b41eecf180d", "eventID":
+      "3cdf2kjk-c777-49aa-8b4f-2f4743853638", "readOnly": false, "eventType": "AwsApiCall",
+      "managementEvent": true, "recipientAccountId": "517716713836", "eventCategory":
+      "Management"}'
+$schema: https://schemas.humio.com/parser/v0.3.0
+script: |-
+  // #region PREPARSE
+    /************************************************************
+    ****** Parse timestamp and log headers
+    ****** Extract message field for parsing
+    ****** Parse structured data
+    ************************************************************/
+
+  parseJson(prefix="Vendor.", excludeEmpty="true", handleNull="discard")
+  | parseTimestamp(field=Vendor.eventTime)
+
+  // #endregion
+
+  // #region METADATA
+    /************************************************************
+    ****** Static Metadata Definitions
+    ************************************************************/
+  | Parser.version := "1.0.1"
+  | Vendor := "aws"
+  | event.module := "cloudtrail"
+  | ecs.version := "8.11.0"
+  | Cps.version := "1.0.0"
+
+  // #endregion
+
+  // #region NORMALIZATION
+    /************************************************************
+    ****** Parse unstructured data (i.e. message field)
+    ****** Normalize fields to data model
+    ************************************************************/
+  // user agent core fields
+  | user_agent.original := Vendor.userAgent
+
+  // source core fields
+  | source.ip := Vendor.sourceIPAddress
+  | source.address := lower(Vendor.sourceIPAddress)
+
+  // cloud extended fields
+  | cloud.region := Vendor.awsRegion
+  | cloud.provider := "aws"
+  | case {
+      Vendor.awsAccountId = * | cloud.account.id := Vendor.awsAccountId;
+      Vendor.userIdentity.accountId = * | cloud.account.id := Vendor.userIdentity.accountId;
+      *
+  }
+
+  // event core fields
+  | event.kind := "event"
+  | case {
+      (Vendor.errorCode = * or Vendor.errorMessage = *)
+          | event.outcome := "failure"
+      ;
+      * | event.outcome := "success"
+      ;
+      }
+  | event.id :=  Vendor.eventID
+
+  // event extended fields
+  | event.provider := Vendor.eventSource
+  | event.action := Vendor.eventName
+
+  // categorization fields
+  | event.type[0] := "info"
+  | case {
+      match(file="aws/cloudtrail/ecs-categorization.csv",
+          field="event.action",
+          column="event_name",
+          include=["event_category","event_type"])
+      | splitString(field=event_category, by="\\|", as=event.category)
+      | splitString(field=event_type, by="\\|", as=event.type);
+      *
+  }
+
+  // error core fields
+  | error.code := Vendor.errorCode
+  | error.message := Vendor.errorMessage
+
+  | user.id :=  Vendor.userIdentity.principalId
+
+  | Vendor.userIdentity.type match {
+      "IAMUser" =>
+          user.name := Vendor.userIdentity.userName;
+      "AssumedRole" =>
+          user.name := Vendor.userIdentity.sessionContext.sessionIssuer.userName;
+      "SAMLUser" =>
+          user.name := Vendor.userIdentity.userName;
+      * => *;
+  }
+
+  // file fields
+  | file.path := Vendor.digestS3Object
+  | case {
+      Vendor.previousDigestHashAlgorithm = "SHA-256"
+          | file.hash.sha256 := lower(Vendor.previousDigestSignature);
+      *
+  }
+  // #endregion
+
+  // #region POST-NORMALIZATION
+    /************************************************************
+    ****** Post Normalization
+    ****** Custom parser logic needed after normalization
+    ************************************************************/
+  // clean up, removing all temporary fields
+  | drop([_index, event_category, event_type])
+  // #endregion
+tagFields:
+- Cps.version
+- Vendor
+- ecs.version
+- event.dataset
+- event.kind
+- event.module
+- event.outcome
+- observer.type

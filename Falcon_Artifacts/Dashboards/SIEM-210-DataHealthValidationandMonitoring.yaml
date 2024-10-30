@@ -1,0 +1,545 @@
+name: SIEM-210-DataHealthValidationandMonitoring
+updateFrequency: never
+timeSelector: {}
+sharedTimeInterval:
+  enabled: true
+  isLive: false
+  start: 1d
+widgets:
+  38eb6137-c7f6-4693-a4ae-8c190119cc30:
+    x: 10
+    y: 18
+    height: 4
+    queryString: |-
+      | now("_now")
+          | now_sec:=_now/1000 | formatTime(field="now_sec", format=%T, as="now_utc")
+      | selectLast([now_utc])
+    end: now
+    start: 15m
+    width: 2
+    options:
+      default: {}
+    visualization: single-value
+    title: Current Time (UTC)
+    isLive: false
+    type: query
+  9827602f-1a55-4218-991f-580577fc6437:
+    x: 4
+    y: 8
+    description: |-
+      This verifies the events have some field normalization happening.
+      The value is what percentage of events are normalized.
+    height: 5
+    queryString: |-
+      // This is for 3PI data, not for falcon data
+      #type=?parserName #type!="falcon-raw-data" #type!=metadata-parser
+      | case { ( user.name=* OR source.ip=* OR source.address=* OR destination.ip=* OR destination.address=* OR event.action=* OR url.domain=* OR host.hostname=*  OR event.reason=* OR host.name=*) | normalized := "yes";
+          * | normalized := "no"
+      }
+       | groupBy([#type], function={ bucket(field=[normalized], function=count(normalized)) | case {normalized="yes" | yes := _count; normalized="no" | no := _count} | groupBy(_bucket, function=selectLast([yes,no, _bucket]))})
+      | default(value=0, field=[yes,no])
+      | total := yes + no
+      | case { yes > 0 | normalized_percent := yes/total*100 | round(normalized_percent, as=normalized_percent);
+          total > 0 AND yes=0 | normalized_percent := 0;
+      * }
+      | @timestamp := _bucket
+      | timechart(#type,function=avg(normalized_percent, as=normalized_percent), limit=20 )
+    end: now
+    start: 1d
+    width: 8
+    options:
+      series: {}
+      plY: 15
+      mx: 100
+      horizontalPlotLineLabel: Threshold - Good is above the line
+      connect-points: false
+      plotType: area
+      mn: 0
+      imputation: none
+    visualization: time-chart
+    title: Field Normalization Over Time - Above the red line (15%) is good
+    isLive: false
+    type: query
+  90f12cae-9e60-42f2-85fd-5220a91b1aec:
+    x: 4
+    y: 22
+    description: Widget for manual verification of truncation issues. If the end of
+      the string cuts off unexpectedly, escalate the issue.
+    height: 4
+    queryString: |-
+      #type=?parserName
+      | #type!="falcon-raw-data" #type!=metadata-parser
+      | length(@rawstring)
+      | _length=?stringLength
+      | rename(field="#type", as="Data Source")
+      | groupBy([@rawstring])
+      | rename(field="_count", as="Events_Sampled")
+    end: now
+    start: 15m
+    width: 8
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        '@rawstring':
+          width: 1211
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Data Truncation - Raw Message View
+    isLive: false
+    type: query
+  9bb34406-6c3c-4df8-84c5-a0335ab5d76f:
+    x: 0
+    y: 0
+    description: |-
+      Quick Info on pass/fail of errors.
+      This looks to see if any 15 minute time span (1 day default search) crosses the error thresholds.
+    height: 4
+    queryString: |-
+      #type=?parserName  //#error=*
+      | #type!="falcon-raw-data" #type!=metadata-parser
+      | default(value="false", field=[#error])
+      | groupBy([#type], function={ bucket(field=[#error], function=count(#error)) | case {#error="true" | yes := _count; * | no := _count} | groupBy(_bucket, function=selectLast([yes,no, _bucket]))})
+      | default(value=0, field=[yes,no])
+      | total := yes + no
+      | case { yes > 0 | error_percent := yes/total*100 | round(error_percent, as=error_percent);
+          total > 0 AND yes=0 | error_percent := 0;
+          * }
+      // Check the percentage of normalization
+      | case { error_percent<15 | Passed := 1;
+              error_percent>=15 | Failed := 1;
+              * | No_Value := 1; // no data, Should not hit this
+      }
+      | groupBy(#type, function=[sum(Passed, as="Passed"),
+              sum(Failed, as="Failed"),
+              sum(No_Value, as="No_Value"),
+              count(as="Total"),
+              sum(total, as="Event_Count"),
+              sum(yes, as="Event_Error_Count")])
+      // check to see if any escalation should take place
+      | case { test(Passed==Total) | Result := "PASS";
+              Passed>0 AND Failed=0 AND No_Value>0  | Result := "PASS";
+              test(Failed==Total) | Result := "FAIL" | Next_Steps := "Look at timechart & error details";
+              test(No_Value==Total) | Result := "FAIL" | Next_Steps := "No Data has come in yet";
+              Passed>0 AND Failed>=0 AND No_Value>=0  | Result := "Verify" | Next_Steps := "Verify TimeChart - Is most recent data error free?";
+              Passed=0 | Result := "FAIL" | Next_Steps := "No data has been error free. Review error details";
+          * | Result := "Unknown" | Next_Steps := "Escalate that the dashboard hit an unknown condition"
+      }
+      | rename(field="#type", as="Data Source")
+      | table([Result, Next_Steps, "Data Source", Total, Passed, Failed, No_Value, Event_Count, Event_Error_Count])
+    end: now
+    start: 1d
+    width: 4
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Event_Count:
+          data-type: number
+          thousands-separator: true
+        Event_Error_Count:
+          data-type: number
+          thousands-separator: true
+        Result:
+          color:
+            conditions:
+            - color: '#29a34bff'
+              condition:
+                arg: PASS
+                type: Equal
+            - color: '#f15249ff'
+              condition:
+                arg: FAIL
+                type: Equal
+            - color: '#f9e686ff'
+              condition:
+                arg: Verify
+                type: Equal
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Error Check
+    isLive: false
+    type: query
+  98251f1f-c1b8-4c3e-a430-7279f4254f4f:
+    x: 0
+    y: 18
+    height: 4
+    queryString: |-
+      #type=?parserName
+      | #type!="falcon-raw-data" #type!=metadata-parser
+      // | sample(40)
+      | TimeDiffSecs := (@ingesttimestamp - @timestamp)/1000
+      // | groupBy([#repo,#type], function=[min(TimeDiffSecs, as=TimeDiffSecs), selectLast([toHours])])
+      | toHours:= (TimeDiffSecs / 3600)
+      | round(toHours)
+      // | toHours:= (TimeDiffSecs / 60) /60
+      // | round(toHours) | round(TimeDiffSecs, how=floor)
+      | groupby([toHours])
+      | case {
+          toHours=0 | TZ:="UTC";
+          toHours=1 | TZ:="UTC+1";
+          toHours=2 | TZ:="UTC+2";
+          toHours=3 | TZ:="UTC+3";
+          toHours=4 | TZ:="UTC+4";
+          toHours=5 | TZ:="UTC+5";
+          toHours=6 | TZ:="UTC+6";
+          toHours=7 | TZ:="UTC+7";
+          toHours=8 | TZ:="UTC+8";
+          toHours=9 | TZ:="UTC+9";
+          toHours=10 | TZ:="UTC+10";
+          toHours=11| TZ:="UTC+11";
+          toHours=12| TZ:="UTC+112";
+
+          *         | TZ:="Err";
+      }
+      | rename(field=_count, as=Events_Sampled)
+      // | select([#type,TZ]) | sort(field=TZ, type=string, order=asc)
+    end: now
+    start: 1d
+    width: 4
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        TZ:
+          color:
+            conditions:
+            - color: '#34B248'
+              condition:
+                arg: UTC
+                type: Equal
+            - color: '#f15249ff'
+              condition:
+                arg: Err
+                type: Equal
+            defaultColor: '#F5B800'
+          width: 60
+      row-numbers-enabled: false
+    visualization: table-view
+    title: TimeZone Check
+    isLive: false
+    type: query
+  1f039668-b85c-4cea-82fc-fea133305326:
+    x: 0
+    y: 4
+    height: 4
+    queryString: |-
+      #type=?parserName  #error=*
+      | #type!="falcon-raw-data" #type!=metadata-parser
+      | case { test(?ErrorDetails == "yes") }
+      | groupBy([#type,@error_msg])
+      | case { @error_msg = /event was filtered out by the parser/ | Next_Steps := "Escalate - Parser filter issue";
+          @error_msg = /timestamp was set to a value in the future. Setting it to now/ | Next_Steps := "Customer - Ensure they are using NTP or timezone is not set ahead of UTC";
+          @error_msg = /No field named [\.\S]+ to use when parsing timestamp/ OR @error_msg=/Could not handle input/ | Next_Steps := "Escalate - Wrong parser or data coming in wrong format";
+          @error_msg = /exceeded resource limits/ | Next_Steps := "Escalate - Resource limits hit";
+          @error_msg = /Error parsing timestamp. errormsg="Text '[^\']+' could not be parsed at index/ | Next_Steps := "Escalate - Time field not in expected format";
+          * | Next_Steps := "Escalate - Undefined Issue"
+       }
+      | rename(field="#type", as="Data Source")
+      | rename(field=_count, as="Events_Sampled")
+      | sort(_count, order=desc, limit=1000)
+    end: now
+    start: 1d
+    width: 10
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        '@error_msg':
+          width: 500
+        Next_Steps:
+          color:
+            conditions:
+            - color: '#C93637'
+              condition:
+                arg: Escalate
+                type: StartsWith
+            - color: '#F9E686'
+              condition:
+                arg: Customer
+                type: StartsWith
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Error Details
+    isLive: false
+    type: query
+  be9ab88b-1828-4719-89b8-320a4b942aa2:
+    x: 4
+    y: 18
+    height: 4
+    queryString: |
+      #type=?parserName // Name of Paser e.g. FDR for Falcon Data Replicator
+      | #type!="falcon-raw-data" #type!=metadata-parser
+      //| sample(?sample)
+
+      // | now("_now")
+      //     | now_sec:=_now/1000 | formatTime(field="now_sec", format=%T, as="now_utc")
+          | evt_timestamp:= @timestamp/1000 | formatTime(field="evt_timestamp", format=%T, as="evt_timestamp_utc")
+          | ingest_timestamp:= @ingesttimestamp/1000 | formatTime(field="ingest_timestamp", format=%T, as="ingest_timestamp_utc")
+      | TimeDiffSecs := (@ingesttimestamp - @timestamp)/1000 | format(format="%.0f", field=[TimeDiffSecs], as="Time Offset") | formatDuration("Time Offset", from=s) | default(field="Time Offset", value=Current, replaceEmpty=true)
+
+      | case
+          { TimeDiffSecs > 60 | Outcome:="Check" ;
+      * | Outcome:="Pass";
+      }
+
+      | rename([[#type, "Parser Name"], [evt_timestamp_utc, "Event Timestamp (UTC)"],[ingest_timestamp_utc, "Time Ingested (UTC)"]])
+      | groupBy(["Parser Name"], function=[count(as="Events_Sampled"), selectLast("Event Timestamp (UTC)"), selectLast("Time Ingested (UTC)"), selectLast("Time Offset"), selectLast([Outcome])], limit=max) | sort(field=Outcome, order=asc, type=string)
+    end: now
+    start: 1d
+    width: 6
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Outcome:
+          color:
+            conditions:
+            - color: '#34B248'
+              condition:
+                arg: Pass
+                type: Equal
+            - color: '#F5B800'
+              condition:
+                arg: Check
+                type: Equal
+            defaultColor: '#F04242FF'
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Timedrift
+    isLive: false
+    type: query
+  85ddb8cd-2de8-487a-a03d-941feb194a53:
+    x: 0
+    description: Dispays the longest string length identified for the given type.
+      Truncation test fails if string length makes up more than 35% of the total from
+      top 5 strings.
+    height: 4
+    queryString: |-
+      #type=?parserName
+      | #type!="falcon-raw-data" #type!=metadata-parser
+      | length(@rawstring)
+      | groupBy([_length])
+      | top([_length], sum=_count, percent=true, limit=5)
+      | top([_length], sum=_sum, percent=true)
+      | rename(field="_sum", as="sum")
+      | top([_length, sum], sum=percent, limit=1)
+      | rename(field="_sum", as="percent")
+      | groupBy([_length, sum, percent], function=(max("_length")))
+      | sort(_length)
+      | case{
+          percent>35 | Result:="Verify" | "Next Steps":="Verify any truncation issues on logs of this length. If truncation is identified, escalate.";
+          * | Result:="Pass";
+      }
+      | drop([_max])
+      | table([Result,_length,sum,percent,"Next Steps"])
+      | rename(field="_length", as="Length")
+      | rename(field="sum", as="Events_Sampled")
+    end: now
+    start: 1d
+    width: 4
+    y: 22
+    interactions:
+    - arguments:
+        stringLength: '["{{ fields.Length }}"]'
+      name: Investigate for truncation
+      type: updateparameters
+      useWidgetTimeWindow: true
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        ? ''
+        : width: 89
+        Result:
+          color:
+            conditions:
+            - color: '#34B248'
+              condition:
+                arg: Pass
+                type: Equal
+            - color: '#F9E686'
+              condition:
+                arg: Verify
+                type: Equal
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Data Truncation - Potential Truncation Due To Message Size
+    isLive: false
+    type: query
+  99792d69-7328-4758-a27d-2955b9abd00b:
+    x: 10
+    y: 4
+    height: 4
+    queryString: |-
+      #type=?parserName
+      | #type!="falcon-raw-data" #type!=metadata-parser
+      | groupBy([#type])
+    end: now
+    start: 1d
+    width: 2
+    options:
+      default: {}
+      value-format: metric
+    visualization: single-value
+    title: Total Event Count
+    isLive: false
+    type: query
+  ae8fd2e1-dae0-4971-890a-534380aa1e68:
+    x: 0
+    y: 8
+    description: |-
+      Quick Info on pass/fail of field normalization.
+      This looks to see if any 15 minute time span (1 day default search) crosses the normalization thresholds.
+    height: 5
+    queryString: |-
+      // This is for 3PI data, not for falcon data
+      #type=?parserName #type!="falcon-raw-data" #type!=metadata-parser
+      // check for the existance of normalized fields
+      | case { ( user.name=* OR source.ip=* OR source.address=* OR destination.ip=* OR destination.address=* OR event.action=* OR url.domain=* OR host.hostname=*) | normalized := "yes";
+          * | normalized := "no"
+      }
+       | groupBy([#type], function={ bucket(field=[normalized], function=count(normalized)) | case {normalized="yes" | yes := _count; normalized="no" | no := _count} | groupBy(_bucket, function=selectLast([yes,no, _bucket]))})
+      // Get the percentage of normalization per bucket
+      | default(value=0, field=[yes,no])
+      | total := yes + no
+      | case { yes > 0 | normalized_percent := yes/total*100 | round(normalized_percent, as=normalized_percent);
+          total > 0 AND yes=0 | normalized_percent := 0;
+      * }
+      // Check the percentage of normalization
+      | case { normalized_percent>15 | Normalized := 1;
+              normalized_percent<=15 | Not_Normalized := 1;
+              * | No_Value := 1; // no data, IE: data before ingestion was started or ingestion delay or timestamp issue
+      }
+      | groupBy(#type, function=[sum(Normalized, as="Normalized"),
+              sum(Not_Normalized, as="Not_Normalized"),
+              sum(No_Value, as="No_Value"),
+              count(as="Total")])
+      // check to see if any escalation should take place
+      | case { test(Normalized==Total) | Result := "PASS";
+              Normalized>0 AND Not_Normalized=0 AND No_Value>0  | Result := "PASS";
+              test(Not_Normalized==Total) | Result := "FAIL" | Next_Steps := "Verify Correct Parser being used";
+              test(No_Value==Total) | Result := "FAIL" | Next_Steps := "No Data has come in yet";
+              Normalized>0 AND Not_Normalized>=0 AND No_Value>=0  | Result := "Verify" | Next_Steps := "Verify TimeChart - Is most recent data normalized?";
+              Normalized=0 | Result := "FAIL" | Next_Steps := "No data has been normalized";
+          * | Result := "Unknown" | Next_Steps := "Escalate that the dashboard hit an unknown condition"
+      }
+      | rename(field="#type", as="Data Source")
+
+      | table([Result, Next_Steps, "Data Source", Total, Normalized, Not_Normalized, No_Value])
+    end: now
+    start: 1d
+    width: 4
+    options:
+      cell-overflow: wrap-text
+      configured-columns:
+        Result:
+          color:
+            conditions:
+            - color: '#29a34bff'
+              condition:
+                arg: PASS
+                type: Equal
+            - color: '#f15249ff'
+              condition:
+                arg: FAIL
+                type: Equal
+            - color: '#f9e686ff'
+              condition:
+                arg: Verify
+                type: Equal
+      row-numbers-enabled: false
+    visualization: table-view
+    title: Field Normalization Check
+    isLive: false
+    type: query
+  ee114ea8-42b2-4a86-9950-6491e2fd07f0:
+    x: 4
+    height: 4
+    queryString: |-
+      #type=?parserName  //#error=*
+      | #type!="falcon-raw-data" #type!=metadata-parser
+      | default(value="false", field=[#error])
+      | groupBy([#type], function={ bucket(field=[#error], function=count(#error)) | case {#error="true" | yes := _count; * | no := _count} | groupBy(_bucket, function=selectLast([yes,no, _bucket]))})
+      | default(value=0, field=[yes,no])
+      | total := yes + no
+      | case { yes > 0 | error_percent := yes/total*100 | round(error_percent, as=error_percent);
+          total > 0 AND yes=0 | error_percent := 0;
+          * }
+      | @timestamp := _bucket
+      | timechart(#type, function=avg(error_percent))
+    end: now
+    start: 1d
+    width: 8
+    y: 0
+    interactions:
+    - arguments:
+        ErrorDetails: '["yes"]'
+      name: Show Error Details
+      type: updateparameters
+      useWidgetTimeWindow: false
+    options:
+      series: {}
+      mx: 100
+      horizontalPlotLineLabel: Error Threshold - Good is below the line
+      connect-points: false
+      stacking: none
+      yAxisScale: linear
+      plotType: area
+      mn: 0
+      imputation: none
+      gradient: false
+      plY: 5
+    visualization: time-chart
+    title: Ingestion Errors Over Time - Below the red line (5%) is Good
+    isLive: false
+    type: query
+  note-1720792899492-0:
+    x: 0
+    y: 13
+    height: 5
+    text: "The timestamp is the part of a log message that marks the time that an\
+      \ event occurred. During ingestion, we can detect the message timestamp, convert\
+      \ it to Unix epoch time (the number of milliseconds since midnight, January\
+      \ 1, 1970 UTC)\n\n# Timestamps, Time Zones and Timedrift\n\nWe support several\
+      \ options for timestamps, time zones, time ranges, and dates. When collecting\
+      \ log data, the timestamp attached to messages is vital, both for the integrity\
+      \ of the data in your account, and for accurate query results.\nBecause of the\
+      \ importance of timestamps, Logscale captures the timestamp of each message,\
+      \ making sure that data relevant to a query’s time range is returned properly\
+      \ in search results, which allows you to reconstruct a correct event timeline.\n\
+      \n## TimeZone Check\nThis will indicate when a data source timestamp fields\
+      \ (\"@timestamp\") is not in UTC (by default), the parser has not been correctly\
+      \ configured correctly \n\n## Timedrift\nMessage time (\"@timestamp\") and receipt\
+      \ time (\"@ingesttimestamp\") of a log message should be almost the same, typically\
+      \ within a minute of each other. However, network latency, random (not continuous)\
+      \ spikes in data volume, and service disruptions can cause delays, leading to\
+      \ a discrepancy between message time and receipt time. \nLarge discrepancies\
+      \ can lead to incorrect events being displayed, and may even cause search performance\
+      \ issues. \nOn some occasions, it can also prevent Dashboards from populating\
+      \ with data.\nNOTE: This could also be caused by Timezone issues this will typically\
+      \ be when the timedrift is > 60 minutes"
+    width: 12
+    title: What is a timestamp?
+    type: note
+$schema: https://schemas.humio.com/dashboard/v0.17.0
+parameters:
+  ErrorDetails:
+    label: ErrorDetails
+    order: 10
+    values:
+    - 'yes'
+    - 'no'
+    type: list
+    width: 1
+  parserName:
+    label: DataSource
+    query: '#type!="falcon-raw-data" #type!=metadata-parser | groupby(#type, limit=100,
+      function=[]) '
+    timeInterval: 1d
+    useDashboardTimeIfSet: false
+    type: query
+    width: 1
+    order: 1
+    valueField: '#type'
+  stringLength:
+    label: stringLength
+    order: 50
+    type: text
+    width: 1
+    invalidInputPatterns:
+    - \D

@@ -1,0 +1,25 @@
+facility_code,facility_name,facility_description
+0,kernel messages,Kernel-level messages
+1,user-level messages,User-level messages
+2,mail system,Mail system
+3,system daemons,System daemons
+4,security/auth,Security/authorization messages
+5,syslogd,Syslog daemon messages
+6,printer,Line printer subsystem
+7,network news,Network news subsystem
+8,uucp,Uucp subsystem
+9,clock daemon,Clock daemon
+10,security/auth,Security/authorization messages
+11,FTP daemon,FTP daemon
+12,NTP subsystem,NTP subsystem
+13,log audit,Log audit
+14,log alert,Log alert
+15,clock daemon,Clock daemon
+16,local use 0,Local use 0 (local0)
+17,local use 1,Local use 1 (local1)
+18,local use 2,Local use 2 (local2)
+19,local use 3,Local use 3 (local3)
+20,local use 4,Local use 4 (local4)
+21,local use 5,Local use 5 (local5)
+22,local use 6,Local use 6 (local6)
+23,local use 7,Local use 7 (local7)
