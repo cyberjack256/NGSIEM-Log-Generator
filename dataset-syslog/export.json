@@ -1,0 +1,857 @@
+[
+    {
+        "field": "modified_timestamp"
+    },
+    {
+        "field": "eid"
+    },
+    {
+        "field": "event_source"
+    },
+    {
+        "field": "Attributes.request_uri_length"
+    },
+    {
+        "field": "ServiceName"
+    },
+    {
+        "field": "event_id"
+    },
+    {
+        "field": "http.request.mime_type"
+    },
+    {
+        "field": "source.address"
+    },
+    {
+        "field": "Vendor.datetime"
+    },
+    {
+        "field": "enabled"
+    },
+    {
+        "field": "Vendor.requestParameters.externalId"
+    },
+    {
+        "field": "Vendor.clientpublicIP"
+    },
+    {
+        "field": "Vendor.message"
+    },
+    {
+        "field": "Vendor.eventTime"
+    },
+    {
+        "field": "#event.dataset"
+    },
+    {
+        "field": "SourceIp"
+    },
+    {
+        "field": "channel"
+    },
+    {
+        "field": "Vendor.requestParameters.Host"
+    },
+    {
+        "field": "url.domain"
+    },
+    {
+        "field": "settings"
+    },
+    {
+        "field": "Attributes.status_code"
+    },
+    {
+        "field": "Success"
+    },
+    {
+        "field": "trace-id"
+    },
+    {
+        "field": "Vendor.severity"
+    },
+    {
+        "field": "Vendor.resources[0].accountId"
+    },
+    {
+        "field": "UserSid"
+    },
+    {
+        "field": "#event.module"
+    },
+    {
+        "field": "Vendor.dlpengine"
+    },
+    {
+        "field": "Ngsiem.alert.id"
+    },
+    {
+        "field": "Attributes.user_ip"
+    },
+    {
+        "field": "http.request.referrer"
+    },
+    {
+        "field": "Vendor.clienttranstime"
+    },
+    {
+        "field": "Vendor.tlsDetails.clientProvidedHostHeader"
+    },
+    {
+        "field": "priority"
+    },
+    {
+        "field": "trace.id"
+    },
+    {
+        "field": "http.response.bytes"
+    },
+    {
+        "field": "Ngsiem.event.product"
+    },
+    {
+        "field": "Vendor.requestID"
+    },
+    {
+        "field": "Vendor.responseElements.assumedRoleUser.assumedRoleId"
+    },
+    {
+        "field": "Vendor.pagerisk"
+    },
+    {
+        "field": "Vendor.eventVersion"
+    },
+    {
+        "field": "Vendor.bwthrottle"
+    },
+    {
+        "field": "Vendor.responseElements.credentials.sessionToken"
+    },
+    {
+        "field": "event.provider"
+    },
+    {
+        "field": "#event_simpleName"
+    },
+    {
+        "field": "#repo.cid"
+    },
+    {
+        "field": "Ngsiem.indicator.data_domain[0]"
+    },
+    {
+        "field": "Ngsiem.event.id"
+    },
+    {
+        "field": "http.request.method"
+    },
+    {
+        "field": "http.request.bytes"
+    },
+    {
+        "field": "UserId"
+    },
+    {
+        "field": "Ngsiem.metadata"
+    },
+    {
+        "field": "Vendor.event_id"
+    },
+    {
+        "field": "Vendor.unscannabletype"
+    },
+    {
+        "field": "Vendor.appname"
+    },
+    {
+        "field": "Vendor.decrypted"
+    },
+    {
+        "field": "rule.version"
+    },
+    {
+        "field": "message"
+    },
+    {
+        "field": "Vendor.urlcategory"
+    },
+    {
+        "field": "platform_id"
+    },
+    {
+        "field": "@timestamp.nanos"
+    },
+    {
+        "field": "source.nat.ip"
+    },
+    {
+        "field": "Ngsiem.indicator.source_product[0]"
+    },
+    {
+        "field": "LogonDomain"
+    },
+    {
+        "field": "Attributes.elapsed_time"
+    },
+    {
+        "field": "AccountType"
+    },
+    {
+        "field": "destination.ip"
+    },
+    {
+        "field": "Attributes.request_content_type"
+    },
+    {
+        "field": "Attributes.cid"
+    },
+    {
+        "field": "Message"
+    },
+    {
+        "field": "LocalAdminAccess"
+    },
+    {
+        "field": "Vendor.readOnly"
+    },
+    {
+        "field": "Attributes.user_agent"
+    },
+    {
+        "field": "Attributes.request_method"
+    },
+    {
+        "field": "ExternalApiType"
+    },
+    {
+        "field": "Parser.version"
+    },
+    {
+        "field": "Attributes.APIClientID"
+    },
+    {
+        "field": "Vendor.facility"
+    },
+    {
+        "field": "Vendor.userIdentity.accountId"
+    },
+    {
+        "field": "Vendor.product"
+    },
+    {
+        "field": "threat.indicator.description"
+    },
+    {
+        "field": "Vendor.sharedEventID"
+    },
+    {
+        "field": "AuditKeyValues[9].Key"
+    },
+    {
+        "field": "event.action"
+    },
+    {
+        "field": "CustomerIdString"
+    },
+    {
+        "field": "Vendor.technique"
+    },
+    {
+        "field": "Attributes.produces"
+    },
+    {
+        "field": "Vendor.priority"
+    },
+    {
+        "field": "threat.framework"
+    },
+    {
+        "field": "cloud.provider"
+    },
+    {
+        "field": "Ngsiem.properties"
+    },
+    {
+        "field": "@collect.remote"
+    },
+    {
+        "field": "Vendor.userIdentity.principalId"
+    },
+    {
+        "field": "@collect.source_name"
+    },
+    {
+        "field": "Vendor.additionalEventData.x-amz-id-2"
+    },
+    {
+        "field": "#Vendor"
+    },
+    {
+        "field": "Vendor.awsRegion"
+    },
+    {
+        "field": "AuditKeyValues[8].Key"
+    },
+    {
+        "field": "name"
+    },
+    {
+        "field": "#event.kind"
+    },
+    {
+        "field": "threat.tactic.id[0]"
+    },
+    {
+        "field": "User"
+    },
+    {
+        "field": "Vendor.servertranstime"
+    },
+    {
+        "field": "Vendor.requestParameters.roleArn"
+    },
+    {
+        "field": "@collect.host"
+    },
+    {
+        "field": "Vendor.tlsDetails.cipherSuite"
+    },
+    {
+        "field": "assignment_type"
+    },
+    {
+        "field": "Vendor.sourceIPAddress"
+    },
+    {
+        "field": "AuditKeyValues[7].Key"
+    },
+    {
+        "field": "Attributes.trace_id"
+    },
+    {
+        "field": "Attributes.request_path"
+    },
+    {
+        "field": "#data_source_group"
+    },
+    {
+        "field": "AuditKeyValues[6].Key"
+    },
+    {
+        "field": "rule.id"
+    },
+    {
+        "field": "#Cps.version"
+    },
+    {
+        "field": "modified_by"
+    },
+    {
+        "field": "AuditKeyValues[9].ValueString"
+    },
+    {
+        "field": "Vendor.observer.id"
+    },
+    {
+        "field": "cloud.region"
+    },
+    {
+        "field": "Time"
+    },
+    {
+        "field": "created_by"
+    },
+    {
+        "field": "Vendor.resource_accessed"
+    },
+    {
+        "field": "Ngsiem.event.data_domain"
+    },
+    {
+        "field": "Vendor.vendor"
+    },
+    {
+        "field": "user_agent.original"
+    },
+    {
+        "field": "Attributes.consumes"
+    },
+    {
+        "field": "AuditKeyValues[5].Key"
+    },
+    {
+        "field": "Vendor.eventType"
+    },
+    {
+        "field": "AuditKeyValues[8].ValueString"
+    },
+    {
+        "field": "Attributes.request_accept"
+    },
+    {
+        "field": "Vendor.service"
+    },
+    {
+        "field": "Vendor.urlclass"
+    },
+    {
+        "field": "AuditKeyValues[7].ValueString"
+    },
+    {
+        "field": "UserLogonFlags"
+    },
+    {
+        "field": "Vendor.eventID"
+    },
+    {
+        "field": "Vendor.eventSource"
+    },
+    {
+        "field": "Nonce"
+    },
+    {
+        "field": "event.id"
+    },
+    {
+        "field": "AuditKeyValues[4].Key"
+    },
+    {
+        "field": "Vendor.urlsupercategory"
+    },
+    {
+        "field": "Vendor.requestParameters.durationSeconds"
+    },
+    {
+        "field": "AuditKeyValues[3].Key"
+    },
+    {
+        "field": "url.original"
+    },
+    {
+        "field": "LogonTime"
+    },
+    {
+        "field": "Vendor.requestParameters.bucketName"
+    },
+    {
+        "field": "Vendor.additionalEventData.AuthenticationMethod"
+    },
+    {
+        "field": "AuditKeyValues[6].ValueString"
+    },
+    {
+        "field": "Vendor.requestParameters.roleSessionName"
+    },
+    {
+        "field": "Ngsiem.pattern.id"
+    },
+    {
+        "field": "host.name"
+    },
+    {
+        "field": "AuditKeyValues[5].ValueString"
+    },
+    {
+        "field": "AgentIdString"
+    },
+    {
+        "field": "Ngsiem.indicator.id"
+    },
+    {
+        "field": "LogonInfo"
+    },
+    {
+        "field": "Vendor.managementEvent"
+    },
+    {
+        "field": "threat.indicator.last_seen"
+    },
+    {
+        "field": "Vendor.responseElements.credentials.expiration"
+    },
+    {
+        "field": "AuditKeyValues[2].Key"
+    },
+    {
+        "field": "event.severity"
+    },
+    {
+        "field": "PasswordLastSet"
+    },
+    {
+        "field": "Ngsiem.type"
+    },
+    {
+        "field": "UTCTimestamp"
+    },
+    {
+        "field": "@collect.timestamp"
+    },
+    {
+        "field": "AuditKeyValues[1].Key"
+    },
+    {
+        "field": "last_updated"
+    },
+    {
+        "field": "AuditKeyValues[4].ValueString"
+    },
+    {
+        "field": "UserIp"
+    },
+    {
+        "field": "OperationName"
+    },
+    {
+        "field": "Vendor.eventCategory"
+    },
+    {
+        "field": "Ngsiem.indicator.source_vendor[0]"
+    },
+    {
+        "field": "@ingesttimestamp"
+    },
+    {
+        "field": "hostname"
+    },
+    {
+        "field": "observer.id"
+    },
+    {
+        "field": "release_id"
+    },
+    {
+        "field": "AuditKeyValues[0].Key"
+    },
+    {
+        "field": "http.response.status_code"
+    },
+    {
+        "field": "_index"
+    },
+    {
+        "field": "AuditKeyValues[3].ValueString"
+    },
+    {
+        "field": "Ngsiem.event.vendor"
+    },
+    {
+        "field": "Vendor.userAgent"
+    },
+    {
+        "field": "Vendor.useragent"
+    },
+    {
+        "field": "Vendor.responseElements.credentials.accessKeyId"
+    },
+    {
+        "field": "AuditKeyValues[2].ValueString"
+    },
+    {
+        "field": "Attributes.received_time"
+    },
+    {
+        "field": "groups"
+    },
+    {
+        "field": "EventType"
+    },
+    {
+        "field": "event.category[2]"
+    },
+    {
+        "field": "#repo"
+    },
+    {
+        "field": "@sourcetype"
+    },
+    {
+        "field": "Vendor.__meta.version"
+    },
+    {
+        "field": "Attributes.elapsed_microseconds"
+    },
+    {
+        "field": "Vendor.recipientAccountId"
+    },
+    {
+        "field": "AuditKeyValues[1].ValueString"
+    },
+    {
+        "field": "AuditKeyValues[15].Key"
+    },
+    {
+        "field": "event.category[1]"
+    },
+    {
+        "field": "cloud.account.id"
+    },
+    {
+        "field": "monthsincereset"
+    },
+    {
+        "field": "Vendor.dlpdictionaries"
+    },
+    {
+        "field": "Vendor.fileclass"
+    },
+    {
+        "field": "event.category[0]"
+    },
+    {
+        "field": "@timestamp"
+    },
+    {
+        "field": "Attributes.scopes"
+    },
+    {
+        "field": "timestamp"
+    },
+    {
+        "field": "AuditKeyValues[14].Key"
+    },
+    {
+        "field": "UserName"
+    },
+    {
+        "field": "device"
+    },
+    {
+        "field": "uninstall_protection"
+    },
+    {
+        "field": "threat.indicator.modified_at"
+    },
+    {
+        "field": "Vendor.additionalEventData.CipherSuite"
+    },
+    {
+        "field": "AuditKeyValues[0].ValueString"
+    },
+    {
+        "field": "config_id_stage"
+    },
+    {
+        "field": "AuditKeyValues[13].Key"
+    },
+    {
+        "field": "Vendor.deviceowner"
+    },
+    {
+        "field": "Vendor.additionalEventData.bytesTransferredIn"
+    },
+    {
+        "field": "Vendor.additionalEventData.SignatureVersion"
+    },
+    {
+        "field": "platform_name"
+    },
+    {
+        "field": "@collect.socket"
+    },
+    {
+        "field": "event.reason"
+    },
+    {
+        "field": "Vendor.threatclass"
+    },
+    {
+        "field": "Vendor.ClientIP"
+    },
+    {
+        "field": "event_platform"
+    },
+    {
+        "field": "version"
+    },
+    {
+        "field": "Vendor.resources[0].ARN"
+    },
+    {
+        "field": "Vendor.responseElements.assumedRoleUser.arn"
+    },
+    {
+        "field": "structured_data"
+    },
+    {
+        "field": "AuditKeyValues[15].ValueString"
+    },
+    {
+        "field": "network.protocol"
+    },
+    {
+        "field": "event.type[2]"
+    },
+    {
+        "field": "Vendor.department"
+    },
+    {
+        "field": "AuditKeyValues[12].Key"
+    },
+    {
+        "field": "@rawstring"
+    },
+    {
+        "field": "event.type[1]"
+    },
+    {
+        "field": "@timezone"
+    },
+    {
+        "field": "AuditKeyValues[11].Key"
+    },
+    {
+        "field": "Vendor.transactionsize"
+    },
+    {
+        "field": "Vendor.userIdentity.type"
+    },
+    {
+        "field": "AuditKeyValues[14].ValueString"
+    },
+    {
+        "field": "user.email"
+    },
+    {
+        "field": "Vendor.hostname"
+    },
+    {
+        "field": "source.ip"
+    },
+    {
+        "field": "AuditKeyValues[13].ValueString"
+    },
+    {
+        "field": "Vendor.kind"
+    },
+    {
+        "field": "Vendor.addendum.reason"
+    },
+    {
+        "field": "event"
+    },
+    {
+        "field": "AuditKeyValues[10].Key"
+    },
+    {
+        "field": "@collect.source_type"
+    },
+    {
+        "field": "UserIsAdmin"
+    },
+    {
+        "field": "event.type[0]"
+    },
+    {
+        "field": "id"
+    },
+    {
+        "field": "Vendor.sourcetype"
+    },
+    {
+        "field": "Source"
+    },
+    {
+        "field": "@id"
+    },
+    {
+        "field": "@source"
+    },
+    {
+        "field": "Vendor.location"
+    },
+    {
+        "field": "AuditKeyValues[12].ValueString"
+    },
+    {
+        "field": "#event.outcome"
+    },
+    {
+        "field": "Ngsiem.detection.id"
+    },
+    {
+        "field": "threat.technique.id[0]"
+    },
+    {
+        "field": "Vendor.additionalEventData.bytesTransferredOut"
+    },
+    {
+        "field": "#ecs.version"
+    },
+    {
+        "field": "Vendor.filetype"
+    },
+    {
+        "field": "AuditKeyValues[11].ValueString"
+    },
+    {
+        "field": "description"
+    },
+    {
+        "field": "AuditKeyValues[10].ValueString"
+    },
+    {
+        "field": "rule.name"
+    },
+    {
+        "field": "#data_source_name"
+    },
+    {
+        "field": "threat.indicator.first_seen"
+    },
+    {
+        "field": "Vendor.__meta.res_id"
+    },
+    {
+        "field": "@collect.timezone"
+    },
+    {
+        "field": "Vendor.appclass"
+    },
+    {
+        "field": "#type"
+    },
+    {
+        "field": "LogonType"
+    },
+    {
+        "field": "user.id"
+    },
+    {
+        "field": "Vendor.threatcategory"
+    },
+    {
+        "field": "threat.indicator.name"
+    },
+    {
+        "field": "Ngsiem.indicator.display_name"
+    },
+    {
+        "field": "Vendor.tactic"
+    },
+    {
+        "field": "cid"
+    },
+    {
+        "field": "Vendor.tlsDetails.tlsVersion"
+    },
+    {
+        "field": "Vendor.resources[0].type"
+    },
+    {
+        "field": "created_timestamp"
+    },
+    {
+        "field": "Vendor.eventName"
+    },
+    {
+        "field": "@collect.id"
+    },
+    {
+        "field": "LastLoggedOnHost"
+    },
+    {
+        "field": "Vendor.CustomerId"
+    }
+]
